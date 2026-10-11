@@ -598,6 +598,7 @@ export class CredentialService {
       guildName: string;
       channels: { id: string; name: string; type: number; position: number }[];
       roles: { id: string; name: string; color: string; position: number }[];
+      emojis: { id: string; name: string; animated: boolean }[];
     };
   } | { ok: false; error: string }> {
     const credRow = await findActiveCredential(this.db, botApplicationId);
@@ -625,7 +626,7 @@ export class CredentialService {
     }
 
     try {
-      const [guildRes, channelsRes, rolesRes] = await Promise.all([
+      const [guildRes, channelsRes, rolesRes, emojisRes] = await Promise.all([
         fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
           headers: { Authorization: `Bot ${plaintext}` },
         }),
@@ -633,6 +634,9 @@ export class CredentialService {
           headers: { Authorization: `Bot ${plaintext}` },
         }),
         fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
+          headers: { Authorization: `Bot ${plaintext}` },
+        }),
+        fetch(`https://discord.com/api/v10/guilds/${guildId}/emojis`, {
           headers: { Authorization: `Bot ${plaintext}` },
         }),
       ]);
@@ -657,7 +661,7 @@ export class CredentialService {
             .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
             .map((c) => ({
               id: c.id,
-              name: `#${c.name}`,
+              name: c.name.replace(/^#+/, ""),
               type: c.type,
               position: c.position ?? 0,
             }));
@@ -686,18 +690,55 @@ export class CredentialService {
         position: r.position ?? 0,
       }));
 
+      let emojis: { id: string; name: string; animated: boolean }[] = [];
+      if (emojisRes.ok) {
+        const eData = (await emojisRes.json().catch(() => [])) as {
+          id: string;
+          name: string;
+          animated?: boolean;
+          available?: boolean;
+        }[];
+        if (Array.isArray(eData)) {
+          emojis = eData
+            .filter((e) => e.available !== false)
+            .map((e) => ({
+              id: e.id,
+              name: e.name,
+              animated: Boolean(e.animated),
+            }));
+        }
+      }
+
       return {
         ok: true,
         data: {
           guildName,
           channels,
           roles: formattedRoles,
+          emojis,
         },
       };
     } catch (err) {
       this.logger.warn("discord.fetch_resources_failed", { err });
       return { ok: false, error: "FETCH_FAILED" };
     }
+  }
+
+  private parseDiscordEmoji(
+    raw: string | undefined,
+  ): { name: string; id?: string; animated?: boolean } | undefined {
+    if (!raw?.trim()) return undefined;
+    const str = raw.trim();
+    // Matches Discord custom emoji format: <:name:id> or <a:name:id>
+    const customMatch = str.match(/^<(a)?:([a-zA-Z0-9_~]+):(\d+)>$/);
+    if (customMatch && customMatch[2] && customMatch[3]) {
+      return {
+        animated: Boolean(customMatch[1]),
+        name: customMatch[2],
+        id: customMatch[3],
+      };
+    }
+    return { name: str };
   }
 
   /**
@@ -711,7 +752,7 @@ export class CredentialService {
       id: string;
       name: string;
       description?: string;
-      type: "BUTTON" | "DROPDOWN";
+      type: "BUTTON" | "DROPDOWN" | "REACTION";
       mode: "MULTI" | "EXCLUSIVE";
       maxSelections?: number;
       embed: {
@@ -790,13 +831,13 @@ export class CredentialService {
           components: chunk.map((opt) => ({
             type: 2, // Button
             style: styleMap[opt.style] ?? 1,
-            label: opt.label || opt.roleName.replace(/^@/, ""),
+            label: opt.label?.trim() ? opt.label.trim() : (opt.emoji ? undefined : opt.roleName.replace(/^@/, "")),
             custom_id: `role_panel:btn:${panel.id}:${opt.id}`,
-            emoji: opt.emoji?.trim() ? { name: opt.emoji.trim() } : undefined,
+            emoji: this.parseDiscordEmoji(opt.emoji),
           })),
         });
       }
-    } else {
+    } else if (panel.type === "DROPDOWN") {
       // DROPDOWN (StringSelectMenu)
       const limitedOptions = panel.options.slice(0, 25);
       const maxVals =
@@ -822,7 +863,7 @@ export class CredentialService {
               label: (opt.label || opt.roleName.replace(/^@/, "")).slice(0, 100),
               value: opt.id,
               description: opt.description?.slice(0, 100) || undefined,
-              emoji: opt.emoji?.trim() ? { name: opt.emoji.trim() } : undefined,
+              emoji: this.parseDiscordEmoji(opt.emoji),
             })),
           },
         ],
@@ -840,6 +881,7 @@ export class CredentialService {
     };
 
     try {
+      let finalMessageId = existingMessageId;
       // If existing message ID exists, try to update in-place
       if (existingMessageId) {
         const patchRes = await fetch(
@@ -853,29 +895,113 @@ export class CredentialService {
 
         if (patchRes.ok) {
           const patchData = (await patchRes.json()) as { id: string };
-          return { ok: true, messageId: patchData.id };
+          finalMessageId = patchData.id;
+        } else {
+          finalMessageId = undefined;
         }
-        // If 404, message was deleted in Discord -> fall through to create new message
       }
 
-      // Create new message
-      const postRes = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(messagePayload),
-      });
+      if (!finalMessageId) {
+        // Create new message
+        const postRes = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(messagePayload),
+        });
 
-      if (!postRes.ok) {
-        const errorText = await postRes.text().catch(() => "POST failed");
-        this.logger.warn("discord.publish_role_panel_failed", { status: postRes.status, errorText });
-        return { ok: false, error: `Discord API error: ${postRes.statusText || postRes.status}` };
+        if (!postRes.ok) {
+          const errorText = await postRes.text().catch(() => "POST failed");
+          this.logger.warn("discord.publish_role_panel_failed", { status: postRes.status, errorText });
+          return { ok: false, error: `Discord API error: ${postRes.statusText || postRes.status}` };
+        }
+
+        const postData = (await postRes.json()) as { id: string };
+        finalMessageId = postData.id;
       }
 
-      const postData = (await postRes.json()) as { id: string };
-      return { ok: true, messageId: postData.id };
+      // If REACTION type, add the emojis to the message
+      if (panel.type === "REACTION" && finalMessageId) {
+        for (const opt of panel.options) {
+          if (opt.emoji?.trim()) {
+            const raw = opt.emoji.trim();
+            const customMatch = raw.match(/^<a?:([a-zA-Z0-9_]+):(\d+)>$/);
+            const emojiParam = customMatch ? `${customMatch[1]}:${customMatch[2]}` : encodeURIComponent(raw);
+            const rRes = await fetch(
+              `https://discord.com/api/v10/channels/${channelId}/messages/${finalMessageId}/reactions/${emojiParam}/@me`,
+              {
+                method: "PUT",
+                headers: { Authorization: `Bot ${plaintext}` },
+              },
+            );
+            if (!rRes.ok) {
+              const errText = await rRes.text().catch(() => "");
+              this.logger.warn("discord.add_reaction_failed", {
+                status: rRes.status,
+                emoji: raw,
+                emojiParam,
+                errText,
+              });
+            }
+          }
+        }
+      }
+
+      return { ok: true, messageId: finalMessageId };
     } catch (err) {
       this.logger.warn("discord.publish_role_panel_exception", { err });
       return { ok: false, error: "DISCORD_REQUEST_FAILED" };
+    }
+  }
+
+  /**
+   * Sends an arbitrary formatted message or embed to a Discord channel using the bot's credentials.
+   */
+  public async sendDiscordMessage(
+    botApplicationId: string,
+    channelId: string,
+    payload: {
+      content?: string | undefined;
+      embeds?: unknown[] | undefined;
+    },
+  ): Promise<{ ok: true; messageId: string } | { ok: false; error: string }> {
+    const credRow = await findActiveCredential(this.db, botApplicationId);
+    if (!credRow) {
+      return { ok: false, error: "NO_ACTIVE_CREDENTIAL" };
+    }
+
+    try {
+      const plaintext = decryptBotCredential(
+        {
+          ciphertext: Buffer.from(credRow.ciphertext),
+          nonce: Buffer.from(credRow.nonce),
+          authTag: Buffer.from(credRow.authTag),
+          keyVersion: credRow.keyVersion,
+        },
+        {
+          botApplicationId: credRow.botApplicationId,
+          credentialId: credRow.id,
+        },
+        this.keys,
+      );
+
+      const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bot ${plaintext}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "POST failed");
+        return { ok: false, error: `Discord API error (${res.status}): ${errText}` };
+      }
+
+      const postData = (await res.json()) as { id: string };
+      return { ok: true, messageId: postData.id };
+    } catch (err) {
+      return { ok: false, error: (err as Error)?.message ?? "DISCORD_REQUEST_FAILED" };
     }
   }
 
@@ -912,8 +1038,16 @@ export class CredentialService {
           headers: { Authorization: `Bot ${plaintext}` },
         },
       );
-      return { ok: res.ok };
-    } catch {
+      if (!res.ok && res.status !== 404) {
+        this.logger.warn("discord.delete_message_failed", {
+          status: res.status,
+          channelId,
+          messageId,
+        });
+      }
+      return { ok: res.ok || res.status === 404 };
+    } catch (err) {
+      this.logger.warn("discord.delete_message_exception", { err, channelId, messageId });
       return { ok: false };
     }
   }

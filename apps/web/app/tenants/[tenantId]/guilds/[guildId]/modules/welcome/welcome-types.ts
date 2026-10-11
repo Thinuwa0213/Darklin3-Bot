@@ -12,6 +12,12 @@ export interface LiveDiscordRole {
   position?: number;
 }
 
+export interface LiveDiscordEmoji {
+  id: string;
+  name: string;
+  animated: boolean;
+}
+
 export type CanvasLayerType = "avatar" | "text";
 
 export interface CanvasLayer {

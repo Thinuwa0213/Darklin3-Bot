@@ -6,6 +6,10 @@ import {
   GuildMember,
   PermissionFlagsBits,
   EmbedBuilder,
+  MessageReaction,
+  User,
+  type PartialMessageReaction,
+  type PartialUser,
 } from "discord.js";
 import type { Logger } from "@creatorcore/logger";
 import type { IDiscordClient } from "./discord-client.js";
@@ -25,7 +29,7 @@ export interface StoredRolePanel {
   name: string;
   description?: string;
   channelId: string;
-  type: "BUTTON" | "DROPDOWN";
+  type: "BUTTON" | "DROPDOWN" | "REACTION";
   mode: "MULTI" | "EXCLUSIVE";
   maxSelections?: number;
   requiredRoleId?: string;
@@ -35,6 +39,7 @@ export interface StoredRolePanel {
 }
 
 export interface StoredRolePanelsConfig {
+  enabled?: boolean;
   panels: StoredRolePanel[];
   loggingEnabled: boolean;
   logChannelId?: string;
@@ -81,6 +86,11 @@ export class RolePanelManager {
       return;
     }
 
+    if (config.enabled === false) {
+      await interaction.editReply({ content: "⏸️ The role selection module is currently paused by an administrator." });
+      return;
+    }
+
     const member =
       interaction.member instanceof GuildMember
         ? interaction.member
@@ -104,6 +114,142 @@ export class RolePanelManager {
     } else if (interaction.isStringSelectMenu()) {
       await this.handleSelectMenu(interaction, member, me, config);
     }
+  }
+
+  public async handleReactionAdd(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser,
+  ): Promise<void> {
+    if (this.isDestroyed || user.bot) return;
+
+    try {
+      if (reaction.partial) await reaction.fetch().catch(() => null);
+      if (user.partial) await user.fetch().catch(() => null);
+
+      const message = reaction.message;
+      const guild = message.guild;
+      if (!guild) return;
+
+      const config = await this.findRolePanelsConfig(guild.id);
+      if (!config || !config.panels || config.enabled === false) return;
+
+      const panel = config.panels.find((p) => p.messageId === message.id && p.type === "REACTION");
+      if (!panel) return;
+
+      const member = await guild.members.fetch(user.id).catch(() => null);
+      if (!member) return;
+
+      const me = guild.members.me ?? (await guild.members.fetchMe().catch(() => null));
+      if (!me || !me.permissions.has(PermissionFlagsBits.ManageRoles)) return;
+
+      const option = panel.options.find((o) => this.matchesReactionEmoji(reaction.emoji, o.emoji));
+      if (!option) return;
+
+      const gateError = this.checkRoleGates(member, panel);
+      if (gateError) {
+        await reaction.users.remove(user.id).catch(() => {});
+        await member.send(`⚠️ ${gateError}`).catch(() => {});
+        return;
+      }
+
+      const role = guild.roles.cache.get(option.roleId) ?? (await guild.roles.fetch(option.roleId).catch(() => null));
+      if (!role || me.roles.highest.position <= role.position) return;
+
+      // EXCLUSIVE mode: Remove other roles from the same panel
+      if (panel.mode === "EXCLUSIVE") {
+        for (const other of panel.options) {
+          if (other.id !== option.id && member.roles.cache.has(other.roleId)) {
+            await member.roles.remove(other.roleId).catch(() => {});
+            await this.logEvent(guild.id, {
+              config,
+              guild,
+              userId: member.id,
+              userName: member.user.tag,
+              panelId: panel.id,
+              panelName: panel.name,
+              roleId: other.roleId,
+              roleName: other.roleName,
+              action: "REMOVE",
+            });
+          }
+        }
+      }
+
+      if (!member.roles.cache.has(role.id)) {
+        await member.roles.add(role.id);
+        await this.logEvent(guild.id, {
+          config,
+          guild,
+          userId: member.id,
+          userName: member.user.tag,
+          panelId: panel.id,
+          panelName: panel.name,
+          roleId: role.id,
+          roleName: role.name,
+          action: "ADD",
+        });
+      }
+    } catch (err) {
+      this.logger.debug?.("role-panel-manager: handleReactionAdd error", { err });
+    }
+  }
+
+  public async handleReactionRemove(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser,
+  ): Promise<void> {
+    if (this.isDestroyed || user.bot) return;
+
+    try {
+      if (reaction.partial) await reaction.fetch().catch(() => null);
+      if (user.partial) await user.fetch().catch(() => null);
+
+      const message = reaction.message;
+      const guild = message.guild;
+      if (!guild) return;
+
+      const config = await this.findRolePanelsConfig(guild.id);
+      if (!config || !config.panels || config.enabled === false) return;
+
+      const panel = config.panels.find((p) => p.messageId === message.id && p.type === "REACTION");
+      if (!panel) return;
+
+      const member = await guild.members.fetch(user.id).catch(() => null);
+      if (!member) return;
+
+      const option = panel.options.find((o) => this.matchesReactionEmoji(reaction.emoji, o.emoji));
+      if (!option) return;
+
+      const role = guild.roles.cache.get(option.roleId) ?? (await guild.roles.fetch(option.roleId).catch(() => null));
+      if (!role) return;
+
+      if (member.roles.cache.has(role.id)) {
+        await member.roles.remove(role.id);
+        await this.logEvent(guild.id, {
+          config,
+          guild,
+          userId: member.id,
+          userName: member.user.tag,
+          panelId: panel.id,
+          panelName: panel.name,
+          roleId: role.id,
+          roleName: role.name,
+          action: "REMOVE",
+        });
+      }
+    } catch (err) {
+      this.logger.debug?.("role-panel-manager: handleReactionRemove error", { err });
+    }
+  }
+
+  private matchesReactionEmoji(reactionEmoji: { name: string | null; id: string | null }, optionEmoji?: string): boolean {
+    if (!optionEmoji?.trim()) return false;
+    const trimmed = optionEmoji.trim();
+    const customMatch = trimmed.match(/^<a?:([a-zA-Z0-9_]+):(\d+)>$/);
+    if (customMatch && customMatch[2]) {
+      return reactionEmoji.id === customMatch[2];
+    }
+    return reactionEmoji.name === trimmed || reactionEmoji.id === trimmed;
   }
 
   private async handleButtonClick(

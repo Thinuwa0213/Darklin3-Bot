@@ -7,6 +7,9 @@ import { WelcomeManager } from "./welcome-manager.js";
 import { XpManager } from "./xp-manager.js";
 import { StreamManager } from "./stream-manager.js";
 import { RolePanelManager } from "./role-panel-manager.js";
+import { BoosterManager } from "./booster-manager.js";
+import { ActionLogManager } from "./action-log-manager.js";
+import { AutoModManager } from "./auto-mod-manager.js";
 
 export interface BotRuntimeOptions {
   botApplicationId: string;
@@ -43,11 +46,16 @@ export class BotRuntime {
   private readonly onFatalError?: ((category: string) => void) | undefined;
   private interactionListener?: ((...args: unknown[]) => void) | undefined;
   private invalidatedListener?: (() => void) | undefined;
+  private messageReactionAddListener?: ((...args: unknown[]) => void) | undefined;
+  private messageReactionRemoveListener?: ((...args: unknown[]) => void) | undefined;
   private presenceManager?: PresenceManager | undefined;
   private welcomeManager?: WelcomeManager | undefined;
   private xpManager?: XpManager | undefined;
   private streamManager?: StreamManager | undefined;
   private rolePanelManager?: RolePanelManager | undefined;
+  private boosterManager?: BoosterManager | undefined;
+  private actionLogManager?: ActionLogManager | undefined;
+  private autoModManager?: AutoModManager | undefined;
   private connected = false;
 
   constructor(options: BotRuntimeOptions) {
@@ -159,6 +167,26 @@ export class BotRuntime {
         };
         client.on("interactionCreate", this.interactionListener);
 
+        this.messageReactionAddListener = (reaction: unknown, user: unknown) => {
+          this.rolePanelManager?.handleReactionAdd(reaction as any, user as any).catch((err: unknown) => {
+            this.logger.error("role-panel-manager: reaction add error", {
+              botApplicationId: this.botApplicationId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          });
+        };
+        client.on("messageReactionAdd", this.messageReactionAddListener);
+
+        this.messageReactionRemoveListener = (reaction: unknown, user: unknown) => {
+          this.rolePanelManager?.handleReactionRemove(reaction as any, user as any).catch((err: unknown) => {
+            this.logger.error("role-panel-manager: reaction remove error", {
+              botApplicationId: this.botApplicationId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          });
+        };
+        client.on("messageReactionRemove", this.messageReactionRemoveListener);
+
         this.invalidatedListener = () => {
           this.connected = false;
           this.logger.warn("discord bot session invalidated by gateway (token reset or revoked)", {
@@ -183,6 +211,15 @@ export class BotRuntime {
 
         this.rolePanelManager = new RolePanelManager(client, this.logger);
         void this.rolePanelManager.start();
+
+        this.boosterManager = new BoosterManager(client, this.logger);
+        void this.boosterManager.start();
+
+        this.actionLogManager = new ActionLogManager(client, this.logger);
+        void this.actionLogManager.start();
+
+        this.autoModManager = new AutoModManager(client, this.logger);
+        void this.autoModManager.start();
 
         this.logger.info("bot runtime connected and ready", {
           botApplicationId: this.botApplicationId,
@@ -259,10 +296,30 @@ export class BotRuntime {
       this.rolePanelManager.stop();
       this.rolePanelManager = undefined;
     }
+    if (this.boosterManager) {
+      this.boosterManager.stop();
+      this.boosterManager = undefined;
+    }
+    if (this.actionLogManager) {
+      this.actionLogManager.stop();
+      this.actionLogManager = undefined;
+    }
+    if (this.autoModManager) {
+      this.autoModManager.stop();
+      this.autoModManager = undefined;
+    }
     if (this.client) {
       if (this.interactionListener) {
         this.client.removeListener("interactionCreate", this.interactionListener);
         this.interactionListener = undefined;
+      }
+      if (this.messageReactionAddListener) {
+        this.client.removeListener("messageReactionAdd", this.messageReactionAddListener);
+        this.messageReactionAddListener = undefined;
+      }
+      if (this.messageReactionRemoveListener) {
+        this.client.removeListener("messageReactionRemove", this.messageReactionRemoveListener);
+        this.messageReactionRemoveListener = undefined;
       }
       if (this.invalidatedListener) {
         this.client.removeListener("invalidated", this.invalidatedListener);

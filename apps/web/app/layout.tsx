@@ -9,8 +9,11 @@ import "./globals.css";
 const config = loadWebConfig();
 
 export const metadata: Metadata = {
-  title: config.NEXT_PUBLIC_APP_NAME,
-  description: "CreatorCore control-plane foundation.",
+  title: {
+    default: config.NEXT_PUBLIC_APP_NAME || "Darklin3",
+    template: `%s | ${config.NEXT_PUBLIC_APP_NAME || "Darklin3"}`,
+  },
+  description: "Darklin3 Bot Operations & Management.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

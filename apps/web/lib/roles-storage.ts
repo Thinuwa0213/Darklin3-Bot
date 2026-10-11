@@ -33,6 +33,7 @@ export async function readStoredRolePanels(
     const parsed = JSON.parse(content) as Partial<RolePanelsConfig>;
 
     return {
+      enabled: parsed.enabled ?? true,
       panels: Array.isArray(parsed.panels) ? parsed.panels : [],
       loggingEnabled: parsed.loggingEnabled ?? true,
       logChannelId: parsed.logChannelId ?? undefined,

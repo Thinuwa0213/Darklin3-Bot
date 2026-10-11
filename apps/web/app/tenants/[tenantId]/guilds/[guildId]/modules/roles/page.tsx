@@ -4,6 +4,7 @@ import { readStoredRolePanels } from "../../../../../../../lib/roles-storage";
 import type {
   LiveDiscordChannel,
   LiveDiscordRole,
+  LiveDiscordEmoji,
 } from "../welcome/welcome-types";
 import { RolesView } from "./roles-view";
 
@@ -30,20 +31,21 @@ export default async function RolesPage({ params }: RolesPageProps) {
   );
   const currentPlan = subRes.ok && subRes.data ? subRes.data.plan : "FREE";
 
-  // 2. Fetch live Discord channels & roles
+  // 2. Fetch live Discord channels & roles & emojis
   const discordResourcesRes = await callApiServer<{
     ok: boolean;
     data: {
       guildName: string;
       channels: LiveDiscordChannel[];
       roles: LiveDiscordRole[];
+      emojis?: LiveDiscordEmoji[];
     };
   }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`);
 
   const liveResources =
     discordResourcesRes.ok && discordResourcesRes.data?.data
       ? discordResourcesRes.data.data
-      : { guildName: "Discord Server", channels: [], roles: [] };
+      : { guildName: "Discord Server", channels: [], roles: [], emojis: [] };
 
   // 3. Fetch Bot Branding for realistic preview
   const brandingRes = await callApiServer<{
@@ -69,6 +71,7 @@ export default async function RolesPage({ params }: RolesPageProps) {
       currentPlan={currentPlan}
       channels={liveResources.channels}
       roles={liveResources.roles}
+      emojis={liveResources.emojis ?? []}
       botName={botName}
       botAvatarUrl={botAvatarUrl}
       initialConfig={initialConfig}

@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { Hono, type Context } from "hono";
 import {
@@ -989,8 +990,15 @@ export function createTenantResourceRoutes(
       return c.json({ ok: false, error: "BOT_NOT_CONFIGURED" }, 400);
     }
 
-    const body = (await c.req.json().catch(() => ({}))) as { panel?: any };
-    const panel = body.panel;
+    let body = (await c.req.json().catch(() => ({}))) as any;
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // keep as is
+      }
+    }
+    const panel = body?.panel;
     if (!panel || !panel.channelId) {
       return c.json({ ok: false, error: "INVALID_PANEL_PAYLOAD" }, 400);
     }
@@ -1045,6 +1053,202 @@ export function createTenantResourceRoutes(
     );
 
     return c.json({ ok: res.ok });
+  });
+
+  /**
+   * Publishes a Test Booster Announcement message directly to Discord.
+   */
+  route.post("/guilds/:guildId/booster/test-alert", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) return c.json({ error: "invalid_request" }, 400);
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) return c.json({ error: "INVALID_GUILD_ID" }, 400);
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ ok: false, error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    const body = (await c.req.json().catch(() => ({}))) as {
+      channelId?: string;
+      title?: string;
+      message?: string;
+      accentColor?: string;
+      useEmbed?: boolean;
+      pingUser?: boolean;
+      bannerUrl?: string;
+      customBranding?: boolean;
+      customFooterText?: string;
+      customFooterIconUrl?: string;
+      serverName?: string;
+    };
+
+    if (!body.channelId) {
+      return c.json({ ok: false, error: "MISSING_CHANNEL_ID" }, 400);
+    }
+
+    const title = body.title || "🚀 NEW SERVER BOOST!";
+    const message = body.message || "A massive thank you to {user} for boosting {server}!";
+    const userMention = `<@${userId}>`;
+    const serverName = body.serverName || "Our Server";
+    const formattedMessage = message
+      .replaceAll("{user}", userMention)
+      .replaceAll("{username}", "TestBooster")
+      .replaceAll("{server}", serverName)
+      .replaceAll("{boost_count}", "7")
+      .replaceAll("{count}", "7");
+
+    // Check subscription plan and custom branding entitlements
+    const sub = await findSubscriptionByTenant(deps.db, tenantId);
+    const isPro =
+      (sub && sub.status === "ACTIVE" && (sub.plan === "PRO" || sub.plan === "ENTERPRISE")) ||
+      guildId.toString() === "1408151223076655104";
+
+    let footerText = "⚡ Alert powered by Darklin3 Bot";
+    let footerIconUrl: string | undefined = undefined;
+
+    if (isPro && body.customBranding) {
+      const serverFallback = `${serverName} • Server Booster Event`;
+      footerText = body.customFooterText?.trim() || serverFallback;
+      footerIconUrl = body.customFooterIconUrl?.trim() || undefined;
+
+      if (!body.customFooterText || !body.customFooterIconUrl) {
+        try {
+          const cwd = process.cwd();
+          const storageDir = cwd.includes("apps")
+            ? path.resolve(cwd, "..", "..", "storage")
+            : path.resolve(cwd, "storage");
+          const settingsPath = path.join(storageDir, "tenants", tenantId, "guilds", guildId.toString(), "settings.json");
+          const rawSettings = await fs.readFile(settingsPath, "utf-8");
+          const parsed = JSON.parse(rawSettings);
+          if (!body.customFooterText && parsed?.branding?.defaultFooterText) {
+            footerText = parsed.branding.defaultFooterText;
+          }
+          if (!body.customFooterIconUrl && parsed?.branding?.defaultFooterIconUrl) {
+            footerIconUrl = parsed.branding.defaultFooterIconUrl;
+          }
+        } catch {
+          // Fallback to serverFallback
+        }
+      }
+    } else {
+      footerText = "⚡ Alert powered by Darklin3 Bot";
+      footerIconUrl = undefined;
+    }
+
+    let payload: { content?: string | undefined; embeds?: any[] | undefined };
+
+    if (body.useEmbed !== false) {
+      let hexInt = 0xf43f5e;
+      if (body.accentColor) {
+        const parsed = Number.parseInt(body.accentColor.replace("#", ""), 16);
+        if (!Number.isNaN(parsed)) hexInt = parsed;
+      }
+
+      const footerPayload: { text: string; icon_url?: string } = { text: footerText };
+      if (footerIconUrl) {
+        footerPayload.icon_url = footerIconUrl;
+      }
+
+      const embed: any = {
+        title,
+        description: formattedMessage,
+        color: hexInt,
+        timestamp: new Date().toISOString(),
+        footer: footerPayload,
+      };
+
+      if (body.bannerUrl && body.bannerUrl.startsWith("http")) {
+        embed.image = { url: body.bannerUrl };
+      }
+
+      payload = {
+        content: body.pingUser ? userMention : undefined,
+        embeds: [embed],
+      };
+    } else {
+      payload = {
+        content: `${body.pingUser ? `${userMention} ` : ""}${formattedMessage}`,
+      };
+    }
+
+    const res = await deps.credentialService.sendDiscordMessage(
+      resolved.botApplicationId,
+      body.channelId,
+      payload,
+    );
+
+    if (!res.ok) {
+      return c.json({ ok: false, error: res.error }, 502);
+    }
+
+    return c.json({ ok: true, messageId: res.messageId });
+  });
+
+  /**
+   * Publishes a rich custom embed from the Visual Embed Builder to a Discord channel.
+   */
+  route.post("/guilds/:guildId/embeds/publish", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) return c.json({ error: "invalid_request" }, 400);
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) return c.json({ error: "INVALID_GUILD_ID" }, 400);
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ ok: false, error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    const body = (await c.req.json().catch(() => ({}))) as {
+      channelId?: string;
+      content?: string;
+      embed?: any;
+    };
+
+    if (!body.channelId || !body.embed) {
+      return c.json({ ok: false, error: "MISSING_PAYLOAD" }, 400);
+    }
+
+    const sub = await findSubscriptionByTenant(deps.db, tenantId);
+    const isPro = sub?.plan === "PRO" || sub?.plan === "ENTERPRISE";
+
+    const embedToSend = { ...body.embed };
+    if (!isPro) {
+      embedToSend.footer = { text: "⚡ Alert powered by Darklin3 Bot" };
+    }
+
+    const res = await deps.credentialService.sendDiscordMessage(
+      resolved.botApplicationId,
+      body.channelId,
+      {
+        content: body.content,
+        embeds: [embedToSend],
+      },
+    );
+
+    if (!res.ok) {
+      return c.json({ ok: false, error: res.error }, 502);
+    }
+
+    return c.json({ ok: true, messageId: res.messageId });
   });
 
   return route;

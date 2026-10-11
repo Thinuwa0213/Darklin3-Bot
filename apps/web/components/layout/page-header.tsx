@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+export { ModuleHeroCard, type ModuleHeroCardProps } from "./module-hero-card";
 
 export interface PageHeaderProps {
   title: string;

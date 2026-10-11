@@ -11,12 +11,13 @@ import {
   Layers,
   CreditCard,
   ShieldAlert,
-  Gift,
   FileText,
   Palette,
   Activity,
   Radar,
   Settings,
+  Rocket,
+  ScrollText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -62,9 +63,10 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
   const notificationsUrl = `${guildBase}/modules/notifications`;
   const radarUrl = `${guildBase}/modules/radar`;
   const rolesUrl = `${guildBase}/modules/roles`;
-  const giveawaysUrl = `${guildBase}/modules/giveaways`;
+  const boosterUrl = `${guildBase}/modules/booster`;
   const embedsUrl = `${guildBase}/modules/embeds`;
   const moderationUrl = `${guildBase}/modules/moderation`;
+  const actionLogsUrl = `${guildBase}/modules/action-logs`;
   const billingUrl = `/tenants/${currentGuild.tenantId}/billing`;
 
   return (
@@ -72,13 +74,13 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
       {/* Brand Header */}
       <SidebarHeader>
         <div className="flex items-center gap-2.5 px-2 py-1">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground font-black text-sm">
-            C
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-950 font-black text-sm">
+            D
           </div>
           {(state === "expanded" || isMobile) && (
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight leading-none text-sidebar-foreground">
-                CreatorCore
+                Darklin3
               </span>
               <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
                 Discord Operations
@@ -175,7 +177,7 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 isActive={pathname === welcomeUrl}
               >
                 <Sparkles className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && <span>Welcome & Rules</span>}
+                {(state === "expanded" || isMobile) && <span>Welcome &amp; Rules</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
 
@@ -186,7 +188,7 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 isActive={pathname === levelsUrl}
               >
                 <Trophy className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && <span>Levels & XP</span>}
+                {(state === "expanded" || isMobile) && <span>Levels &amp; XP</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
 
@@ -207,11 +209,11 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 href={radarUrl}
                 isActive={pathname === radarUrl}
               >
-                <Radar className="h-4 w-4 shrink-0 text-amber-500" />
+                <Radar className="h-4 w-4 shrink-0 text-muted-foreground" />
                 {(state === "expanded" || isMobile) && (
                   <div className="flex items-center justify-between w-full">
                     <span>Community Radar</span>
-                    <Badge variant="outline" className="text-[9px] font-mono border-amber-500/40 text-amber-500 bg-amber-500/10 px-1 py-0">
+                    <Badge variant="outline" className="text-[9px] font-mono border-zinc-700/80 text-zinc-300 bg-zinc-900/60 px-1 py-0">
                       PRO
                     </Badge>
                   </div>
@@ -226,18 +228,25 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 isActive={pathname === rolesUrl}
               >
                 <Layers className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && <span>Button Roles</span>}
+                {(state === "expanded" || isMobile) && <span>Reaction &amp; Button Roles</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                id="nav-module-giveaways"
-                href={giveawaysUrl}
-                isActive={pathname === giveawaysUrl}
+                id="nav-module-booster"
+                href={boosterUrl}
+                isActive={pathname === boosterUrl}
               >
-                <Gift className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && <span>Giveaways</span>}
+                <Rocket className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {(state === "expanded" || isMobile) && (
+                  <div className="flex items-center justify-between w-full">
+                    <span>Server Booster</span>
+                    <Badge variant="outline" className="text-[9px] font-mono border-zinc-700/80 text-zinc-300 bg-zinc-900/60 px-1 py-0">
+                      PRO
+                    </Badge>
+                  </div>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
 
@@ -248,7 +257,14 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 isActive={pathname === embedsUrl}
               >
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && <span>Embed Builder</span>}
+                {(state === "expanded" || isMobile) && (
+                  <div className="flex items-center justify-between w-full">
+                    <span>Embed Builder</span>
+                    <Badge variant="outline" className="text-[9px] font-mono border-zinc-700/80 text-zinc-300 bg-zinc-900/60 px-1 py-0">
+                      PRO
+                    </Badge>
+                  </div>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -272,6 +288,17 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 {(state === "expanded" || isMobile) && <span>Auto Moderation</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                id="nav-module-action-logs"
+                href={actionLogsUrl}
+                isActive={pathname === actionLogsUrl}
+              >
+                <ScrollText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {(state === "expanded" || isMobile) && <span>Action Logs</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </div>
 
@@ -293,7 +320,7 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 {(state === "expanded" || isMobile) && (
                   <div className="flex items-center justify-between w-full">
                     <span>Billing & Plans</span>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 font-mono font-bold border-zinc-700/80 text-zinc-300 bg-zinc-900/60">
                       PRO
                     </Badge>
                   </div>

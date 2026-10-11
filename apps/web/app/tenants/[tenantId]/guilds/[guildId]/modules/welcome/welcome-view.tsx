@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,12 +23,14 @@ import {
   Radio,
   Lock,
   ArrowRight,
+  Hash,
 } from "lucide-react";
 import { WELCOME_VARIABLES } from "@/lib/template-variables";
 import { VariableChips } from "@/components/modules/variable-chips";
 import { saveWelcomeAction, refreshGuildDiscordResourcesAction } from "@/app/actions";
 import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import {
   DEFAULT_WELCOME_CONFIG,
   type WelcomeConfig,
@@ -142,6 +144,27 @@ export function WelcomeView({
       }
     }
   }, [liveRoles, autoRoleId]);
+
+  // Clean Discord channels for SearchableSelect options (fixes double ## bug)
+  const channelOptions: SearchableOption[] = useMemo(() => {
+    return channels.map((ch) => {
+      const cleanName = ch.name.replace(/^#+/, "");
+      return {
+        value: ch.id,
+        label: cleanName,
+        icon: <Hash className="h-3.5 w-3.5" />,
+      };
+    });
+  }, [channels]);
+
+  // Clean Discord roles for SearchableSelect options
+  const roleOptions: SearchableOption[] = useMemo(() => {
+    return roles.map((r) => ({
+      value: r.id,
+      label: r.name,
+      icon: <AtSign className="h-3.5 w-3.5" style={{ color: r.color }} />,
+    }));
+  }, [roles]);
 
   // Sync live channels and roles directly from Discord
   const handleSyncFromDiscord = async () => {
@@ -444,18 +467,15 @@ export function WelcomeView({
                     {channels.length} channels available
                   </span>
                 </div>
-                <select
+                <SearchableSelect
                   id="welcome-channel"
+                  options={channelOptions}
                   value={channelId}
-                  onChange={(e) => handleChannelSelect(e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-medium"
-                >
-                  {channels.map((ch) => (
-                    <option key={ch.id} value={ch.id}>
-                      {ch.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => handleChannelSelect(val)}
+                  placeholder="Select a welcome announcement channel..."
+                  searchPlaceholder="Search channel (e.g. welcome, general)..."
+                  emptyMessage="No Discord channels match your search"
+                />
                 <p className="text-[11px] text-muted-foreground">
                   Ensure the bot has Send Messages and Embed Links permissions in this channel.
                 </p>
@@ -572,18 +592,15 @@ export function WelcomeView({
                       <span>Refresh Roles</span>
                     </button>
                   </div>
-                  <select
+                  <SearchableSelect
                     id="auto-role-select"
+                    options={roleOptions}
                     value={autoRoleId}
-                    onChange={(e) => handleRoleSelect(e.target.value)}
-                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-mono"
-                  >
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id} style={{ color: role.color }}>
-                        {role.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => handleRoleSelect(val)}
+                    placeholder="Select a role to assign on join..."
+                    searchPlaceholder="Search roles (e.g. Member, Verified)..."
+                    emptyMessage="No Discord roles match your search"
+                  />
                 </div>
 
                 {/* Role Hierarchy Safety Alert */}

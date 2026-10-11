@@ -130,7 +130,6 @@ export function SettingsView({
       return {
         value: ch.id,
         label: cleanName,
-        sublabel: ch.id,
         icon: <Hash className="h-3.5 w-3.5" />,
       };
     });

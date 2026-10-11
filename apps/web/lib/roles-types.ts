@@ -1,6 +1,6 @@
 export type RoleButtonStyle = "primary" | "secondary" | "success" | "danger";
 
-export type RoleComponentType = "BUTTON" | "DROPDOWN";
+export type RoleComponentType = "BUTTON" | "DROPDOWN" | "REACTION";
 
 export type RoleSelectionMode = "MULTI" | "EXCLUSIVE";
 
@@ -43,6 +43,7 @@ export interface RolePanel {
 }
 
 export interface RolePanelsConfig {
+  enabled?: boolean;
   panels: RolePanel[];
   loggingEnabled: boolean;
   logChannelId?: string | undefined;
@@ -61,6 +62,7 @@ export interface RoleAssignmentLog {
 }
 
 export const DEFAULT_ROLE_PANELS_CONFIG: RolePanelsConfig = {
+  enabled: true,
   panels: [],
   loggingEnabled: true,
   logChannelId: undefined,

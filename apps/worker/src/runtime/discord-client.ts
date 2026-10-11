@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, type ApplicationCommandDataResolvable } from "discord.js";
+import { Client, GatewayIntentBits, Partials, type ApplicationCommandDataResolvable } from "discord.js";
 
 /**
  * Interface abstracting Discord Gateway Client capabilities needed by CreatorCore.
@@ -19,7 +19,7 @@ export interface IDiscordClient {
 }
 
 /**
- * Real Discord.js Client implementation with Guilds and GuildMembers intents.
+ * Real Discord.js Client implementation with Guilds, GuildMembers, and Reactions intents.
  * GuildMembers intent is required for member onboarding, auto-roles, and welcome messages.
  */
 export class RealDiscordClient implements IDiscordClient {
@@ -33,6 +33,15 @@ export class RealDiscordClient implements IDiscordClient {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions,
+      ],
+      partials: [
+        Partials.Message,
+        Partials.Channel,
+        Partials.Reaction,
+        Partials.User,
+        Partials.GuildMember,
       ],
     });
   }

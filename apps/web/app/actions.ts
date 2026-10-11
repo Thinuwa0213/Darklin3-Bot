@@ -28,10 +28,26 @@ import {
   type RolePanelsConfig,
   type RoleAssignmentLog,
 } from "../lib/roles-storage";
+import {
+  readStoredBoosterConfig,
+  writeStoredBoosterConfig,
+  type BoosterConfig,
+} from "../lib/booster-storage";
+import {
+  readStoredActionLogsConfig,
+  writeStoredActionLogsConfig,
+  type ActionLogsConfig,
+} from "../lib/action-logs-storage";
+import {
+  readStoredModerationConfig,
+  writeStoredModerationConfig,
+  type ModerationConfig,
+} from "../lib/moderation-storage";
 import type {
   WelcomeConfig,
   LiveDiscordChannel,
   LiveDiscordRole,
+  LiveDiscordEmoji,
 } from "./tenants/[tenantId]/guilds/[guildId]/modules/welcome/welcome-types";
 
 export interface ConnectGuildActionResult {
@@ -580,11 +596,12 @@ export interface DiscordResourcesActionResult {
     guildName: string;
     channels: LiveDiscordChannel[];
     roles: LiveDiscordRole[];
+    emojis?: LiveDiscordEmoji[];
   };
 }
 
 /**
- * Server Action to fetch live Discord channels and roles for a connected guild.
+ * Server Action to fetch live Discord channels, roles, and custom emojis for a connected guild.
  */
 export async function refreshGuildDiscordResourcesAction(
   tenantId: string,
@@ -600,6 +617,7 @@ export async function refreshGuildDiscordResourcesAction(
       guildName: string;
       channels: LiveDiscordChannel[];
       roles: LiveDiscordRole[];
+      emojis?: LiveDiscordEmoji[];
     };
     error?: string;
   }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`);
@@ -860,7 +878,7 @@ export async function publishRolePanelAction(
       `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/roles-panels/${encodeURIComponent(panelId)}/publish`,
       {
         method: "POST",
-        body: JSON.stringify({ panel }),
+        body: { panel },
       },
     );
 
@@ -891,6 +909,8 @@ export async function deleteRolePanelAction(
   tenantId: string,
   guildId: string,
   panelId: string,
+  targetChannelId?: string,
+  targetMessageId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   if (!tenantId || !guildId || !panelId) {
     return { ok: false, error: "Missing required parameters" };
@@ -899,12 +919,21 @@ export async function deleteRolePanelAction(
     const config = await readStoredRolePanels(tenantId, guildId);
     const panel = config.panels.find((p) => p.id === panelId);
 
-    if (panel?.messageId && panel.channelId) {
+    const channelId = targetChannelId || panel?.channelId;
+    const messageId = targetMessageId || panel?.messageId;
+
+    if (messageId && channelId) {
       // Best-effort delete message from Discord
-      await callApiServer(
-        `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/roles-panels/${encodeURIComponent(panelId)}/discord-message?channelId=${encodeURIComponent(panel.channelId)}&messageId=${encodeURIComponent(panel.messageId)}`,
+      const delRes = await callApiServer(
+        `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/roles-panels/${encodeURIComponent(panelId)}/discord-message?channelId=${encodeURIComponent(channelId)}&messageId=${encodeURIComponent(messageId)}`,
         { method: "DELETE" },
-      ).catch(() => {});
+      ).catch((err) => {
+        console.warn("[deleteRolePanelAction] Discord delete call error:", err);
+        return { ok: false };
+      });
+      if (delRes && !delRes.ok) {
+        console.warn("[deleteRolePanelAction] Failed to delete Discord message:", delRes);
+      }
     }
 
     config.panels = config.panels.filter((p) => p.id !== panelId);
@@ -932,4 +961,176 @@ export async function getRoleLogsAction(
     return { ok: false, error: (err as Error)?.message ?? "Failed to load role logs" };
   }
 }
+
+/**
+ * Server Action to fetch Server Booster configuration.
+ */
+export async function getBoosterConfigAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; config?: BoosterConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const config = await readStoredBoosterConfig(tenantId, guildId);
+    return { ok: true, config };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load booster configuration" };
+  }
+}
+
+/**
+ * Server Action to save Server Booster configuration.
+ */
+export async function saveBoosterConfigAction(
+  tenantId: string,
+  guildId: string,
+  data: BoosterConfig,
+): Promise<{ ok: boolean; config?: BoosterConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const saved = await writeStoredBoosterConfig(tenantId, guildId, data);
+    return { ok: true, config: saved };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save booster configuration" };
+  }
+}
+
+/**
+ * Server Action to dispatch a Test Server Booster Alert directly to Discord.
+ */
+export async function sendTestBoostAlertAction(
+  tenantId: string,
+  guildId: string,
+  data: BoosterConfig,
+): Promise<{ ok: boolean; messageId?: string | undefined; error?: string }> {
+  if (!tenantId || !guildId || !data.channelId) {
+    return { ok: false, error: "Please select an announcement channel first." };
+  }
+  try {
+    const res = await callApiServer<{ ok: boolean; messageId?: string; error?: string }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/booster/test-alert`,
+      {
+        method: "POST",
+        body: data,
+      },
+    );
+    if (res.ok && res.data?.ok) {
+      return { ok: true, messageId: res.data.messageId };
+    }
+    return { ok: false, error: res.error || res.data?.error || "Discord test alert failed" };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to send test alert" };
+  }
+}
+
+/**
+ * Server Action to publish a visual custom embed to Discord.
+ */
+export async function publishEmbedToDiscordAction(
+  tenantId: string,
+  guildId: string,
+  channelId: string,
+  embed: any,
+  content?: string,
+): Promise<{ ok: boolean; messageId?: string | undefined; error?: string }> {
+  if (!tenantId || !guildId || !channelId || !embed) {
+    return { ok: false, error: "Missing required parameters" };
+  }
+  try {
+    const res = await callApiServer<{ ok: boolean; messageId?: string; error?: string }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/embeds/publish`,
+      {
+        method: "POST",
+        body: { channelId, embed, content },
+      },
+    );
+    if (res.ok && res.data?.ok) {
+      return { ok: true, messageId: res.data.messageId };
+    }
+    return { ok: false, error: res.error || res.data?.error || "Publishing embed failed" };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to publish embed" };
+  }
+}
+
+/**
+ * Server Action to fetch Action Logs configuration.
+ */
+export async function getActionLogsConfigAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; config?: ActionLogsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const config = await readStoredActionLogsConfig(tenantId, guildId);
+    return { ok: true, config };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load action logs configuration" };
+  }
+}
+
+/**
+ * Server Action to save Action Logs configuration.
+ */
+export async function saveActionLogsConfigAction(
+  tenantId: string,
+  guildId: string,
+  data: ActionLogsConfig,
+): Promise<{ ok: boolean; config?: ActionLogsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const saved = await writeStoredActionLogsConfig(tenantId, guildId, data);
+    return { ok: true, config: saved };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save action logs configuration" };
+  }
+}
+
+/**
+ * Server Action to fetch Auto-Moderation configuration.
+ */
+export async function getModerationConfigAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; config?: ModerationConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const config = await readStoredModerationConfig(tenantId, guildId);
+    return { ok: true, config };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load moderation configuration" };
+  }
+}
+
+/**
+ * Server Action to save Auto-Moderation configuration.
+ */
+export async function saveModerationConfigAction(
+  tenantId: string,
+  guildId: string,
+  data: ModerationConfig,
+): Promise<{ ok: boolean; config?: ModerationConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const saved = await writeStoredModerationConfig(tenantId, guildId, data);
+    return { ok: true, config: saved };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save moderation configuration" };
+  }
+}
+
+
+
 
