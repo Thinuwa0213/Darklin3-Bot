@@ -12,12 +12,10 @@ import {
   Sparkles,
   MessageSquare,
   UserPlus,
-  CheckCircle2,
   Save,
   ShieldAlert,
   Palette,
   Loader2,
-  AlertCircle,
   AtSign,
   Send,
   Bot,
@@ -29,6 +27,8 @@ import {
 import { WELCOME_VARIABLES } from "@/lib/template-variables";
 import { VariableChips } from "@/components/modules/variable-chips";
 import { saveWelcomeAction, refreshGuildDiscordResourcesAction } from "@/app/actions";
+import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import {
   DEFAULT_WELCOME_CONFIG,
   type WelcomeConfig,
@@ -252,75 +252,75 @@ export function WelcomeView({
   return (
     <div className="space-y-6 max-w-7xl pb-12">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Welcome &amp; Onboarding
-            </h1>
-            <Badge variant={enabled ? "default" : "secondary"} className="text-xs">
-              {enabled ? "Active" : "Disabled"}
+      <PageHeader
+        category="Onboarding Flow"
+        title="Welcome & Onboarding"
+        description="Greet newcomers in live Discord channels, assign real server roles, and customize dynamic welcome cards."
+        badges={[
+          isLiveConnected ? (
+            <Badge
+              key="sync"
+              variant="outline"
+              className="text-[11px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10 flex items-center gap-1 font-mono"
+            >
+              <Radio className="h-3 w-3 animate-pulse text-emerald-500" />
+              <span>Live Discord Sync ({channels.length} channels, {roles.length} roles)</span>
             </Badge>
+          ) : (
+            <Badge
+              key="sync"
+              variant="outline"
+              className="text-[11px] text-zinc-400 border-zinc-700/40 bg-zinc-800/30 flex items-center gap-1 font-mono"
+            >
+              <span>●</span>
+              <span>Standby Mode</span>
+            </Badge>
+          ),
+          currentPlan !== "FREE" ? (
+            <ProBadge key="plan" label={currentPlan} />
+          ) : null,
+        ].filter(Boolean)}
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+        actions={
+          <div className="flex items-center gap-2.5">
+            <ModuleToggle
+              enabled={enabled}
+              onToggle={setEnabled}
+              activeLabel="Active"
+              disabledLabel="Paused"
+              disabled={!isBotOnline}
+            />
 
-            {/* Live Discord Sync Status Badge */}
-            {isLiveConnected ? (
-              <Badge
-                variant="outline"
-                className="text-[11px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10 flex items-center gap-1 font-mono"
-              >
-                <Radio className="h-3 w-3 animate-pulse text-emerald-500" />
-                <span>Live Discord Sync ({channels.length} channels, {roles.length} roles)</span>
-              </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="text-[11px] text-zinc-400 border-zinc-700/40 bg-zinc-800/30 flex items-center gap-1 font-mono"
-              >
-                <span>●</span>
-                <span>Standby Mode</span>
-              </Badge>
-            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSyncFromDiscord}
+              disabled={isSyncing}
+              className="gap-1.5 text-xs h-9 border-border hover:bg-muted shadow-2xs"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin text-primary" : ""}`} />
+              <span>{isSyncing ? "Syncing..." : "Sync Live Data"}</span>
+            </Button>
 
-            {currentPlan !== "FREE" && (
-              <Badge variant="outline" className="font-mono text-[10px] tracking-wider">
-                {currentPlan}
-              </Badge>
-            )}
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !isBotOnline}
+              className="gap-2 shadow-2xs bg-primary text-primary-foreground font-semibold h-9"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : !isBotOnline ? (
+                <Lock className="h-4 w-4" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              <span>{isSaving ? "Saving..." : !isBotOnline ? "Configuration Locked" : "Save Changes"}</span>
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Greet newcomers in live Discord channels, assign real server roles, and customize dynamic welcome cards.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleSyncFromDiscord}
-            disabled={isSyncing}
-            className="gap-1.5 text-xs h-9 border-border hover:bg-muted"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin text-primary" : ""}`} />
-            <span>{isSyncing ? "Syncing..." : "Sync Live Data"}</span>
-          </Button>
-
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || !isBotOnline}
-            className="gap-2 shadow-xs bg-primary text-primary-foreground font-semibold h-9"
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : !isBotOnline ? (
-              <Lock className="h-4 w-4" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            <span>{isSaving ? "Saving..." : !isBotOnline ? "Configuration Locked" : "Save Changes"}</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Bot Prerequisite & Privileged Intents Gate Warning */}
       {!isBotOnline && (
@@ -361,24 +361,27 @@ export function WelcomeView({
 
       {/* Status Alerts */}
       {syncStatus && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs animate-in fade-in">
-          <Sparkles className="h-4 w-4 shrink-0" />
-          <span>{syncStatus}</span>
-        </div>
+        <FeedbackBanner
+          type="info"
+          message={syncStatus}
+          onDismiss={() => setSyncStatus(null)}
+        />
       )}
 
       {saved && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm animate-in fade-in">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Welcome module settings saved successfully!</span>
-        </div>
+        <FeedbackBanner
+          type="success"
+          message="Welcome module settings saved and synced with Discord bot successfully!"
+          onDismiss={() => setSaved(false)}
+        />
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm animate-in fade-in">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
+        <FeedbackBanner
+          type="error"
+          message={errorMessage}
+          onDismiss={() => setErrorMessage(null)}
+        />
       )}
 
       {/* Main Two-Column Layout */}

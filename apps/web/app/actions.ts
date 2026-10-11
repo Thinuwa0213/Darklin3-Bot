@@ -10,6 +10,24 @@ import {
   type LevelSettings,
   type UserXpRecord,
 } from "../lib/levels-storage";
+import {
+  writeStoredStreams,
+  readStoredStreams,
+  type StoredStreamsConfig,
+  type CommunityRadarConfig,
+} from "../lib/streams-storage";
+import {
+  readStoredSettings,
+  writeStoredSettings,
+  type GuildSettings,
+} from "../lib/settings-storage";
+import {
+  readStoredRolePanels,
+  writeStoredRolePanels,
+  readStoredRoleLogs,
+  type RolePanelsConfig,
+  type RoleAssignmentLog,
+} from "../lib/roles-storage";
 import type {
   WelcomeConfig,
   LiveDiscordChannel,
@@ -656,4 +674,262 @@ export async function getLevelLeaderboardAction(
   }
 }
 
+/**
+ * Server Action to save Stream Alert settings for a guild.
+ */
+export async function saveStreamAlertsAction(
+  tenantId: string,
+  guildId: string,
+  config: Partial<StoredStreamsConfig>,
+): Promise<{ ok: boolean; data?: StoredStreamsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const data = await writeStoredStreams(tenantId, guildId, config);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save stream alert settings" };
+  }
+}
+
+/**
+ * Server Action to retrieve Stream Alert settings for a guild.
+ */
+export async function getStreamAlertsAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; data?: StoredStreamsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const data = await readStoredStreams(tenantId, guildId);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load stream alert settings" };
+  }
+}
+
+/**
+ * Server Action to save Community Stream Radar settings for a guild.
+ */
+export async function saveCommunityRadarAction(
+  tenantId: string,
+  guildId: string,
+  radarConfig: CommunityRadarConfig,
+): Promise<{ ok: boolean; data?: StoredStreamsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const existing = await readStoredStreams(tenantId, guildId);
+    const updated = await writeStoredStreams(tenantId, guildId, {
+      ...existing,
+      communityRadar: radarConfig,
+    });
+    return { ok: true, data: updated };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save community radar settings" };
+  }
+}
+
+/**
+ * Server Action to retrieve Community Stream Radar settings for a guild.
+ */
+export async function getCommunityRadarAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; data?: CommunityRadarConfig | undefined; error?: string | undefined }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const data = await readStoredStreams(tenantId, guildId);
+    return { ok: true, data: data.communityRadar };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load community radar settings" };
+  }
+}
+
+/**
+ * Server Action to save centralized Guild & Bot Settings.
+ */
+export async function saveGuildSettingsAction(
+  tenantId: string,
+  guildId: string,
+  settings: GuildSettings,
+): Promise<{ ok: boolean; data?: GuildSettings; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    await writeStoredSettings(tenantId, guildId, settings);
+    return { ok: true, data: settings };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save guild settings" };
+  }
+}
+
+/**
+ * Server Action to retrieve centralized Guild & Bot Settings.
+ */
+export async function getGuildSettingsAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; data?: GuildSettings; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const data = await readStoredSettings(tenantId, guildId);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load guild settings" };
+  }
+}
+
+/**
+ * Server Action to retrieve Role Panels configuration.
+ */
+export async function getRolePanelsAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; data?: RolePanelsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const data = await readStoredRolePanels(tenantId, guildId);
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load role panels" };
+  }
+}
+
+/**
+ * Server Action to save Role Panels configuration.
+ */
+export async function saveRolePanelsAction(
+  tenantId: string,
+  guildId: string,
+  config: RolePanelsConfig,
+): Promise<{ ok: boolean; data?: RolePanelsConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const saved = await writeStoredRolePanels(tenantId, guildId, config);
+    return { ok: true, data: saved };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save role panels" };
+  }
+}
+
+/**
+ * Server Action to publish a Role Panel to its destination Discord channel.
+ * Calls apps/api to construct Embed + ActionRow components and posts/updates via Discord REST API.
+ */
+export async function publishRolePanelAction(
+  tenantId: string,
+  guildId: string,
+  panelId: string,
+): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  if (!tenantId || !guildId || !panelId) {
+    return { ok: false, error: "Missing required parameters" };
+  }
+  try {
+    const config = await readStoredRolePanels(tenantId, guildId);
+    const panelIndex = config.panels.findIndex((p) => p.id === panelId);
+    if (panelIndex === -1) {
+      return { ok: false, error: "Role panel not found" };
+    }
+
+    const panel = config.panels[panelIndex];
+    if (!panel) {
+      return { ok: false, error: "Role panel is undefined" };
+    }
+    if (!panel.channelId) {
+      return { ok: false, error: "Please select a target channel first" };
+    }
+    if (panel.options.length === 0) {
+      return { ok: false, error: "Please configure at least one role option" };
+    }
+
+    const res = await callApiServer<{ ok: boolean; messageId: string }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/roles-panels/${encodeURIComponent(panelId)}/publish`,
+      {
+        method: "POST",
+        body: JSON.stringify({ panel }),
+      },
+    );
+
+    if (!res.ok || !res.data) {
+      const errorMsg = res.error || "Failed to publish panel to Discord";
+      panel.status = "ERROR";
+      panel.lastError = errorMsg;
+      await writeStoredRolePanels(tenantId, guildId, config);
+      return { ok: false, error: errorMsg };
+    }
+
+    panel.messageId = res.data.messageId;
+    panel.publishedAt = new Date().toISOString();
+    panel.status = "PUBLISHED";
+    panel.lastError = undefined;
+
+    await writeStoredRolePanels(tenantId, guildId, config);
+    return { ok: true, messageId: res.data.messageId };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Publishing failed" };
+  }
+}
+
+/**
+ * Server Action to delete a Role Panel and remove its published message from Discord.
+ */
+export async function deleteRolePanelAction(
+  tenantId: string,
+  guildId: string,
+  panelId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!tenantId || !guildId || !panelId) {
+    return { ok: false, error: "Missing required parameters" };
+  }
+  try {
+    const config = await readStoredRolePanels(tenantId, guildId);
+    const panel = config.panels.find((p) => p.id === panelId);
+
+    if (panel?.messageId && panel.channelId) {
+      // Best-effort delete message from Discord
+      await callApiServer(
+        `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/roles-panels/${encodeURIComponent(panelId)}/discord-message?channelId=${encodeURIComponent(panel.channelId)}&messageId=${encodeURIComponent(panel.messageId)}`,
+        { method: "DELETE" },
+      ).catch(() => {});
+    }
+
+    config.panels = config.panels.filter((p) => p.id !== panelId);
+    await writeStoredRolePanels(tenantId, guildId, config);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to delete role panel" };
+  }
+}
+
+/**
+ * Server Action to fetch Role Assignment Audit Logs.
+ */
+export async function getRoleLogsAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; logs?: RoleAssignmentLog[]; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const logs = await readStoredRoleLogs(tenantId, guildId);
+    return { ok: true, logs };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load role logs" };
+  }
+}
 

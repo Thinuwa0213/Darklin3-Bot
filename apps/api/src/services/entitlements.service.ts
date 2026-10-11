@@ -20,6 +20,7 @@ export interface PlanEntitlements {
   priceAnnual: number;
   maxConnectedGuilds: number;
   streamNotificationsLimit: number;
+  maxRolePanels: number;
   customBotToken: boolean;
   customCanvasRankCard: boolean;
   unlimitedButtonRoles: boolean;
@@ -36,6 +37,7 @@ export const PLAN_DEFINITIONS: Record<SubscriptionPlan, PlanEntitlements> = {
     priceAnnual: 0,
     maxConnectedGuilds: 1,
     streamNotificationsLimit: 1,
+    maxRolePanels: 2,
     customBotToken: false,
     customCanvasRankCard: false,
     unlimitedButtonRoles: false,
@@ -50,6 +52,7 @@ export const PLAN_DEFINITIONS: Record<SubscriptionPlan, PlanEntitlements> = {
     priceAnnual: 79,
     maxConnectedGuilds: 3,
     streamNotificationsLimit: 25,
+    maxRolePanels: 10,
     customBotToken: true,
     customCanvasRankCard: true,
     unlimitedButtonRoles: true,
@@ -64,6 +67,7 @@ export const PLAN_DEFINITIONS: Record<SubscriptionPlan, PlanEntitlements> = {
     priceAnnual: 249,
     maxConnectedGuilds: 100,
     streamNotificationsLimit: 100,
+    maxRolePanels: 100,
     customBotToken: true,
     customCanvasRankCard: true,
     unlimitedButtonRoles: true,

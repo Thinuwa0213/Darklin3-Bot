@@ -5,6 +5,8 @@ import { type CommandRegistry, createDefaultCommandRegistry } from "../commands/
 import { PresenceManager } from "./presence-manager.js";
 import { WelcomeManager } from "./welcome-manager.js";
 import { XpManager } from "./xp-manager.js";
+import { StreamManager } from "./stream-manager.js";
+import { RolePanelManager } from "./role-panel-manager.js";
 
 export interface BotRuntimeOptions {
   botApplicationId: string;
@@ -44,6 +46,8 @@ export class BotRuntime {
   private presenceManager?: PresenceManager | undefined;
   private welcomeManager?: WelcomeManager | undefined;
   private xpManager?: XpManager | undefined;
+  private streamManager?: StreamManager | undefined;
+  private rolePanelManager?: RolePanelManager | undefined;
   private connected = false;
 
   constructor(options: BotRuntimeOptions) {
@@ -112,19 +116,40 @@ export class BotRuntime {
           }
         }
 
-        // Attach interaction listener for slash commands
+        // Attach interaction listener for slash commands and role panel components
         this.interactionListener = (interaction: unknown) => {
-          if (interaction && typeof interaction === "object" && "isChatInputCommand" in interaction) {
+          if (!interaction || typeof interaction !== "object") return;
+
+          const anyInt = interaction as {
+            isChatInputCommand?: () => boolean;
+            isButton?: () => boolean;
+            isStringSelectMenu?: () => boolean;
+            customId?: string;
+          };
+
+          if (typeof anyInt.isChatInputCommand === "function" && anyInt.isChatInputCommand()) {
             const chatInput = interaction as ChatInputCommandInteraction;
-            if (chatInput.isChatInputCommand()) {
-              this.commandRegistry
-                .handleInteraction(chatInput, {
+            this.commandRegistry
+              .handleInteraction(chatInput, {
+                botApplicationId: this.botApplicationId,
+                logger: this.logger,
+                clientPing: typeof client.getPing === "function" ? client.getPing() : undefined,
+              })
+              .catch((dispatchErr: unknown) => {
+                this.logger.error("unhandled interaction dispatch error", {
                   botApplicationId: this.botApplicationId,
-                  logger: this.logger,
-                  clientPing: typeof client.getPing === "function" ? client.getPing() : undefined,
-                })
+                  error: dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr),
+                });
+              });
+          } else if (
+            (typeof anyInt.isButton === "function" && anyInt.isButton()) ||
+            (typeof anyInt.isStringSelectMenu === "function" && anyInt.isStringSelectMenu())
+          ) {
+            if (typeof anyInt.customId === "string" && anyInt.customId.startsWith("role_panel:")) {
+              this.rolePanelManager
+                ?.handleInteraction(interaction as any)
                 .catch((dispatchErr: unknown) => {
-                  this.logger.error("unhandled interaction dispatch error", {
+                  this.logger.error("role-panel-manager: dispatch error", {
                     botApplicationId: this.botApplicationId,
                     error: dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr),
                   });
@@ -152,6 +177,12 @@ export class BotRuntime {
 
         this.xpManager = new XpManager(client, this.logger);
         void this.xpManager.start();
+
+        this.streamManager = new StreamManager(client, this.logger);
+        void this.streamManager.start();
+
+        this.rolePanelManager = new RolePanelManager(client, this.logger);
+        void this.rolePanelManager.start();
 
         this.logger.info("bot runtime connected and ready", {
           botApplicationId: this.botApplicationId,
@@ -219,6 +250,14 @@ export class BotRuntime {
     if (this.xpManager) {
       this.xpManager.stop();
       this.xpManager = undefined;
+    }
+    if (this.streamManager) {
+      this.streamManager.stop();
+      this.streamManager = undefined;
+    }
+    if (this.rolePanelManager) {
+      this.rolePanelManager.stop();
+      this.rolePanelManager = undefined;
     }
     if (this.client) {
       if (this.interactionListener) {

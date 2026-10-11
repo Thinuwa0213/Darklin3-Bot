@@ -14,6 +14,8 @@ export interface IDiscordClient {
   registerCommands?(commands: unknown[]): Promise<void>;
   getPing?(): number;
   setPresence?(presence: unknown): unknown;
+  fetchChannel?(channelId: string): Promise<unknown>;
+  fetchGuild?(guildId: string): Promise<unknown>;
 }
 
 /**
@@ -30,6 +32,7 @@ export class RealDiscordClient implements IDiscordClient {
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildPresences,
       ],
     });
   }
@@ -92,6 +95,22 @@ export class RealDiscordClient implements IDiscordClient {
   public setPresence(presence: unknown): unknown {
     if (!this.client.user) return;
     return this.client.user.setPresence(presence as any);
+  }
+
+  public async fetchChannel(channelId: string): Promise<unknown> {
+    try {
+      return await this.client.channels.fetch(channelId);
+    } catch {
+      return null;
+    }
+  }
+
+  public async fetchGuild(guildId: string): Promise<unknown> {
+    try {
+      return await this.client.guilds.fetch(guildId);
+    } catch {
+      return null;
+    }
   }
 }
 

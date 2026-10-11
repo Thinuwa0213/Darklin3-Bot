@@ -13,10 +13,11 @@ import {
   Gift,
   Plus,
   Trash2,
-  CheckCircle2,
   Clock,
   Users,
 } from "lucide-react";
+import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
 interface GiveawaysViewProps {
   tenantId: string;
@@ -36,7 +37,7 @@ interface GiveawayItem {
   endsAt: string;
 }
 
-export function GiveawaysView({ tenantId: _tenantId, guildId: _guildId, currentPlan: _currentPlan }: GiveawaysViewProps) {
+export function GiveawaysView({ tenantId, guildId, currentPlan = "FREE" }: GiveawaysViewProps) {
   const [giveaways, setGiveaways] = useState<GiveawayItem[]>([
     {
       id: "1",
@@ -85,30 +86,37 @@ export function GiveawaysView({ tenantId: _tenantId, guildId: _guildId, currentP
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Community Giveaways</h1>
-            <Badge variant="default" className="text-xs">
-              {giveaways.length} Active
+    <div className="space-y-6 max-w-4xl pb-12">
+      <PageHeader
+        category="Community Engagement"
+        title="Community Giveaways"
+        description="Host automated Discord giveaways with role requirements, timer countdowns, and fair winner picking."
+        badges={[
+          <Badge key="count" variant="default" className="text-xs">
+            {giveaways.length} Active
+          </Badge>,
+          currentPlan !== "FREE" ? (
+            <ProBadge key="plan" label={currentPlan} />
+          ) : (
+            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
+              FREE
             </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Host automated Discord giveaways with role requirements, timer countdowns, and fair winner picking.
-          </p>
-        </div>
-      </div>
+          ),
+        ].filter(Boolean)}
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+      />
 
       {saved && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Giveaway created and scheduled to Discord channel!</span>
-        </div>
+        <FeedbackBanner
+          type="success"
+          message="Giveaway created and scheduled to Discord channel successfully!"
+          onDismiss={() => setSaved(false)}
+        />
       )}
 
       {/* Create Giveaway Card */}
-      <Card className="border-border">
+      <Card className="border-border/80 shadow-2xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Plus className="h-4 w-4 text-primary" />

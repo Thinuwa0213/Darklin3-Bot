@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { callApiServer, getServerSession } from "../../../../lib/api";
+import { GlobalHeader } from "@/components/layout/global-header";
 import { BillingView } from "./billing-view";
 
 export const dynamic = "force-dynamic";
@@ -32,12 +33,15 @@ export default async function BillingPage({ params }: BillingPageProps) {
   const subscription = res.ok && res.data ? res.data.subscription : null;
 
   return (
-    <main className="min-h-screen bg-background p-4 sm:p-8">
-      <BillingView
-        tenantId={tenantId}
-        currentPlan={currentPlan}
-        subscription={subscription}
-      />
-    </main>
+    <div className="min-h-screen bg-background">
+      <GlobalHeader user={session.user} />
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <BillingView
+          tenantId={tenantId}
+          currentPlan={currentPlan}
+          subscription={subscription}
+        />
+      </main>
+    </div>
   );
 }

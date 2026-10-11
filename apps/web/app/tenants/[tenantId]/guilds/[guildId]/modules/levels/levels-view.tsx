@@ -13,7 +13,6 @@ import {
   Award,
   Zap,
   Save,
-  CheckCircle2,
   Plus,
   Trash2,
   Users,
@@ -21,7 +20,6 @@ import {
   Clock,
   Sparkles,
   Loader2,
-  AlertCircle,
   Hash,
   Mic,
   Gift,
@@ -35,7 +33,9 @@ import {
   type LevelSettings,
   type LevelRoleReward,
   type UserXpRecord,
-} from "@/lib/levels-storage";
+} from "@/lib/levels-types";
+import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import type { LiveDiscordChannel, LiveDiscordRole } from "../welcome/welcome-types";
 import { getLevelProgress } from "@/lib/level-calculator";
 
@@ -52,6 +52,7 @@ interface LevelsViewProps {
 export function LevelsView({
   tenantId,
   guildId,
+  currentPlan = "FREE",
   initialSettings,
   initialUsers,
   liveChannels,
@@ -191,39 +192,56 @@ export function LevelsView({
   return (
     <div className="space-y-6 max-w-5xl pb-12">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">XP & Leveling System</h1>
-            <Badge variant={enabled ? "default" : "secondary"} className={enabled ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" : ""}>
-              {enabled ? "Active" : "Disabled"}
+      <PageHeader
+        category="Engagement Engine"
+        title="XP & Leveling System"
+        description="Reward chat activity with XP points, milestone Discord roles, and public server leaderboards."
+        badges={[
+          currentPlan !== "FREE" ? (
+            <ProBadge key="plan" label={currentPlan} />
+          ) : (
+            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
+              FREE
             </Badge>
+          ),
+        ].filter(Boolean)}
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+        actions={
+          <div className="flex items-center gap-2.5">
+            <ModuleToggle
+              enabled={enabled}
+              onToggle={setEnabled}
+              activeLabel="Active"
+              disabledLabel="Paused"
+            />
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              size="sm"
+              className="gap-2 shadow-2xs font-semibold text-xs px-4 h-9 cursor-pointer"
+            >
+              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Reward chat activity with XP points, milestone Discord roles, and public server leaderboards.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 shadow-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs">
-            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-            <span>{isSaving ? "Saving..." : "Save Changes"}</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {saved && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Leveling configuration saved and synced with Discord bot!</span>
-        </div>
+        <FeedbackBanner
+          type="success"
+          message="Leveling configuration saved and synced with Discord bot successfully!"
+          onDismiss={() => setSaved(false)}
+        />
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
+        <FeedbackBanner
+          type="error"
+          message={errorMessage}
+          onDismiss={() => setErrorMessage(null)}
+        />
       )}
 
       {/* Navigation Pills */}

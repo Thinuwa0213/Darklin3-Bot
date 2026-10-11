@@ -15,6 +15,8 @@ import {
   FileText,
   Palette,
   Activity,
+  Radar,
+  Settings,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -54,9 +56,11 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
   const setupUrl = `${guildBase}/setup`;
   const brandingUrl = `${guildBase}/modules/branding`;
   const presenceUrl = `${guildBase}/modules/presence`;
+  const settingsUrl = `${guildBase}/settings`;
   const welcomeUrl = `${guildBase}/modules/welcome`;
   const levelsUrl = `${guildBase}/modules/levels`;
   const notificationsUrl = `${guildBase}/modules/notifications`;
+  const radarUrl = `${guildBase}/modules/radar`;
   const rolesUrl = `${guildBase}/modules/roles`;
   const giveawaysUrl = `${guildBase}/modules/giveaways`;
   const embedsUrl = `${guildBase}/modules/embeds`;
@@ -142,6 +146,17 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 {(state === "expanded" || isMobile) && <span>Rich Presence</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                id="nav-guild-settings"
+                href={settingsUrl}
+                isActive={pathname === settingsUrl}
+              >
+                <Settings className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {(state === "expanded" || isMobile) && <span>Server Settings</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </div>
 
@@ -183,6 +198,24 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
               >
                 <Radio className="h-4 w-4 shrink-0 text-muted-foreground" />
                 {(state === "expanded" || isMobile) && <span>Stream Alerts</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                id="nav-module-radar"
+                href={radarUrl}
+                isActive={pathname === radarUrl}
+              >
+                <Radar className="h-4 w-4 shrink-0 text-amber-500" />
+                {(state === "expanded" || isMobile) && (
+                  <div className="flex items-center justify-between w-full">
+                    <span>Community Radar</span>
+                    <Badge variant="outline" className="text-[9px] font-mono border-amber-500/40 text-amber-500 bg-amber-500/10 px-1 py-0">
+                      PRO
+                    </Badge>
+                  </div>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
 

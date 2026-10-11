@@ -9,13 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Save,
-  CheckCircle2,
   Bot,
   Upload,
   HardDrive,
   Clock,
   X,
-  Palette,
   AlertCircle,
   ImageIcon,
   Sparkles,
@@ -25,6 +23,8 @@ import {
   removeBrandingAvatarAction,
   removeBrandingBannerAction,
 } from "@/app/actions";
+import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { ImageCropperModal } from "./image-cropper-modal";
 
 interface BrandingViewProps {
@@ -398,38 +398,28 @@ export function BrandingView({
   const globalHandle = botTag || `@${botName.toLowerCase().replace(/[^a-z0-9_]/g, "") || "bot"}`;
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-5xl pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/70">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
-              <Palette className="h-4.5 w-4.5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                  Bot Identity &amp; Branding
-                </h1>
-                <Badge
-                  variant={currentPlan === "FREE" ? "secondary" : "default"}
-                  className="text-[10px] font-mono font-bold"
-                >
-                  {currentPlan}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Customize your bot&apos;s server display nickname, uploaded icon, banner, and brand colors.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <PageHeader
+        category="White-Label Identity"
+        title="Bot Identity & Branding"
+        description="Customize your bot's server display nickname, uploaded icon, banner, and brand colors."
+        badge={
+          currentPlan === "FREE" ? (
+            <Badge variant="outline" className="text-[10px] font-mono">
+              FREE
+            </Badge>
+          ) : (
+            <ProBadge label={currentPlan} />
+          )
+        }
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+        actions={
           <Button
             onClick={handleSave}
             disabled={isPending}
-            className="gap-2 shadow-xs transition-all"
+            className="gap-2 shadow-2xs h-9 cursor-pointer transition-all"
           >
             <Save className="h-4 w-4" />
             <span>
@@ -442,12 +432,12 @@ export function BrandingView({
                     : "Save Branding Changes"}
             </span>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Staged Changes Alert */}
       {hasStagedChanges && !saved && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs shadow-xs animate-in fade-in-50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-primary/10 border border-primary/25 text-primary text-xs shadow-2xs animate-in fade-in-50">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 shrink-0 text-primary" />
             <span>
@@ -458,7 +448,7 @@ export function BrandingView({
             size="sm"
             onClick={handleSave}
             disabled={isPending}
-            className="h-7 text-xs px-3 shadow-xs shrink-0 self-end sm:self-auto"
+            className="h-7 text-xs px-3 shadow-2xs shrink-0 self-end sm:self-auto cursor-pointer"
           >
             Save Now
           </Button>
@@ -467,10 +457,11 @@ export function BrandingView({
 
       {/* Success Notification */}
       {saved && (
-        <div className="flex items-center gap-2 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium shadow-xs animate-in fade-in-50">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>{successMessage || "Bot branding updated successfully and synced with Discord!"}</span>
-        </div>
+        <FeedbackBanner
+          type="success"
+          message={successMessage || "Bot branding updated successfully and synced with Discord!"}
+          onDismiss={() => setSaved(false)}
+        />
       )}
 
       {/* Storage Quota Card */}

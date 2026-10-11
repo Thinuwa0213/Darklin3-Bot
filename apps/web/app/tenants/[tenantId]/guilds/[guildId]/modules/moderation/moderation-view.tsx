@@ -12,12 +12,13 @@ import { Separator } from "@/components/ui/separator";
 import {
   ShieldAlert,
   Save,
-  CheckCircle2,
   Link2,
   Users,
   MessageSquareWarning,
   Flame,
 } from "lucide-react";
+import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
 interface ModerationViewProps {
   tenantId: string;
@@ -25,7 +26,7 @@ interface ModerationViewProps {
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
 }
 
-export function ModerationView({ tenantId: _tenantId, guildId: _guildId, currentPlan: _currentPlan }: ModerationViewProps) {
+export function ModerationView({ tenantId, guildId, currentPlan = "FREE" }: ModerationViewProps) {
   const [enabled, setEnabled] = useState(true);
   const [logChannel, setLogChannel] = useState("#mod-logs");
 
@@ -54,37 +55,48 @@ export function ModerationView({ tenantId: _tenantId, guildId: _guildId, current
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Auto-Moderation & Security</h1>
-            <Badge variant={enabled ? "success" : "secondary"}>
-              {enabled ? "Active" : "Disabled"}
+    <div className="space-y-6 max-w-4xl pb-12">
+      <PageHeader
+        category="Security & Auto-Mod"
+        title="Auto-Moderation & Security"
+        description="Automate server defense against raid attacks, spam waves, malicious links, and unauthorized invites."
+        badges={[
+          currentPlan !== "FREE" ? (
+            <ProBadge key="plan" label={currentPlan} />
+          ) : (
+            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
+              FREE
             </Badge>
+          ),
+        ].filter(Boolean)}
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+        actions={
+          <div className="flex items-center gap-2.5">
+            <ModuleToggle
+              enabled={enabled}
+              onToggle={setEnabled}
+              activeLabel="Protected"
+              disabledLabel="Paused"
+            />
+            <Button onClick={handleSave} size="sm" className="gap-2 shadow-2xs h-9 cursor-pointer">
+              <Save className="h-4 w-4" />
+              <span>Save Rules</span>
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Automate server defense against raid attacks, spam waves, malicious links, and unauthorized invites.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button onClick={handleSave} className="gap-2 shadow-xs">
-            <Save className="h-4 w-4" />
-            <span>Save Rules</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {saved && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Security and moderation policies applied successfully!</span>
-        </div>
+        <FeedbackBanner
+          type="success"
+          message="Security and auto-moderation policies applied and synchronized with Discord Gateway!"
+          onDismiss={() => setSaved(false)}
+        />
       )}
 
       {/* Master Toggle & Logging */}
-      <Card className="border-border">
+      <Card className="border-border/80 shadow-2xs">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
@@ -96,7 +108,6 @@ export function ModerationView({ tenantId: _tenantId, guildId: _guildId, current
                 Real-time message analysis on Discord Gateway events.
               </CardDescription>
             </div>
-            <Switch checked={enabled} onCheckedChange={setEnabled} />
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-2">

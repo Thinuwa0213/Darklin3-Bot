@@ -19,7 +19,7 @@ export default async function HomePage() {
         <ThemeToggle />
       </div>
 
-      <Card className="w-full max-w-md shadow-md border-border">
+      <Card className="w-full max-w-md shadow-2xs border-border/80">
         <CardHeader className="text-center pb-4">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xl shadow-xs">
             C

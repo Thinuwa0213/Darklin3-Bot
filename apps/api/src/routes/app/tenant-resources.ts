@@ -966,5 +966,87 @@ export function createTenantResourceRoutes(
     });
   });
 
+  /**
+   * Publishes or updates an interactive Role Panel message in a Discord channel.
+   */
+  route.post("/guilds/:guildId/roles-panels/:panelId/publish", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) return c.json({ error: "invalid_request" }, 400);
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) return c.json({ error: "INVALID_GUILD_ID" }, 400);
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ ok: false, error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    const body = (await c.req.json().catch(() => ({}))) as { panel?: any };
+    const panel = body.panel;
+    if (!panel || !panel.channelId) {
+      return c.json({ ok: false, error: "INVALID_PANEL_PAYLOAD" }, 400);
+    }
+
+    const res = await deps.credentialService.publishRolePanelMessage(
+      resolved.botApplicationId,
+      panel.channelId,
+      panel,
+      panel.messageId,
+    );
+
+    if (!res.ok) {
+      return c.json({ ok: false, error: res.error }, 502);
+    }
+
+    return c.json({ ok: true, messageId: res.messageId });
+  });
+
+  /**
+   * Deletes a published Role Panel message from Discord.
+   */
+  route.delete("/guilds/:guildId/roles-panels/:panelId/discord-message", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) return c.json({ error: "invalid_request" }, 400);
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) return c.json({ error: "INVALID_GUILD_ID" }, 400);
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ ok: false, error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    const channelId = c.req.query("channelId");
+    const messageId = c.req.query("messageId");
+    if (!channelId || !messageId) {
+      return c.json({ ok: false, error: "MISSING_PARAMS" }, 400);
+    }
+
+    const res = await deps.credentialService.deleteDiscordMessage(
+      resolved.botApplicationId,
+      channelId,
+      messageId,
+    );
+
+    return c.json({ ok: res.ok });
+  });
+
   return route;
 }
+

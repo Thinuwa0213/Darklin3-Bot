@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { callApiServer, getServerSession } from "../../../../../lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
 import { Separator } from "@/components/ui/separator";
 import {
   ShieldAlert,
@@ -100,24 +101,23 @@ export default async function GuildOverviewPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Guild Overview</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Operational status and bot application configuration for this server.
-          </p>
-        </div>
-
-        <Button variant="outline" size="sm" asChild>
-          <a href="/guilds">&larr; All Servers</a>
-        </Button>
-      </div>
+      <PageHeader
+        category="Server Control Plane"
+        title="Guild Overview"
+        description="Operational status and bot application configuration for this server."
+        badge={
+          <Badge variant={badgeVariant} className="text-xs">
+            {status}
+          </Badge>
+        }
+        backHref="/guilds"
+        backLabel="All Servers"
+      />
 
       {/* Main Overview Card */}
       <div
         id="guild-overview-card"
-        className="rounded-lg border border-border bg-card p-6 shadow-sm"
+        className="rounded-lg border border-border/80 bg-card p-6 shadow-2xs"
       >
         {/* Guild Identity */}
         <section className="space-y-3">

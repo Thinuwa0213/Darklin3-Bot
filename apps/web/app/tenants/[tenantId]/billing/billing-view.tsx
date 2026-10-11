@@ -17,10 +17,10 @@ import {
   Radio,
   Bot,
   Zap,
-  CheckCircle2,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
+import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
 interface BillingViewProps {
   tenantId: string;
@@ -86,44 +86,34 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <span>Billing & Subscriptions</span>
-            <Badge variant={activePlan === "PRO" ? "default" : activePlan === "ENTERPRISE" ? "default" : "secondary"}>
-              {activePlan}
+      <PageHeader
+        category="Tenant Administration"
+        title="Billing & Subscriptions"
+        description="Manage your subscription tiers, usage entitlements, and white-label bot features."
+        badge={
+          activePlan === "FREE" ? (
+            <Badge variant="outline" className="font-mono text-[10px]">
+              FREE
             </Badge>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Manage your subscription tiers, usage entitlements, and white-label bot features.
-          </p>
-        </div>
-
-        <Button variant="outline" size="sm" asChild>
-          <a href="/guilds">&larr; Server Selection</a>
-        </Button>
-      </div>
+          ) : (
+            <ProBadge label={activePlan} />
+          )
+        }
+        backHref="/guilds"
+        backLabel="Server Selection"
+      />
 
       {/* Status Feedback Banner */}
       {feedback && (
-        <div
-          className={`flex items-center gap-3 p-4 rounded-lg border text-sm ${
-            feedback.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-              : "bg-destructive/10 border-destructive/20 text-destructive"
-          }`}
-        >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="h-5 w-5 shrink-0" />
-          ) : (
-            <AlertCircle className="h-5 w-5 shrink-0" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
+        <FeedbackBanner
+          type={feedback.type}
+          message={feedback.message}
+          onDismiss={() => setFeedback(null)}
+        />
       )}
 
       {/* Current Subscription Status Card */}
-      <Card className="border-border shadow-xs">
+      <Card className="border-border/80 shadow-2xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center justify-between">
             <span className="flex items-center gap-2">

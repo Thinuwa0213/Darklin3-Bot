@@ -86,7 +86,7 @@ export class HttpDiscordGuildProvider implements DiscordGuildProvider {
     this.fetchFn = options.fetchFn ?? fetch;
     this.apiBaseUrl = options.apiBaseUrl ?? "https://discord.com/api/v10";
     this.tokenEndpoint = options.tokenEndpoint ?? "https://discord.com/api/oauth2/token";
-    this.timeoutMs = options.timeoutMs ?? 5_000;
+    this.timeoutMs = options.timeoutMs ?? 10_000;
     this.readCacheTtlMs = options.readCacheTtlMs ?? 5 * 60_000;
   }
 
@@ -113,17 +113,76 @@ export class HttpDiscordGuildProvider implements DiscordGuildProvider {
     return guilds.some((guild) => guild.id === discordGuildId);
   }
 
+  private async forceRefreshAccessToken(userId: bigint): Promise<string | null> {
+    const credential = await findDiscordOauthCredential(this.db, userId);
+    if (!credential) return null;
+    const stored = this.decryptStoredPayload(userId, credential);
+    if (!stored.refreshToken) return null;
+
+    try {
+      const refreshed = await this.refreshWithDiscord(stored.refreshToken);
+      const nextRefreshToken = refreshed.refresh_token ?? stored.refreshToken;
+      const encrypted = encryptDiscordOauthCredential(
+        JSON.stringify({ accessToken: refreshed.access_token, refreshToken: nextRefreshToken }),
+        { accountId: userId },
+        this.keys,
+      );
+      await replaceDiscordOauthCredentialIfUnchanged(
+        this.db,
+        userId,
+        credential.updatedAt,
+        {
+          accountId: userId,
+          ciphertext: encrypted.ciphertext,
+          nonce: encrypted.nonce,
+          authTag: encrypted.authTag,
+          keyVersion: encrypted.keyVersion,
+          expiresAt: new Date(Date.now() + refreshed.expires_in * 1000),
+        },
+      );
+      return refreshed.access_token;
+    } catch {
+      return null;
+    }
+  }
+
   private async fetchManageableGuildsLive(userId: bigint): Promise<ManageableGuild[]> {
-    const accessToken = await this.getValidAccessToken(userId);
+    let accessToken = await this.getValidAccessToken(userId);
+
+    const executeFetch = async (token: string) => {
+      return await this.fetchFn(`${this.apiBaseUrl}/users/@me/guilds`, {
+        headers: { authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    };
 
     let response: Response;
     try {
-      response = await this.fetchFn(`${this.apiBaseUrl}/users/@me/guilds`, {
-        headers: { authorization: `Bearer ${accessToken}` },
-        signal: AbortSignal.timeout(this.timeoutMs),
-      });
-    } catch {
-      throw new DiscordUnavailableError();
+      response = await executeFetch(accessToken);
+    } catch (err) {
+      // 1 retry on transient network or timeout error
+      try {
+        response = await executeFetch(accessToken);
+      } catch (retryErr) {
+        throw new DiscordUnavailableError(
+          `Discord guild list request failed: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`,
+          { cause: retryErr },
+        );
+      }
+    }
+
+    if (response.status === 401) {
+      const refreshedToken = await this.forceRefreshAccessToken(userId);
+      if (refreshedToken) {
+        try {
+          response = await executeFetch(refreshedToken);
+        } catch (retryErr) {
+          throw new DiscordUnavailableError(
+            `Discord guild list request failed after refresh: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`,
+            { cause: retryErr },
+          );
+        }
+      }
     }
 
     if (!response.ok) {

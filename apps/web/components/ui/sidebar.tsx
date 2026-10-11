@@ -139,13 +139,13 @@ export const Sidebar = React.forwardRef<
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-sidebar="sidebar"
       className={cn(
-        "relative hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-linear md:flex md:flex-col shrink-0",
+        "sticky top-0 h-screen hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-linear md:flex md:flex-col shrink-0 self-start z-30",
         state === "expanded" ? "w-64" : "w-16",
         className,
       )}
       {...props}
     >
-      <div className="flex h-full w-full flex-col">{children}</div>
+      <div className="flex h-full w-full flex-col overflow-hidden">{children}</div>
     </div>
   );
 });
@@ -183,7 +183,7 @@ export const SidebarHeader = React.forwardRef<HTMLDivElement, React.ComponentPro
       <div
         ref={ref}
         data-sidebar="header"
-        className={cn("flex flex-col gap-2 p-3 border-b border-sidebar-border", className)}
+        className={cn("flex flex-col gap-2 p-3 border-b border-sidebar-border shrink-0", className)}
         {...props}
       />
     );
@@ -197,7 +197,7 @@ export const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentPr
       <div
         ref={ref}
         data-sidebar="content"
-        className={cn("flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-3", className)}
+        className={cn("flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 scrollbar-none", className)}
         {...props}
       />
     );
@@ -211,7 +211,7 @@ export const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentPro
       <div
         ref={ref}
         data-sidebar="footer"
-        className={cn("flex flex-col gap-2 p-3 border-t border-sidebar-border", className)}
+        className={cn("flex flex-col gap-2 p-3 border-t border-sidebar-border mt-auto shrink-0", className)}
         {...props}
       />
     );

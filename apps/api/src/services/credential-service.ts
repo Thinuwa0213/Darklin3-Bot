@@ -699,5 +699,224 @@ export class CredentialService {
       return { ok: false, error: "FETCH_FAILED" };
     }
   }
+
+  /**
+   * Publishes or updates an interactive Role Panel message (Buttons or Dropdown) in a Discord channel.
+   * If existingMessageId is provided, performs in-place PATCH; falls back to POST if deleted.
+   */
+  public async publishRolePanelMessage(
+    botApplicationId: string,
+    channelId: string,
+    panel: {
+      id: string;
+      name: string;
+      description?: string;
+      type: "BUTTON" | "DROPDOWN";
+      mode: "MULTI" | "EXCLUSIVE";
+      maxSelections?: number;
+      embed: {
+        title: string;
+        description: string;
+        color: string;
+        footerText?: string;
+        showTimestamp?: boolean;
+      };
+      options: {
+        id: string;
+        roleId: string;
+        roleName: string;
+        label: string;
+        description?: string;
+        emoji?: string;
+        style: "primary" | "secondary" | "success" | "danger";
+      }[];
+    },
+    existingMessageId?: string,
+  ): Promise<{ ok: true; messageId: string } | { ok: false; error: string }> {
+    const credRow = await findActiveCredential(this.db, botApplicationId);
+    if (!credRow) {
+      return { ok: false, error: "NO_ACTIVE_CREDENTIAL" };
+    }
+
+    let plaintext: string;
+    try {
+      plaintext = decryptBotCredential(
+        {
+          ciphertext: Buffer.from(credRow.ciphertext),
+          nonce: Buffer.from(credRow.nonce),
+          authTag: Buffer.from(credRow.authTag),
+          keyVersion: credRow.keyVersion,
+        },
+        {
+          botApplicationId: credRow.botApplicationId,
+          credentialId: credRow.id,
+        },
+        this.keys,
+      );
+    } catch {
+      return { ok: false, error: "DECRYPTION_FAILED" };
+    }
+
+    const hexColor = panel.embed.color?.replace("#", "") || "5865F2";
+    const colorInt = parseInt(hexColor, 16) || 0x5865f2;
+
+    const embedPayload: Record<string, unknown> = {
+      title: panel.embed.title || panel.name || "Role Selection",
+      description: panel.embed.description || "Select your roles below.",
+      color: colorInt,
+    };
+
+    if (panel.embed.footerText) {
+      embedPayload.footer = { text: panel.embed.footerText };
+    }
+    if (panel.embed.showTimestamp) {
+      embedPayload.timestamp = new Date().toISOString();
+    }
+
+    const components: unknown[] = [];
+    if (panel.type === "BUTTON") {
+      const styleMap: Record<string, number> = {
+        primary: 1,
+        secondary: 2,
+        success: 3,
+        danger: 4,
+      };
+
+      const limitedOptions = panel.options.slice(0, 25);
+      for (let i = 0; i < limitedOptions.length; i += 5) {
+        const chunk = limitedOptions.slice(i, i + 5);
+        components.push({
+          type: 1, // ActionRow
+          components: chunk.map((opt) => ({
+            type: 2, // Button
+            style: styleMap[opt.style] ?? 1,
+            label: opt.label || opt.roleName.replace(/^@/, ""),
+            custom_id: `role_panel:btn:${panel.id}:${opt.id}`,
+            emoji: opt.emoji?.trim() ? { name: opt.emoji.trim() } : undefined,
+          })),
+        });
+      }
+    } else {
+      // DROPDOWN (StringSelectMenu)
+      const limitedOptions = panel.options.slice(0, 25);
+      const maxVals =
+        panel.mode === "EXCLUSIVE"
+          ? 1
+          : Math.min(
+              limitedOptions.length,
+              panel.maxSelections && panel.maxSelections > 0
+                ? panel.maxSelections
+                : limitedOptions.length,
+            );
+
+      components.push({
+        type: 1, // ActionRow
+        components: [
+          {
+            type: 3, // StringSelectMenu
+            custom_id: `role_panel:select:${panel.id}`,
+            placeholder: panel.description || "Choose your roles...",
+            min_values: 0,
+            max_values: Math.max(1, maxVals),
+            options: limitedOptions.map((opt) => ({
+              label: (opt.label || opt.roleName.replace(/^@/, "")).slice(0, 100),
+              value: opt.id,
+              description: opt.description?.slice(0, 100) || undefined,
+              emoji: opt.emoji?.trim() ? { name: opt.emoji.trim() } : undefined,
+            })),
+          },
+        ],
+      });
+    }
+
+    const messagePayload = {
+      embeds: [embedPayload],
+      components,
+    };
+
+    const headers = {
+      Authorization: `Bot ${plaintext}`,
+      "Content-Type": "application/json",
+    };
+
+    try {
+      // If existing message ID exists, try to update in-place
+      if (existingMessageId) {
+        const patchRes = await fetch(
+          `https://discord.com/api/v10/channels/${channelId}/messages/${existingMessageId}`,
+          {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify(messagePayload),
+          },
+        );
+
+        if (patchRes.ok) {
+          const patchData = (await patchRes.json()) as { id: string };
+          return { ok: true, messageId: patchData.id };
+        }
+        // If 404, message was deleted in Discord -> fall through to create new message
+      }
+
+      // Create new message
+      const postRes = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(messagePayload),
+      });
+
+      if (!postRes.ok) {
+        const errorText = await postRes.text().catch(() => "POST failed");
+        this.logger.warn("discord.publish_role_panel_failed", { status: postRes.status, errorText });
+        return { ok: false, error: `Discord API error: ${postRes.statusText || postRes.status}` };
+      }
+
+      const postData = (await postRes.json()) as { id: string };
+      return { ok: true, messageId: postData.id };
+    } catch (err) {
+      this.logger.warn("discord.publish_role_panel_exception", { err });
+      return { ok: false, error: "DISCORD_REQUEST_FAILED" };
+    }
+  }
+
+  /**
+   * Deletes a published message from a Discord channel.
+   */
+  public async deleteDiscordMessage(
+    botApplicationId: string,
+    channelId: string,
+    messageId: string,
+  ): Promise<{ ok: boolean }> {
+    const credRow = await findActiveCredential(this.db, botApplicationId);
+    if (!credRow) return { ok: false };
+
+    try {
+      const plaintext = decryptBotCredential(
+        {
+          ciphertext: Buffer.from(credRow.ciphertext),
+          nonce: Buffer.from(credRow.nonce),
+          authTag: Buffer.from(credRow.authTag),
+          keyVersion: credRow.keyVersion,
+        },
+        {
+          botApplicationId: credRow.botApplicationId,
+          credentialId: credRow.id,
+        },
+        this.keys,
+      );
+
+      const res = await fetch(
+        `https://discord.com/api/v10/channels/${channelId}/messages/${messageId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bot ${plaintext}` },
+        },
+      );
+      return { ok: res.ok };
+    } catch {
+      return { ok: false };
+    }
+  }
 }
+
 
