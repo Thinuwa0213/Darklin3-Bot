@@ -3,6 +3,7 @@ import path from "node:path";
 import { EmbedBuilder, PermissionFlagsBits, type Message } from "discord.js";
 import type { Logger } from "@creatorcore/logger";
 import type { IDiscordClient } from "./discord-client.js";
+import { logToGuildConsole } from "./guild-console-logger.js";
 
 export interface StoredAutoModRule {
   enabled: boolean;
@@ -312,6 +313,14 @@ export class AutoModManager {
       reason,
       action,
     });
+
+    if (message.guild?.id) {
+      void logToGuildConsole(message.guild.id, {
+        level: "WARN",
+        category: "AUTO_MOD",
+        message: `AutoMod triggered: "${reason}" by @${user.username || user.id} in #${(channel as any)?.name || channel.id} (Action: ${action})`,
+      });
+    }
 
     // Log violation to logChannel if configured
     if (logChannelId && message.guild) {

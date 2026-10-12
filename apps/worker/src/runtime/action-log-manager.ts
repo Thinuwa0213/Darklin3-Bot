@@ -3,6 +3,7 @@ import path from "node:path";
 import { EmbedBuilder } from "discord.js";
 import type { Logger } from "@creatorcore/logger";
 import type { IDiscordClient } from "./discord-client.js";
+import { logToGuildConsole } from "./guild-console-logger.js";
 
 export interface StoredActionLogsConfig {
   enabled: boolean;
@@ -729,10 +730,33 @@ export class ActionLogManager {
           text: "⚡ Alert powered by Darklin3 Bot",
           ...(guildIcon ? { iconURL: guildIcon } : {}),
         });
-        await channel.send({ embeds: [embed] }).catch(() => {});
+        await channel.send({ embeds: [embed] }).catch((err: any) => {
+          void logToGuildConsole(guild.id, {
+            level: "ERROR",
+            category: "ACTION_LOGS",
+            message: `Discord rejected embed in channel #${channel.name || channelId}: ${err?.message || "Missing Permissions (403)"}`,
+          });
+        });
+
+        const title = (embed.data as any)?.title || "Action event";
+        void logToGuildConsole(guild.id, {
+          level: "INFO",
+          category: "ACTION_LOGS",
+          message: `Action log "${title}" sent to #${channel.name || channelId}`,
+        });
+      } else {
+        void logToGuildConsole(guild.id, {
+          level: "WARN",
+          category: "ACTION_LOGS",
+          message: `Action log channel <#${channelId}> unreachable or bot missing 'View Channel' permission.`,
+        });
       }
-    } catch {
-      // Non-fatal
+    } catch (err: any) {
+      void logToGuildConsole(guild.id, {
+        level: "ERROR",
+        category: "ACTION_LOGS",
+        message: `Action log error: ${err?.message || String(err)}`,
+      });
     }
   }
 

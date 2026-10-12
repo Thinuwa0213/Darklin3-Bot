@@ -43,6 +43,14 @@ import {
   writeStoredModerationConfig,
   type ModerationConfig,
 } from "../lib/moderation-storage";
+import {
+  readStoredConsoleLogs,
+  appendStoredConsoleLog,
+  clearStoredConsoleLogs,
+  type GuildConsoleLogEntry,
+  type ConsoleLogLevel,
+  type ConsoleLogCategory,
+} from "../lib/console-logs-storage";
 import type {
   WelcomeConfig,
   LiveDiscordChannel,
@@ -1130,6 +1138,68 @@ export async function saveModerationConfigAction(
     return { ok: false, error: (err as Error)?.message ?? "Failed to save moderation configuration" };
   }
 }
+
+/**
+ * Server Action to fetch live console logs for a guild.
+ */
+export async function getGuildConsoleLogsAction(
+  tenantId: string,
+  guildId: string,
+  guildTimezone = "Asia/Colombo",
+): Promise<{ ok: boolean; logs?: GuildConsoleLogEntry[]; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const logs = await readStoredConsoleLogs(tenantId, guildId, guildTimezone);
+    return { ok: true, logs };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load console logs" };
+  }
+}
+
+/**
+ * Server Action to clear console logs for a guild.
+ */
+export async function clearGuildConsoleLogsAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    await clearStoredConsoleLogs(tenantId, guildId);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to clear console logs" };
+  }
+}
+
+/**
+ * Server Action to append a console log (e.g. for testing or event dispatching).
+ */
+export async function appendGuildConsoleLogAction(
+  tenantId: string,
+  guildId: string,
+  entry: {
+    level: ConsoleLogLevel;
+    category?: ConsoleLogCategory;
+    message: string;
+    details?: string;
+  },
+): Promise<{ ok: boolean; log?: GuildConsoleLogEntry; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const log = await appendStoredConsoleLog(tenantId, guildId, entry);
+    return { ok: true, log };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to append console log" };
+  }
+}
+
 
 
 

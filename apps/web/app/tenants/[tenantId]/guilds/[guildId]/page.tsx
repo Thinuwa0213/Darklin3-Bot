@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import { Separator } from "@/components/ui/separator";
+import { readStoredSettings } from "@/lib/settings-storage";
+import { readStoredConsoleLogs } from "@/lib/console-logs-storage";
+import { GuildLiveConsole } from "./guild-live-console";
 import {
   ShieldAlert,
   Bot,
@@ -38,20 +41,24 @@ export default async function GuildOverviewPage({ params }: PageProps) {
 
   const { tenantId, guildId } = await params;
 
-  const res = await callApiServer<{
-    status:
-      | "NOT_CONFIGURED"
-      | "PENDING_CREDENTIAL"
-      | "UNASSIGNED"
-      | "ACTIVE_ASSIGNMENT"
-      | "ONLINE"
-      | "DEGRADED"
-      | "OFFLINE";
-    botApplicationId: string | null;
-    botName?: string | null;
-  }>(
-    `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`,
-  );
+  const [res, settings, initialLogs] = await Promise.all([
+    callApiServer<{
+      status:
+        | "NOT_CONFIGURED"
+        | "PENDING_CREDENTIAL"
+        | "UNASSIGNED"
+        | "ACTIVE_ASSIGNMENT"
+        | "ONLINE"
+        | "DEGRADED"
+        | "OFFLINE";
+      botApplicationId: string | null;
+      botName?: string | null;
+    }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`,
+    ),
+    readStoredSettings(tenantId, guildId),
+    readStoredConsoleLogs(tenantId, guildId),
+  ]);
 
   if (!res.ok || !res.data) {
     return (
@@ -445,6 +452,14 @@ export default async function GuildOverviewPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Live Server Console */}
+      <GuildLiveConsole
+        tenantId={tenantId}
+        guildId={guildId}
+        guildTimezone={settings.timezone}
+        initialLogs={initialLogs}
+      />
     </div>
   );
 }
