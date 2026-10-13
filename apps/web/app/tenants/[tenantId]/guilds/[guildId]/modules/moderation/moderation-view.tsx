@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useState, useTransition, useMemo } from "react";
 import {
-  ShieldAlert,
   Save,
   Plus,
   X,
@@ -16,12 +15,14 @@ import {
   AlertTriangle,
   Clock,
   AtSign,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ModuleHeroCard } from "@/components/layout/module-hero-card";
+import { PageHeader, ModuleToggle, ProBadge } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import {
@@ -50,7 +51,7 @@ interface ModerationViewProps {
 export function ModerationView({
   tenantId,
   guildId,
-  currentPlan: _currentPlan,
+  currentPlan,
   initialConfig,
   serverName: _serverName,
   liveChannels,
@@ -276,34 +277,50 @@ export function ModerationView({
 
   return (
     <div className="space-y-6 max-w-6xl pb-16">
-      {/* Unified Hero Header Card */}
-      <ModuleHeroCard
+      {/* Unified Page Header Bar */}
+      <PageHeader
         category="Server Security & Defense"
-        title="AUTO MODERATION"
-        subtitle="Keep your server safe with automated filters, spam protection, and real-time rule enforcement."
-        icon={<ShieldAlert className="h-6 w-6 text-rose-500" />}
-        enabled={config.enabled}
-        onToggle={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
+        title="Auto Moderation"
+        description="Keep your server safe with automated filters, spam protection, and real-time rule enforcement."
+        badges={[
+          currentPlan !== "FREE" ? (
+            <ProBadge key="plan" label={currentPlan} />
+          ) : (
+            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
+              FREE
+            </Badge>
+          ),
+        ].filter(Boolean)}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
-        secondaryAction={
-          <Button
-            onClick={handleSave}
-            disabled={isPending}
-            className="gap-2 h-10 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 font-mono text-xs uppercase font-semibold rounded-xl cursor-pointer transition-all"
-          >
-            <Save className="h-4 w-4" />
-            <span>{isPending ? "Saving..." : "Save Changes"}</span>
-          </Button>
-        }
-        primaryAction={
-          <Button
-            onClick={() => setIsCreateRuleOpen(true)}
-            className="gap-2 h-10 px-5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs tracking-wide uppercase font-mono shadow-md rounded-xl cursor-pointer transition-all"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Create Rule</span>
-          </Button>
+        actions={
+          <div className="flex items-center gap-2.5">
+            <ModuleToggle
+              enabled={config.enabled}
+              onToggle={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
+              activeLabel="Active"
+              disabledLabel="Paused"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCreateRuleOpen(true)}
+              className="gap-1.5 text-xs h-9 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Create Rule</span>
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isPending}
+              size="sm"
+              className="gap-2 shadow-2xs font-semibold text-xs px-4 h-9 cursor-pointer"
+            >
+              {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              <span>{isPending ? "Saving..." : "Save Changes"}</span>
+            </Button>
+          </div>
         }
       />
 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { callApiServer, getServerSession } from "@/lib/api";
 import { readStoredSettings } from "@/lib/settings-storage";
+import { getGuildBotBranding } from "@/lib/bot-branding";
 import type { LiveDiscordChannel } from "../modules/welcome/welcome-types";
 import { SettingsView } from "./settings-view";
 
@@ -32,14 +33,17 @@ export default async function ServerSettingsPage({ params }: SettingsPageProps) 
         ? subRes.data.plan
         : "FREE";
 
-  // Fetch real live Discord channels
-  const discordResourcesRes = await callApiServer<{
-    ok: boolean;
-    data: {
-      guildName: string;
-      channels: LiveDiscordChannel[];
-    };
-  }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`);
+  // Fetch real live Discord channels and guild branding in parallel
+  const [discordResourcesRes, branding] = await Promise.all([
+    callApiServer<{
+      ok: boolean;
+      data: {
+        guildName: string;
+        channels: LiveDiscordChannel[];
+      };
+    }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`),
+    getGuildBotBranding(tenantId, guildId),
+  ]);
 
   const liveChannels =
     discordResourcesRes.ok && discordResourcesRes.data?.data
@@ -59,6 +63,8 @@ export default async function ServerSettingsPage({ params }: SettingsPageProps) 
       tenantId={tenantId}
       guildId={guildId}
       guildName={guildName}
+      botName={branding.botName}
+      botAvatarUrl={branding.botAvatarUrl}
       currentPlan={currentPlan}
       channels={liveChannels}
       initialSettings={initialSettings}

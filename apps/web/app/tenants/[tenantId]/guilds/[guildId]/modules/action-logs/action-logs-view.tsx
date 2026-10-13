@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useState, useTransition, useMemo } from "react";
 import {
-  ScrollText,
   Save,
   MessageSquare,
   Users,
@@ -11,12 +10,13 @@ import {
   Mic,
   Hash,
   Info,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ModuleHeroCard } from "@/components/layout/module-hero-card";
+import { PageHeader, ModuleToggle, ProBadge } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import type { ActionLogsConfig } from "@/lib/action-logs-types";
@@ -39,7 +39,7 @@ interface ActionLogsViewProps {
 export function ActionLogsView({
   tenantId,
   guildId,
-  currentPlan: _currentPlan,
+  currentPlan,
   initialConfig,
   serverName: _serverName,
   liveChannels,
@@ -169,25 +169,40 @@ export function ActionLogsView({
 
   return (
     <div className="space-y-6 max-w-6xl pb-16">
-      {/* Unified Hero Header Card */}
-      <ModuleHeroCard
+      {/* Unified Page Header Bar */}
+      <PageHeader
         category="Server Defense & Audit"
-        title="ACTION LOGS"
-        subtitle="Track server modifications with advanced filters, per-event routing, and high-fidelity embeds."
-        icon={<ScrollText className="h-6 w-6" />}
-        enabled={config.enabled}
-        onToggle={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
+        title="Action Logs"
+        description="Track server modifications with advanced filters, per-event routing, and high-fidelity embeds."
+        badges={[
+          currentPlan !== "FREE" ? (
+            <ProBadge key="plan" label={currentPlan} />
+          ) : (
+            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
+              FREE
+            </Badge>
+          ),
+        ].filter(Boolean)}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
-        primaryAction={
-          <Button
-            onClick={handleSave}
-            disabled={isPending}
-            className="gap-2 h-10 px-5 bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs tracking-wide uppercase font-mono shadow-md rounded-xl cursor-pointer transition-all"
-          >
-            <Save className="h-4 w-4" />
-            <span>{isPending ? "Saving..." : "Save Changes"}</span>
-          </Button>
+        actions={
+          <div className="flex items-center gap-2.5">
+            <ModuleToggle
+              enabled={config.enabled}
+              onToggle={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
+              activeLabel="Active"
+              disabledLabel="Paused"
+            />
+            <Button
+              onClick={handleSave}
+              disabled={isPending}
+              size="sm"
+              className="gap-2 shadow-2xs font-semibold text-xs px-4 h-9 cursor-pointer"
+            >
+              {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              <span>{isPending ? "Saving..." : "Save Changes"}</span>
+            </Button>
+          </div>
         }
       />
 

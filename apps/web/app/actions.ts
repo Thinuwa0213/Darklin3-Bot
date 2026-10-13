@@ -51,6 +51,11 @@ import {
   type ConsoleLogLevel,
   type ConsoleLogCategory,
 } from "../lib/console-logs-storage";
+import {
+  readStoredInvites,
+  writeStoredInvites,
+  type InvitesConfig,
+} from "../lib/invites-storage";
 import type {
   WelcomeConfig,
   LiveDiscordChannel,
@@ -1199,6 +1204,91 @@ export async function appendGuildConsoleLogAction(
     return { ok: false, error: (err as Error)?.message ?? "Failed to append console log" };
   }
 }
+
+/**
+ * Server Action to fetch Invites configuration for a guild.
+ */
+export async function getInvitesConfigAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; config?: InvitesConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const config = await readStoredInvites(tenantId, guildId);
+    return { ok: true, config };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to load invites configuration" };
+  }
+}
+
+/**
+ * Server Action to save Invites configuration for a guild.
+ */
+export async function saveInvitesConfigAction(
+  tenantId: string,
+  guildId: string,
+  data: InvitesConfig,
+): Promise<{ ok: boolean; config?: InvitesConfig; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+  try {
+    const saved = await writeStoredInvites(tenantId, guildId, data);
+    return { ok: true, config: saved };
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to save invites configuration" };
+  }
+}
+
+/**
+ * Server Action to dispatch a simulated Test Invite Alert to Discord channel.
+ */
+export async function sendTestInviteAlertAction(
+  tenantId: string,
+  guildId: string,
+  data: InvitesConfig,
+): Promise<{ ok: boolean; messageId?: string | undefined; error?: string }> {
+  if (!tenantId || !guildId || !data.channelId) {
+    return { ok: false, error: "Please select an invite log channel first." };
+  }
+  try {
+    const cleanChannelName = data.channelName ? `#${data.channelName.replace(/^#+/, "")}` : "#logs";
+
+    const embed = {
+      color: 0x23a55a, // Discord Green (#23a55a)
+      title: "New Member Joined!",
+      thumbnail: {
+        url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=160&auto=format&fit=crop&q=80",
+      },
+      fields: [
+        {
+          name: "👤 Joined Member's Details",
+          value: "• `@Alex_Rivers`\n• Username: `alex_rivers`\n• User ID: `982341059128471029`",
+          inline: false,
+        },
+        {
+          name: "👥 Invited By",
+          value: "• `@CyberNova`\n• Username: `cybernova`\n• User ID: `731902481092847104`",
+          inline: false,
+        },
+        {
+          name: "🔗 Invite Link's Details",
+          value: `• Code: [DEMO98X](https://discord.gg/)\n• Channel: ${cleanChannelName}\n• Created at: October 3, 2025 5:42 AM\n• Expires at: \`∞\`\n• Uses: \`4 / ∞\``,
+          inline: false,
+        },
+      ],
+      footer: { text: "⚡ Alert powered by Darklin3 Bot" },
+      timestamp: new Date().toISOString(),
+    };
+
+    return await publishEmbedToDiscordAction(tenantId, guildId, data.channelId, embed);
+  } catch (err) {
+    return { ok: false, error: (err as Error)?.message ?? "Failed to send test invite alert" };
+  }
+}
+
 
 
 

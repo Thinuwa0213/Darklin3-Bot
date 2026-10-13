@@ -2,23 +2,16 @@
 
 import * as React from "react";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
-  Sparkles,
-  MessageSquare,
-  UserPlus,
   Save,
   ShieldAlert,
   Palette,
   Loader2,
   AtSign,
-  Send,
-  Bot,
   RefreshCw,
   Radio,
   Lock,
@@ -409,39 +402,32 @@ export function WelcomeView({
 
       {/* Main Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Configuration Forms (7 cols) */}
-        <div className={`lg:col-span-7 space-y-6 ${!isBotOnline ? "opacity-60 pointer-events-none select-none" : ""}`}>
-          {/* Master Toggle */}
-          <Card className="border-border">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-semibold text-foreground">
-                    Enable Welcome Module
-                  </span>
-                  {!isBotOnline && (
-                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-500 bg-amber-500/10 flex items-center gap-1 font-mono">
-                      <Lock className="h-3 w-3" /> LOCKED
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Automatically announce and orient new members when they join the server.
-                </p>
+        {/* Left Column: Unified Configuration Surface (7 cols) */}
+        <div className={`lg:col-span-7 rounded-xl border border-border/80 bg-card/60 backdrop-blur-xs p-6 shadow-2xs space-y-6 ${!isBotOnline ? "opacity-60 pointer-events-none select-none" : ""}`}>
+          {/* Section 1: Module Activation & Target Channel */}
+          <section className="space-y-4">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  Welcome &amp; Onboarding Flow
+                </span>
+                {!isBotOnline && (
+                  <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-500 bg-amber-500/10 flex items-center gap-1 font-mono">
+                    <Lock className="h-3 w-3" /> LOCKED
+                  </Badge>
+                )}
               </div>
-              <Switch checked={enabled && isBotOnline} disabled={!isBotOnline} onCheckedChange={setEnabled} />
-            </CardContent>
-          </Card>
+              <p className="text-xs text-muted-foreground">
+                Automatically announce and orient new members when they join the server.
+              </p>
+            </div>
 
-          {/* Section 1: Channel & Message Template */}
-          <Card className="border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  <span>Message Configuration</span>
-                </CardTitle>
+            {/* Target Channel */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="welcome-channel" className="text-xs font-medium text-foreground">
+                  Announcement Channel
+                </Label>
                 <button
                   type="button"
                   onClick={handleSyncFromDiscord}
@@ -449,137 +435,100 @@ export function WelcomeView({
                   className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className={`h-3 w-3 ${isSyncing ? "animate-spin" : ""}`} />
-                  <span>Refresh Channels</span>
+                  <span>Refresh ({channels.length})</span>
                 </button>
               </div>
-              <CardDescription className="text-xs">
-                Select where the announcement appears and format the automated greeting.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Channel Selector with Live Discord Channels */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="welcome-channel" className="text-xs font-semibold">
-                    Announcement Channel
-                  </Label>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {channels.length} channels available
-                  </span>
+              <SearchableSelect
+                id="welcome-channel"
+                options={channelOptions}
+                value={channelId}
+                onChange={(val) => handleChannelSelect(val)}
+                placeholder="Select announcement channel..."
+                searchPlaceholder="Search channel (e.g. welcome, general)..."
+                emptyMessage="No Discord channels match your search"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Ensure the bot has Send Messages and Embed Links permissions in this channel.
+              </p>
+            </div>
+
+            {/* Delivery Toggles Inline Rail */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/20">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-medium text-foreground block">Ping Member</span>
+                  <span className="text-[10px] text-muted-foreground block">Push notification</span>
                 </div>
-                <SearchableSelect
-                  id="welcome-channel"
-                  options={channelOptions}
-                  value={channelId}
-                  onChange={(val) => handleChannelSelect(val)}
-                  placeholder="Select a welcome announcement channel..."
-                  searchPlaceholder="Search channel (e.g. welcome, general)..."
-                  emptyMessage="No Discord channels match your search"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Ensure the bot has Send Messages and Embed Links permissions in this channel.
+                <Switch checked={pingUser} onCheckedChange={setPingUser} />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/20">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-medium text-foreground block">Direct Message</span>
+                  <span className="text-[10px] text-muted-foreground block">Send to private DM</span>
+                </div>
+                <Switch checked={sendDm} onCheckedChange={setSendDm} />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/20">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-medium text-foreground block">Ignore Bots</span>
+                  <span className="text-[10px] text-muted-foreground block">Skip bot accounts</span>
+                </div>
+                <Switch checked={ignoreBots} onCheckedChange={setIgnoreBots} />
+              </div>
+            </div>
+          </section>
+
+          <div className="border-t border-border/60" />
+
+          {/* Section 2: Message Template */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">Message Template</span>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                Markdown &amp; tokens supported
+              </span>
+            </div>
+
+            <textarea
+              id="welcome-msg"
+              ref={textareaRef}
+              rows={4}
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              placeholder="Welcome to {server}, {user}! Check out #rules to get started!"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-mono leading-relaxed"
+            />
+
+            <VariableChips
+              variables={WELCOME_VARIABLES}
+              onInsert={handleInsertVariable}
+            />
+          </section>
+
+          <div className="border-t border-border/60" />
+
+          {/* Section 3: Auto-Role on Join */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-foreground">Auto-Role on Join</span>
+                <p className="text-xs text-muted-foreground">
+                  Automatically assign a server role to verified newcomers upon arrival.
                 </p>
               </div>
-
-              {/* Message Template with Variable Chips */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="welcome-msg" className="text-xs font-semibold">
-                    Message Template
-                  </Label>
-                  <span className="text-[11px] text-muted-foreground font-mono">
-                    Markdown &amp; variables supported
-                  </span>
-                </div>
-
-                <textarea
-                  id="welcome-msg"
-                  ref={textareaRef}
-                  rows={4}
-                  value={welcomeMessage}
-                  onChange={(e) => setWelcomeMessage(e.target.value)}
-                  placeholder="Welcome to {server}, {user}! Check out #rules to get started!"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-mono leading-relaxed"
-                />
-
-                {/* Centralized Variable Chips Component */}
-                <VariableChips
-                  variables={WELCOME_VARIABLES}
-                  onInsert={handleInsertVariable}
-                />
-              </div>
-
-              <Separator />
-
-              {/* Mention User, Direct Message & Ignore Bots Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <AtSign className="h-3.5 w-3.5 text-blue-400" />
-                      <span className="text-xs font-semibold text-foreground">Ping Member</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground block">
-                      Send a push notification ping
-                    </span>
-                  </div>
-                  <Switch checked={pingUser} onCheckedChange={setPingUser} />
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <Send className="h-3.5 w-3.5 text-emerald-400" />
-                      <span className="text-xs font-semibold text-foreground">Direct Message</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground block">
-                      Send greeting to private DM
-                    </span>
-                  </div>
-                  <Switch checked={sendDm} onCheckedChange={setSendDm} />
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <Bot className="h-3.5 w-3.5 text-amber-400" />
-                      <span className="text-xs font-semibold text-foreground">Ignore Bots</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground block">
-                      Skip welcome &amp; roles for bots
-                    </span>
-                  </div>
-                  <Switch checked={ignoreBots} onCheckedChange={setIgnoreBots} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Section 2: Auto-Role on Join with Live Discord Roles */}
-          <Card className="border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-semibold flex items-center gap-2">
-                    <UserPlus className="h-4 w-4 text-blue-400" />
-                    <span>Auto-Role on Join</span>
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Automatically grant an initial Discord role to verified newcomers.
-                  </CardDescription>
-                </div>
-                <Switch
-                  checked={autoRoleEnabled}
-                  onCheckedChange={setAutoRoleEnabled}
-                />
-              </div>
-            </CardHeader>
+              <Switch
+                checked={autoRoleEnabled}
+                onCheckedChange={setAutoRoleEnabled}
+              />
+            </div>
 
             {autoRoleEnabled && (
-              <CardContent className="space-y-3.5 pt-0">
+              <div className="space-y-3 pt-1">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="auto-role-select" className="text-xs font-semibold">
+                    <Label htmlFor="auto-role-select" className="text-xs font-medium text-foreground">
                       Role to Assign
                     </Label>
                     <button
@@ -603,79 +552,68 @@ export function WelcomeView({
                   />
                 </div>
 
-                {/* Role Hierarchy Safety Alert */}
-                <div className="flex items-start gap-2.5 p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-xs">
+                <div className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-500 text-xs">
                   <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <span className="font-semibold block">Discord Role Hierarchy Notice</span>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
                       In Discord Server Settings &gt; Roles, ensure the bot&apos;s role is positioned
                       higher than <span className="font-mono text-foreground font-semibold">{autoRoleName}</span>,
                       otherwise Discord will block role assignments.
                     </p>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             )}
-          </Card>
+          </section>
 
-          {/* Section 3: Dynamic Welcome Card */}
-          <Card className="border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Palette className="h-4 w-4 text-purple-400" />
-                <span>Dynamic Welcome Banner Card</span>
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Enhance onboarding with visual card graphics and personalized artwork.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Dynamic Welcome Card */}
-              <div className="flex items-center justify-between">
+          <div className="border-t border-border/60" />
+
+          {/* Section 4: Dynamic Welcome Banner Card */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground">
+                    Custom Canvas Welcome Card
+                  </span>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono font-bold">
+                    PRO
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Generates an image attachment with newcomer avatar, display name, and custom background artwork.
+                </p>
+              </div>
+              <Switch
+                checked={customCanvasCard}
+                onCheckedChange={setCustomCanvasCard}
+              />
+            </div>
+
+            {customCanvasCard && (
+              <div className="flex items-center justify-between p-3.5 rounded-lg border border-border/60 bg-muted/20">
                 <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-foreground">
-                      Custom Canvas Welcome Card
-                    </span>
-                    <Badge variant="outline" className="text-[9px] px-1 py-0 font-mono font-bold">
-                      PRO
-                    </Badge>
-                  </div>
+                  <span className="text-xs font-semibold text-foreground block">
+                    Banner Studio Designer
+                  </span>
                   <span className="text-[11px] text-muted-foreground block">
-                    Generates a personalized image attachment with user avatar, name, and brand banner.
+                    Position avatar, edit text placement, fonts, and upload background art.
                   </span>
                 </div>
-                <Switch
-                  checked={customCanvasCard}
-                  onCheckedChange={setCustomCanvasCard}
-                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setStudioOpen(true)}
+                  className="gap-1.5 text-xs h-8 border-primary/30 text-primary hover:bg-primary/10 cursor-pointer"
+                >
+                  <Palette className="h-3.5 w-3.5" />
+                  <span>Open Studio</span>
+                </Button>
               </div>
-
-              {customCanvasCard && (
-                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
-                  <div className="space-y-0.5">
-                    <span className="text-xs font-semibold text-foreground block">
-                      Banner Studio Design
-                    </span>
-                    <span className="text-[11px] text-muted-foreground block">
-                      Drag and drop avatar &amp; text, edit fonts, and customize background artwork.
-                    </span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setStudioOpen(true)}
-                    className="gap-1.5 text-xs h-8 border-primary/30 text-primary hover:bg-primary/10"
-                  >
-                    <Palette className="h-3.5 w-3.5" />
-                    <span>Open Banner Studio</span>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </section>
         </div>
 
         {/* Right Column: Sticky Live Discord Preview (5 cols) */}
@@ -692,14 +630,6 @@ export function WelcomeView({
             bannerConfig={bannerConfig}
             onOpenStudio={() => setStudioOpen(true)}
           />
-
-          <div className="p-3 rounded-lg border border-border bg-muted/20 text-[11px] text-muted-foreground space-y-1">
-            <span className="font-semibold text-foreground block">💡 Pro-Tip</span>
-            <p>
-              Changes to messages, real channels, and dynamic canvas card positions update live
-              in the Discord mockup container above.
-            </p>
-          </div>
         </div>
       </div>
 

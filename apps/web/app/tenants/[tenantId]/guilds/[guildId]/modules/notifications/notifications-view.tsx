@@ -24,17 +24,15 @@ import {
   Save,
   AlertCircle,
   ExternalLink,
-  Sparkles,
   Loader2,
   Lock,
-  Film,
+  Palette,
+  Sparkles,
   Users,
   Search,
   Check,
   Play,
   Pencil,
-  Palette,
-  Shield,
 } from "lucide-react";
 import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
@@ -49,6 +47,7 @@ import type {
   StoredStreamerAlert,
 } from "@/lib/streams-storage";
 import type { LiveDiscordChannel, LiveDiscordRole } from "../welcome/welcome-types";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 
 type PlatformType = "twitch" | "youtube" | "kick" | "tiktok";
 type TabType = "creators" | "templates";
@@ -57,9 +56,11 @@ interface NotificationsViewProps {
   tenantId: string;
   guildId: string;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
-  initialConfig?: StoredStreamsConfig;
-  liveChannels?: LiveDiscordChannel[];
-  liveRoles?: LiveDiscordRole[];
+  botName?: string | undefined;
+  botAvatarUrl?: string | null | undefined;
+  initialConfig?: StoredStreamsConfig | undefined;
+  liveChannels?: LiveDiscordChannel[] | undefined;
+  liveRoles?: LiveDiscordRole[] | undefined;
 }
 
 const PLATFORM_CONFIG: Record<
@@ -106,6 +107,8 @@ export function NotificationsView({
   tenantId,
   guildId,
   currentPlan,
+  botName = "Darklin3 Bot",
+  botAvatarUrl = null,
   initialConfig,
   liveChannels = [],
   liveRoles = [],
@@ -776,9 +779,8 @@ export function NotificationsView({
             {/* Message Formatting Card */}
             <Card className="border-border/80">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Film className="h-4 w-4 text-primary" />
-                  <span>Message Formatting</span>
+                <CardTitle className="text-sm font-semibold">
+                  Message Formatting
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Customize the announcement text sent to Discord for streams and videos.
@@ -788,9 +790,8 @@ export function NotificationsView({
                 {/* Live stream template */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="live-msg" className="text-xs font-semibold flex items-center gap-1.5">
-                      <Radio className="h-3.5 w-3.5 text-rose-500" />
-                      <span>Live Stream Announcement</span>
+                    <Label htmlFor="live-msg" className="text-xs font-semibold">
+                      Live Stream Announcement
                     </Label>
                   </div>
                   <textarea
@@ -811,9 +812,8 @@ export function NotificationsView({
                 {/* Video upload template */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="upload-msg" className="text-xs font-semibold flex items-center gap-1.5">
-                      <Film className="h-3.5 w-3.5 text-sky-500" />
-                      <span>Video Upload Announcement</span>
+                    <Label htmlFor="upload-msg" className="text-xs font-semibold">
+                      Video Upload Announcement
                     </Label>
                   </div>
                   <textarea
@@ -835,9 +835,8 @@ export function NotificationsView({
             <Card className="border-border/80">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-amber-500" />
-                    <span>Alert Branding &amp; Watermark</span>
+                  <CardTitle className="text-sm font-semibold">
+                    Alert Branding &amp; Watermark
                   </CardTitle>
                   <Badge
                     variant="outline"
@@ -857,10 +856,10 @@ export function NotificationsView({
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5 text-xs text-amber-600 dark:text-amber-400 space-y-1.5">
                     <div className="flex items-center gap-2 font-semibold">
                       <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                      <span>CreatorCore Branding Active</span>
+                      <span>Darklin3 Bot Branding Active</span>
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Free plan alerts display <strong className="text-foreground">⚡ Alert powered by CreatorCore • creatorcore.app</strong> in the Discord embed footer. Upgrade to PRO to enable white-labeling or use your own custom server footer.
+                      Free plan alerts display <strong className="text-foreground">⚡ Alert powered by Darklin3 Bot</strong> in the Discord embed footer. Upgrade to PRO to enable white-labeling or use your own custom server footer.
                     </p>
                   </div>
                 ) : (
@@ -869,7 +868,7 @@ export function NotificationsView({
                       <div className="space-y-0.5">
                         <Label className="text-xs font-semibold">Custom Branding / White-Label</Label>
                         <p className="text-[11px] text-muted-foreground">
-                          Remove default CreatorCore branding from alert embeds.
+                          Remove default Darklin3 Bot branding from alert embeds.
                         </p>
                       </div>
                       <Switch
@@ -930,23 +929,22 @@ export function NotificationsView({
 
           {/* Discord Embed Preview (5 cols) */}
           <div className="lg:col-span-5 space-y-4">
-            <Card className="border-border/80 sticky top-4 overflow-hidden">
-              <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Discord Live Mockup
-                  </span>
-
+            <div className="sticky top-4 space-y-3">
+              <DiscordChatPreview
+                channelName="#live-streams"
+                botName={botName}
+                botAvatarUrl={botAvatarUrl}
+                headerRightSlot={
                   <div className="flex items-center gap-2">
                     {/* Platform Selector */}
-                    <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-md">
+                    <div className="flex items-center gap-1 bg-black/40 p-0.5 rounded-md border border-white/5">
                       <button
                         type="button"
                         onClick={() => setPreviewPlatform("youtube")}
                         className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
                           previewPlatform === "youtube"
                             ? "bg-red-600 text-white font-semibold shadow-xs"
-                            : "text-muted-foreground hover:text-foreground"
+                            : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         YouTube
@@ -957,7 +955,7 @@ export function NotificationsView({
                         className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
                           previewPlatform === "twitch"
                             ? "bg-purple-600 text-white font-semibold shadow-xs"
-                            : "text-muted-foreground hover:text-foreground"
+                            : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         Twitch
@@ -965,14 +963,14 @@ export function NotificationsView({
                     </div>
 
                     {/* Mode Selector */}
-                    <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-md">
+                    <div className="flex items-center gap-1 bg-black/40 p-0.5 rounded-md border border-white/5">
                       <button
                         type="button"
                         onClick={() => setPreviewMode("live")}
                         className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
                           previewMode === "live"
-                            ? "bg-background text-foreground shadow-xs font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
+                            ? "bg-[#5865F2] text-white shadow-xs font-semibold"
+                            : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         Live
@@ -982,18 +980,16 @@ export function NotificationsView({
                         onClick={() => setPreviewMode("upload")}
                         className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
                           previewMode === "upload"
-                            ? "bg-background text-foreground shadow-xs font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
+                            ? "bg-[#5865F2] text-white shadow-xs font-semibold"
+                            : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         Upload
                       </button>
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="p-4 space-y-3 bg-[#313338] text-white">
+                }
+              >
                 {/* 1. YouTube Live Preview (Matches Image 1 YAGPDB Style Exactly) */}
                 {previewPlatform === "youtube" && previewMode === "live" && (
                   <div className="space-y-2 text-xs">
@@ -1002,7 +998,7 @@ export function NotificationsView({
                       <p className="text-white/95 leading-relaxed font-sans">
                         Hey <span className="text-[#5865f2] bg-[#5865f2]/10 px-1 py-0.2 rounded font-medium">@everyone</span>{" "}
                         <strong className="text-white font-semibold">
-                          {streamers.find((s) => s.platform === "youtube")?.channelName || "ALWIZ 2.0"}
+                          {streamers.find((s) => s.platform === "youtube")?.channelName || "CreatorPulse"}
                         </strong>{" "}
                         is going to be live soon!
                       </p>
@@ -1025,14 +1021,14 @@ export function NotificationsView({
                         <div className="flex flex-col">
                           <span className="text-[10px] text-[#949ba4] font-medium leading-none">YouTube</span>
                           <span className="text-xs font-bold text-white leading-tight">
-                            {streamers.find((s) => s.platform === "youtube")?.channelName || "ALWIZ 2.0"}
+                            {streamers.find((s) => s.platform === "youtube")?.channelName || "CreatorPulse"}
                           </span>
                         </div>
                       </div>
 
                       {/* Stream Title (Clickable Blue Link) */}
                       <p className="text-sm font-semibold text-[#00a8fc] hover:underline cursor-pointer leading-snug">
-                        අද අපි බස් පදිමු | @chirathtimodh
+                        Weekend Gaming & Community Showcase Live!
                       </p>
 
                       {/* Full 16:9 Thumbnail Image */}
@@ -1054,7 +1050,7 @@ export function NotificationsView({
                         {customBranding && isPro ? (
                           <span>{customFooterText || "Custom Server Alerts"}</span>
                         ) : (
-                          <span>⚡ Alert powered by CreatorCore • creatorcore.app</span>
+                          <span>⚡ Alert powered by Darklin3 Bot</span>
                         )}
                         <span>Today at 10:10 AM</span>
                       </div>
@@ -1130,7 +1126,7 @@ export function NotificationsView({
                         {customBranding && isPro ? (
                           <span>{customFooterText || "Custom Server Alerts"}</span>
                         ) : (
-                          <span>⚡ Stream Alert powered by CreatorCore • creatorcore.app</span>
+                          <span>⚡ Stream Alert powered by Darklin3 Bot</span>
                         )}
                         <span>Today at 10:10 AM</span>
                       </div>
@@ -1145,7 +1141,7 @@ export function NotificationsView({
                       <p className="text-white/95 leading-relaxed font-sans">
                         🎬 New video uploaded by{" "}
                         <strong className="text-white font-semibold">
-                          {streamers.find((s) => s.platform === "youtube")?.channelName || "ALWIZ 2.0"}
+                          {streamers.find((s) => s.platform === "youtube")?.channelName || "CreatorPulse"}
                         </strong>
                         ! Check it out:
                       </p>
@@ -1166,13 +1162,13 @@ export function NotificationsView({
                         <div className="flex flex-col">
                           <span className="text-[10px] text-[#949ba4] font-medium leading-none">YouTube</span>
                           <span className="text-xs font-bold text-white leading-tight">
-                            {streamers.find((s) => s.platform === "youtube")?.channelName || "ALWIZ 2.0"}
+                            {streamers.find((s) => s.platform === "youtube")?.channelName || "CreatorPulse"}
                           </span>
                         </div>
                       </div>
 
                       <p className="text-sm font-semibold text-[#00a8fc] hover:underline cursor-pointer leading-snug">
-                        Euro Truck Simulator 2 - New Real Life Sri Lanka Map Mod Review!
+                        Euro Truck Simulator 2 - Highway Route & Truck Mod Showcase
                       </p>
 
                       <div className="relative aspect-video w-full rounded-md overflow-hidden bg-black/60 group cursor-pointer mt-1">
@@ -1195,15 +1191,15 @@ export function NotificationsView({
                         {customBranding && isPro ? (
                           <span>{customFooterText || "Custom Server Alerts"}</span>
                         ) : (
-                          <span>⚡ Video Alert powered by CreatorCore • creatorcore.app</span>
+                          <span>⚡ Video Alert powered by Darklin3 Bot</span>
                         )}
                         <span>Today at 10:10 AM</span>
                       </div>
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </DiscordChatPreview>
+            </div>
           </div>
         </div>
       )}

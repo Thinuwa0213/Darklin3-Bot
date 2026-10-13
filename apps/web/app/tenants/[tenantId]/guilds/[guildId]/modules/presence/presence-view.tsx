@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Save,
-  Bot,
   Activity,
   Plus,
   Trash2,
@@ -22,10 +21,12 @@ import {
   Headphones,
   Tv,
   Trophy,
+  Loader2,
 } from "lucide-react";
 import { savePresenceAction } from "@/app/actions";
 import { PageHeader, ProBadge } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { DiscordAppBadge } from "@/components/discord/discord-chat-preview";
 
 export type ActivityType = "WATCHING" | "PLAYING" | "LISTENING" | "STREAMING" | "COMPETING";
 
@@ -40,10 +41,11 @@ interface PresenceViewProps {
   tenantId: string;
   guildId: string;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
-  botName?: string;
-  initialActivities?: ActivityItem[];
-  initialStatusMode?: "online" | "idle" | "dnd";
-  initialRotationInterval?: number;
+  botName?: string | undefined;
+  botAvatarUrl?: string | null | undefined;
+  initialActivities?: ActivityItem[] | undefined;
+  initialStatusMode?: "online" | "idle" | "dnd" | undefined;
+  initialRotationInterval?: number | undefined;
 }
 
 export function PresenceView({
@@ -51,6 +53,7 @@ export function PresenceView({
   guildId,
   currentPlan,
   botName = "CreatorBot",
+  botAvatarUrl = null,
   initialActivities = [],
   initialStatusMode = "online",
   initialRotationInterval = 60,
@@ -203,9 +206,14 @@ export function PresenceView({
           <Button
             onClick={handleSave}
             disabled={isPending || cooldownSeconds > 0}
-            className="gap-2 shadow-2xs h-9 cursor-pointer"
+            size="sm"
+            className="gap-2 shadow-2xs font-semibold text-xs px-4 h-9 cursor-pointer"
           >
-            <Save className="h-4 w-4" />
+            {isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
             <span>
               {isPending
                 ? "Applying..."
@@ -277,7 +285,7 @@ export function PresenceView({
                 Discord Gateway Safety
               </p>
               <p className="text-[11px] text-muted-foreground leading-tight">
-                Max 5 updates/minute enforced by Discord. CreatorCore safely spaces out rotations.
+                Max 5 updates/minute enforced by Discord. Darklin3 Bot safely spaces out rotations.
               </p>
             </div>
           </CardContent>
@@ -290,8 +298,7 @@ export function PresenceView({
           {/* Global Gateway Status Card */}
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Activity className="h-4 w-4 text-emerald-500" />
+              <CardTitle className="text-sm font-semibold">
                 Global Gateway Presence
               </CardTitle>
               <CardDescription className="text-xs">
@@ -558,9 +565,17 @@ export function PresenceView({
                 <div className="px-4 pb-4 space-y-3 relative">
                   <div className="relative -mt-8 inline-block">
                     <div className="h-16 w-16 rounded-full border-4 border-[#111214] overflow-hidden bg-[#2b2d31]">
-                      <div className="h-full w-full flex items-center justify-center font-bold text-xs bg-[#5865F2] text-white">
-                        <Bot className="h-7 w-7" />
-                      </div>
+                      {botAvatarUrl ? (
+                        <img
+                          src={botAvatarUrl}
+                          alt={botName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center font-bold text-xs bg-[#5865F2] text-white">
+                          <span>{botName.slice(0, 2).toUpperCase()}</span>
+                        </div>
+                      )}
                     </div>
                     {/* Status Dot */}
                     <div
@@ -580,9 +595,7 @@ export function PresenceView({
                       <span className="text-sm font-bold text-white tracking-tight">
                         {botName}
                       </span>
-                      <span className="bg-[#5865F2] text-white text-[9px] font-bold px-1.5 py-0.5 rounded leading-none">
-                        BOT
-                      </span>
+                      <DiscordAppBadge />
                     </div>
                     <span className="text-[11px] text-[#949ba4] font-mono block">
                       @{botName.toLowerCase().replace(/[^a-z0-9_]/g, "")}

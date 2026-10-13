@@ -23,7 +23,7 @@ export interface GuildConsoleLogEntry {
   details?: string | undefined;
 }
 
-const MAX_CONSOLE_LOGS = 100;
+const MAX_CONSOLE_LOGS = 500;
 
 function resolveStorageTenantsDir(): string {
   const candidates: string[] = [

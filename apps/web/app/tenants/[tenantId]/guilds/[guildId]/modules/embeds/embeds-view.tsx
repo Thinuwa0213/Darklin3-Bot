@@ -10,7 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  FileText,
   Send,
   Plus,
   Trash2,
@@ -26,6 +25,7 @@ import { SearchableSelect, type SearchableOption } from "@/components/ui/searcha
 import type { GuildSettings } from "@/lib/settings-storage";
 import type { LiveDiscordChannel } from "../welcome/welcome-types";
 import { publishEmbedToDiscordAction } from "@/app/actions";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 
 interface EmbedsViewProps {
   tenantId: string;
@@ -222,8 +222,7 @@ export function EmbedsView({ tenantId, guildId, currentPlan, globalSettings, liv
         <div className="lg:col-span-7 space-y-6">
           <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base font-semibold">
                 Embed Content Configuration
               </CardTitle>
             </CardHeader>
@@ -567,85 +566,31 @@ export function EmbedsView({ tenantId, guildId, currentPlan, globalSettings, liv
 
         {/* Live Discord Embed Preview Column (5 cols) */}
         <div className="lg:col-span-5 sticky top-6">
-          <Card className="border-border shadow-md bg-card/40">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Live Discord Message Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              {/* Message Container */}
-              <div className="rounded-xl border border-border/80 bg-background/95 p-4 space-y-3 font-sans">
-                {/* Bot Header */}
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-linear-to-br from-indigo-500 to-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-                    D
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-foreground">Darklin3 Bot</span>
-                      <Badge variant="secondary" className="text-[9px] px-1 py-0 font-bold bg-[#5865F2]/20 text-[#5865F2] border-[#5865F2]/30">
-                        APP
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground font-mono">Today at 12:00 PM</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Discord Embed Element */}
-                <div
-                  className="rounded-md border-l-4 bg-muted/30 p-3.5 space-y-2.5 text-xs"
-                  style={{ borderLeftColor: color }}
-                >
-                  {authorName && (
-                    <span className="text-[11px] font-semibold text-foreground/80 block">
-                      {authorName}
-                    </span>
-                  )}
-
-                  {title && (
-                    <h3 className="text-sm font-bold text-foreground leading-snug">
-                      {title}
-                    </h3>
-                  )}
-
-                  {description && (
-                    <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                      {description}
-                    </p>
-                  )}
-
-                  {/* Embed Fields Grid */}
-                  {fields.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2.5 pt-1">
-                      {fields.map((f) => (
-                        <div key={f.id} className={f.inline ? "col-span-1" : "col-span-2"}>
-                          <span className="text-[11px] font-bold text-foreground block">{f.name}</span>
-                          <span className="text-muted-foreground">{f.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Footer */}
-                  {(resolvedFooterText || includeTimestamp) && (
-                    <div className="flex items-center gap-1.5 pt-2 text-[10px] text-muted-foreground font-mono border-t border-border/50">
-                      {resolvedFooterIcon && (
-                        <img
-                          src={resolvedFooterIcon}
-                          alt="footer icon"
-                          className="h-3.5 w-3.5 rounded-full object-cover shrink-0"
-                        />
-                      )}
-                      {resolvedFooterText && <span>{resolvedFooterText}</span>}
-                      {resolvedFooterText && includeTimestamp && <span>•</span>}
-                      {includeTimestamp && <span>Today at 12:00 PM</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <DiscordChatPreview
+            channelName={liveChannels.find((c) => c.id === channelId)?.name || "announcements"}
+            botName="Darklin3 Bot"
+            headerRightSlot={
+              <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
+                LIVE EMBED BUILDER
+              </Badge>
+            }
+            embed={{
+              color: color,
+              author: authorName ? { name: authorName } : undefined,
+              title: title,
+              description: description,
+              fields: fields.map((f) => ({
+                name: f.name,
+                value: f.value,
+                inline: f.inline,
+              })),
+              footer: {
+                text: resolvedFooterText || null,
+                iconUrl: resolvedFooterIcon || null,
+              },
+              timestamp: includeTimestamp,
+            }}
+          />
         </div>
       </div>
     </div>

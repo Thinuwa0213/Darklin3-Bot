@@ -21,10 +21,10 @@ export function GlobalHeader({ user, className }: GlobalHeaderProps) {
     <header className={cn("sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border/80 bg-background/95 px-4 sm:px-8 backdrop-blur-xs", className)}>
       <Link href="/guilds" className="flex items-center gap-2.5 group">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-black text-sm transition-transform group-hover:scale-105">
-          C
+          D
         </div>
         <span className="font-bold text-base tracking-tight text-foreground">
-          CreatorCore
+          Darklin3
         </span>
       </Link>
 

@@ -549,7 +549,7 @@ export function BannerStudioModal({
                 Welcome Banner Studio
               </DialogTitle>
               <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider font-semibold">
-                CreatorCore Studio
+                Darklin3 Studio
               </Badge>
               {isPro ? (
                 <Badge variant="default" className="text-[10px] uppercase font-mono tracking-wider gap-1 bg-amber-500/20 text-amber-400 border border-amber-500/30">

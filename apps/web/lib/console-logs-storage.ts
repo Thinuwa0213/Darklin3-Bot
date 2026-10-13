@@ -19,51 +19,10 @@ function resolveStorageDir(): string {
   return path.resolve(cwd, "storage");
 }
 
-function generateInitialLogs(guildId: string, timezone = "Asia/Colombo"): GuildConsoleLogEntry[] {
-  const now = Date.now();
-  return [
-    {
-      id: `init-${now - 120000}`,
-      timestamp: new Date(now - 120000).toISOString(),
-      level: "INFO",
-      category: "SYSTEM",
-      message: `Darklin3 Bot runtime initialized for server [${guildId}].`,
-    },
-    {
-      id: `init-${now - 110000}`,
-      timestamp: new Date(now - 110000).toISOString(),
-      level: "INFO",
-      category: "GATEWAY",
-      message: "Discord Gateway connection established (Shard #0, Heartbeat latency 28ms).",
-    },
-    {
-      id: `init-${now - 90000}`,
-      timestamp: new Date(now - 90000).toISOString(),
-      level: "INFO",
-      category: "SECURITY",
-      message: "Privileged Intents verified: Server Members, Message Content, and Presence are ACTIVE.",
-    },
-    {
-      id: `init-${now - 60000}`,
-      timestamp: new Date(now - 60000).toISOString(),
-      level: "INFO",
-      category: "SYSTEM",
-      message: `Guild timezone synchronized with settings [${timezone}].`,
-    },
-    {
-      id: `init-${now - 30000}`,
-      timestamp: new Date(now - 30000).toISOString(),
-      level: "INFO",
-      category: "ACTION_LOGS",
-      message: "Action Log dispatcher ready. Listening for guild events and audit records.",
-    },
-  ];
-}
-
 export async function readStoredConsoleLogs(
   tenantId: string,
   guildId: string,
-  guildTimezone = "Asia/Colombo",
+  _guildTimezone = "Asia/Colombo",
 ): Promise<GuildConsoleLogEntry[]> {
   try {
     const storageDir = resolveStorageDir();
@@ -71,28 +30,14 @@ export async function readStoredConsoleLogs(
     const content = await fs.readFile(filePath, "utf-8");
     const parsed = JSON.parse(content) as Partial<GuildConsoleData>;
 
-    if (Array.isArray(parsed.logs) && parsed.logs.length > 0) {
-      return parsed.logs;
+    if (Array.isArray(parsed.logs)) {
+      // Return genuine logs only, filtering out any legacy mock dummy data
+      return parsed.logs.filter((l) => !l.id.startsWith("init-"));
     }
 
-    // If file exists but logs empty, return empty array
-    if (parsed.lastClearedAt) {
-      return [];
-    }
-
-    // Default initial logs
-    const initial = generateInitialLogs(guildId, guildTimezone);
-    await writeStoredConsoleLogs(tenantId, guildId, initial);
-    return initial;
+    return [];
   } catch {
-    // If not found, write and return initial logs
-    const initial = generateInitialLogs(guildId, guildTimezone);
-    try {
-      await writeStoredConsoleLogs(tenantId, guildId, initial);
-    } catch {
-      // Storage directory may not exist yet, fallback silently
-    }
-    return initial;
+    return [];
   }
 }
 

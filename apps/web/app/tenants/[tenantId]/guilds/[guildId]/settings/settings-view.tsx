@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useState, useTransition, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,19 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import {
-  Globe,
-  Bell,
   ShieldAlert,
   Sparkles,
   Save,
   CheckCircle2,
   Clock,
   Hash,
-  Palette,
   Pipette,
   ArrowRight,
-  Radio,
-  UserCheck,
   Zap,
   Check,
 } from "lucide-react";
@@ -32,11 +26,14 @@ import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import type { LiveDiscordChannel } from "../modules/welcome/welcome-types";
 import type { GuildSettings } from "@/lib/settings-storage";
 import { saveGuildSettingsAction } from "@/app/actions";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 
 interface SettingsViewProps {
   tenantId: string;
   guildId: string;
   guildName: string;
+  botName?: string | undefined;
+  botAvatarUrl?: string | null | undefined;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
   channels: LiveDiscordChannel[];
   initialSettings: GuildSettings;
@@ -78,6 +75,8 @@ export function SettingsView({
   tenantId,
   guildId,
   guildName,
+  botName = "Darklin3 Bot",
+  botAvatarUrl = null,
   currentPlan,
   channels,
   initialSettings,
@@ -245,412 +244,347 @@ export function SettingsView({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Form Column (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Card 1: General & Localization */}
-          <Card className="relative z-30 border-border/80 bg-card shadow-2xs transition-all">
-            <CardHeader className="pb-3.5">
+        {/* Left Form Column (7 cols): Single Unified Settings Surface */}
+        <div className="lg:col-span-7 rounded-xl border border-border/80 bg-card/60 backdrop-blur-xs p-6 shadow-2xs space-y-6">
+          {/* Section 1: General & Localization */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-semibold text-foreground">
+                  General &amp; Localization
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Timezone and regional formats used for daily resets, scheduled logs, and embeds.
+                </p>
+              </div>
+              <div className="flex items-center px-2.5 py-1 rounded-md bg-muted/60 border border-border/60 text-[11px] font-mono text-muted-foreground shrink-0">
+                <span>{formattedLocalTime}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
-                    <Globe className="h-4 w-4" />
-                  </div>
-                  <span>General &amp; Localization</span>
-                </CardTitle>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] font-mono text-muted-foreground">
-                  <Clock className="h-3 w-3 text-primary" />
-                  <span>{formattedLocalTime}</span>
-                </div>
-              </div>
-              <CardDescription className="text-xs">
-                Timezone and regional formats used for daily leaderboard resets, stream alerts, and embeds.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-1">
-              {/* Searchable Timezone */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="timezone-select" className="text-xs font-semibold text-foreground/90">
-                    Server Timezone
-                  </Label>
-                  <span className="text-[10px] text-muted-foreground font-mono">IANA: {timezone}</span>
-                </div>
-
-                <SearchableSelect
-                  id="timezone-select"
-                  options={TIMEZONE_OPTIONS}
-                  value={timezone}
-                  onChange={(val) => setTimezone(val)}
-                  placeholder="Search and select timezone (e.g. Colombo, UTC, New York)..."
-                  searchPlaceholder="Type timezone or city name..."
-                  emptyMessage="No matching timezones found"
-                />
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Scheduled notifications and event resets are aligned with this timezone.
-                </p>
-              </div>
-
-              <Separator className="opacity-60" />
-
-              {/* Bot Language (English Only) */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-foreground/90">
-                    Bot Language / Locale
-                  </Label>
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 font-mono">
-                    ENGLISH ONLY
-                  </Badge>
-                </div>
-                <div className="p-2.5 rounded-lg border border-border/70 bg-muted/30 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">English (US)</span>
-                    <span className="text-[11px] text-muted-foreground">— Official Bot Language</span>
-                  </div>
-                  <Check className="h-4 w-4 text-emerald-500" />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  English is currently the supported bot language across commands, automated alerts, and announcements.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Notification & Error Channels */}
-          <Card className="relative z-20 border-border/70 bg-card/50 backdrop-blur-md shadow-xs hover:border-border transition-all">
-            <CardHeader className="pb-3.5">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                  <Bell className="h-4 w-4" />
-                </div>
-                <span>Notification &amp; System Log Channels</span>
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Designate target channels for staff error dispatches and automated announcements.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-1">
-              {/* Error Alert Channel (Searchable) */}
-              <div className="space-y-1.5 relative z-20">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="error-channel" className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
-                    <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
-                    <span>Error &amp; Staff Alert Channel</span>
-                  </Label>
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 font-medium bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                    Private Staff
-                  </Badge>
-                </div>
-
-                {channels.length > 0 ? (
-                  <SearchableSelect
-                    id="error-channel"
-                    options={channelOptions}
-                    value={systemAlertChannelId}
-                    onChange={(val) => setSystemAlertChannelId(val)}
-                    placeholder="Search staff log channel by name or ID..."
-                    searchPlaceholder="Type channel name (e.g. logs, staff)..."
-                    emptyMessage="No Discord channels match your search"
-                  />
-                ) : (
-                  <Input
-                    id="error-channel"
-                    placeholder="Enter Channel ID (e.g. 1092837465910)"
-                    value={systemAlertChannelId}
-                    onChange={(e) => setSystemAlertChannelId(e.target.value)}
-                    className="text-xs font-mono h-9 rounded-lg"
-                  />
-                )}
-                <p className="text-[11px] text-muted-foreground">
-                  Bot crash logs, missing channel permissions, and stream API errors will be dispatched here.
-                </p>
-              </div>
-
-              <Separator className="opacity-60" />
-
-              {/* Default Announcement Channel (Searchable) */}
-              <div className="space-y-1.5 relative z-10">
-                <Label htmlFor="notification-channel" className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
-                  <Hash className="h-3.5 w-3.5 text-primary" />
-                  <span>Default Notification / Fallback Channel</span>
+                <Label htmlFor="timezone-select" className="text-xs font-medium text-foreground">
+                  Server Timezone
                 </Label>
+                <span className="text-[10px] text-muted-foreground font-mono">IANA: {timezone}</span>
+              </div>
 
-                {channels.length > 0 ? (
-                  <SearchableSelect
-                    id="notification-channel"
-                    options={channelOptions}
-                    value={notificationChannelId}
-                    onChange={(val) => setNotificationChannelId(val)}
-                    placeholder="Search fallback channel by name or ID..."
-                    searchPlaceholder="Type channel name (e.g. general, announcements)..."
-                    emptyMessage="No Discord channels match your search"
-                  />
-                ) : (
-                  <Input
-                    id="notification-channel"
-                    placeholder="Enter Channel ID (e.g. 1092837465910)"
-                    value={notificationChannelId}
-                    onChange={(e) => setNotificationChannelId(e.target.value)}
-                    className="text-xs font-mono h-9 rounded-lg"
-                  />
-                )}
-                <p className="text-[11px] text-muted-foreground">
-                  Fallback target when module-specific channels are deleted or unspecified.
+              <SearchableSelect
+                id="timezone-select"
+                options={TIMEZONE_OPTIONS}
+                value={timezone}
+                onChange={(val) => setTimezone(val)}
+                placeholder="Search and select timezone (e.g. Colombo, UTC, New York)..."
+                searchPlaceholder="Type timezone or city name..."
+                emptyMessage="No matching timezones found"
+              />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Scheduled notifications and event resets are aligned with this timezone.
+              </p>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <Label className="text-xs font-medium text-foreground">
+                Bot Language / Locale
+              </Label>
+              <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-foreground">English (US)</span>
+                  <span className="text-[11px] text-muted-foreground">— Official Bot Language</span>
+                </div>
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              </div>
+            </div>
+          </section>
+
+          <div className="border-t border-border/60" />
+
+          {/* Section 2: Notification & System Log Channels */}
+          <section className="space-y-4">
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-semibold text-foreground">
+                Notification &amp; System Log Channels
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Designate target Discord channels for staff error dispatches and automated announcements.
+              </p>
+            </div>
+
+            {/* Error Alert Channel */}
+            <div className="space-y-1.5">
+              <Label htmlFor="error-channel" className="text-xs font-medium text-foreground">
+                Error &amp; Staff Alert Channel
+              </Label>
+
+              {channels.length > 0 ? (
+                <SearchableSelect
+                  id="error-channel"
+                  options={channelOptions}
+                  value={systemAlertChannelId}
+                  onChange={(val) => setSystemAlertChannelId(val)}
+                  placeholder="Search staff log channel by name or ID..."
+                  searchPlaceholder="Type channel name (e.g. logs, staff)..."
+                  emptyMessage="No Discord channels match your search"
+                />
+              ) : (
+                <Input
+                  id="error-channel"
+                  placeholder="Enter Channel ID (e.g. 1092837465910)"
+                  value={systemAlertChannelId}
+                  onChange={(e) => setSystemAlertChannelId(e.target.value)}
+                  className="text-xs font-mono h-9 rounded-lg"
+                />
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                Bot crash logs, missing channel permissions, and stream API errors will be dispatched here.
+              </p>
+            </div>
+
+            {/* Default Fallback Channel */}
+            <div className="space-y-1.5">
+              <Label htmlFor="notification-channel" className="text-xs font-medium text-foreground">
+                Default Notification / Fallback Channel
+              </Label>
+
+              {channels.length > 0 ? (
+                <SearchableSelect
+                  id="notification-channel"
+                  options={channelOptions}
+                  value={notificationChannelId}
+                  onChange={(val) => setNotificationChannelId(val)}
+                  placeholder="Search fallback channel by name or ID..."
+                  searchPlaceholder="Type channel name (e.g. general, announcements)..."
+                  emptyMessage="No Discord channels match your search"
+                />
+              ) : (
+                <Input
+                  id="notification-channel"
+                  placeholder="Enter Channel ID (e.g. 1092837465910)"
+                  value={notificationChannelId}
+                  onChange={(e) => setNotificationChannelId(e.target.value)}
+                  className="text-xs font-mono h-9 rounded-lg"
+                />
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                Fallback target when module-specific channels are deleted or unspecified.
+              </p>
+            </div>
+          </section>
+
+          <div className="border-t border-border/60" />
+
+          {/* Section 3: Global Branding & Appearance */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Global Branding &amp; Appearance
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Set server theme color, custom footers, and white-labeling across all Darklin3 Bot embeds.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+              <Badge
+                variant="outline"
+                className={`font-mono text-[10px] tracking-wider shrink-0 ${
+                  isPro ? "border-amber-500/40 text-amber-500 bg-amber-500/10" : ""
+                }`}
+              >
+                {isPro ? "PRO WHITE-LABEL" : "FREE PLAN"}
+              </Badge>
+            </div>
 
-          {/* Card 3: Global Branding & White-Label */}
-          <Card className="relative z-10 border-border/70 bg-card/50 backdrop-blur-md shadow-xs hover:border-border transition-all">
-            <CardHeader className="pb-3.5">
+            {/* Default Theme Color */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <span>Darklin3 Bot Global Branding &amp; Appearance</span>
-                </CardTitle>
-                <Badge
-                  variant="outline"
-                  className={`font-mono text-[10px] tracking-wider ${
-                    isPro ? "border-amber-500/40 text-amber-500 bg-amber-500/10" : ""
-                  }`}
+                <Label className="text-xs font-medium text-foreground">
+                  Default Embed Accent Color
+                </Label>
+                <span className="text-[10px] font-mono text-muted-foreground uppercase">{defaultEmbedColor}</span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <label
+                  className="relative h-9 w-12 rounded-lg border border-border shadow-xs shrink-0 transition-all hover:scale-105 active:scale-95 overflow-hidden cursor-pointer flex items-center justify-center group focus-within:ring-2 focus-within:ring-primary/40"
+                  style={{ backgroundColor: defaultEmbedColor }}
+                  title="Click to open color picker"
                 >
-                  {isPro ? "PRO WHITE-LABEL" : "FREE PLAN"}
-                </Badge>
-              </div>
-              <CardDescription className="text-xs">
-                Set server theme color, custom footers, and white-labeling across all Darklin3 Bot embeds.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-1">
-              {/* Default Theme Color */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
-                    <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>Default Embed Accent Color</span>
-                  </Label>
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase">{defaultEmbedColor}</span>
-                </div>
-
-                <div className="flex items-center gap-2.5">
-                  <label
-                    className="relative h-9 w-12 rounded-lg border border-border shadow-xs shrink-0 transition-all hover:scale-105 active:scale-95 overflow-hidden cursor-pointer flex items-center justify-center group focus-within:ring-2 focus-within:ring-primary/40"
-                    style={{ backgroundColor: defaultEmbedColor }}
-                    title="Click to open color picker"
-                  >
-                    <input
-                      type="color"
-                      value={
-                        /^#[0-9A-Fa-f]{6}$/.test(defaultEmbedColor)
-                          ? defaultEmbedColor
-                          : "#5865F2"
-                      }
-                      onChange={(e) => setDefaultEmbedColor(e.target.value.toUpperCase())}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                      aria-label="Pick default embed accent color"
-                    />
-                    <Pipette className="h-3.5 w-3.5 text-white/90 drop-shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                  </label>
-                  <Input
-                    value={defaultEmbedColor}
-                    onChange={(e) => setDefaultEmbedColor(e.target.value)}
-                    placeholder="#5865F2"
-                    maxLength={7}
-                    className="text-xs font-mono max-w-[130px] uppercase h-9 rounded-lg"
+                  <input
+                    type="color"
+                    value={
+                      /^#[0-9A-Fa-f]{6}$/.test(defaultEmbedColor)
+                        ? defaultEmbedColor
+                        : "#5865F2"
+                    }
+                    onChange={(e) => setDefaultEmbedColor(e.target.value.toUpperCase())}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    aria-label="Pick default embed accent color"
                   />
-                  <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                    Click color box to pick custom color
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {PRESET_COLORS.map((p) => (
-                    <button
-                      key={p.hex}
-                      type="button"
-                      onClick={() => setDefaultEmbedColor(p.hex)}
-                      className={`h-6 px-2.5 text-[10px] rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer ${
-                        defaultEmbedColor.toLowerCase() === p.hex.toLowerCase()
-                          ? "border-primary bg-primary/15 text-primary font-bold shadow-xs scale-105"
-                          : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.hex }} />
-                      <span>{p.label}</span>
-                    </button>
-                  ))}
-                </div>
+                  <Pipette className="h-3.5 w-3.5 text-white/90 drop-shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                </label>
+                <Input
+                  value={defaultEmbedColor}
+                  onChange={(e) => setDefaultEmbedColor(e.target.value)}
+                  placeholder="#5865F2"
+                  maxLength={7}
+                  className="text-xs font-mono max-w-[130px] uppercase h-9 rounded-lg"
+                />
+                <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                  Click swatch to pick custom hex color
+                </span>
               </div>
 
-              <Separator className="opacity-60" />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {PRESET_COLORS.map((p) => (
+                  <button
+                    key={p.hex}
+                    type="button"
+                    onClick={() => setDefaultEmbedColor(p.hex)}
+                    className={`h-6 px-2.5 text-[10px] rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer ${
+                      defaultEmbedColor.toLowerCase() === p.hex.toLowerCase()
+                        ? "border-primary bg-primary/15 text-primary font-bold shadow-xs scale-105"
+                        : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.hex }} />
+                    <span>{p.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              {/* White-Label Toggle */}
-              {!isPro ? (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-600 dark:text-amber-400 space-y-2.5">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
-                    <span>White-Labeling Requires PRO Plan</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Free servers display <strong className="text-foreground">⚡ Alert powered by Darklin3 Bot</strong> in all embed footers. Upgrade to Pro to customize footer text, set custom icons, or remove watermarks globally.
-                  </p>
-                  <Button size="sm" variant="outline" className="text-xs h-7 gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 font-semibold" asChild>
-                    <a href={`/tenants/${tenantId}/billing`}>
-                      <span>Upgrade to PRO</span>
-                      <ArrowRight className="h-3 w-3" />
-                    </a>
-                  </Button>
+            <Separator className="opacity-60" />
+
+            {/* White-Label Toggle */}
+            {!isPro ? (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-600 dark:text-amber-400 space-y-2.5">
+                <div className="flex items-center gap-2 font-semibold">
+                  <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span>White-Labeling Requires PRO Plan</span>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-xs font-semibold">Custom White-Label Footer</Label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Replace default Darklin3 Bot watermark with your custom community branding.
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Free servers display <strong className="text-foreground">⚡ Alert powered by Darklin3 Bot</strong> in all embed footers. Upgrade to Pro to customize footer text, set custom icons, or remove watermarks globally.
+                </p>
+                <Button size="sm" variant="outline" className="text-xs h-7 gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 font-semibold" asChild>
+                  <a href={`/tenants/${tenantId}/billing`}>
+                    <span>Upgrade to PRO</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </a>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs font-semibold">Custom White-Label Footer</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Replace default Darklin3 Bot watermark with your custom community branding.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={customBrandingEnabled}
+                    onCheckedChange={setCustomBrandingEnabled}
+                  />
+                </div>
+
+                {customBrandingEnabled && (
+                  <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="footer-text" className="text-xs font-semibold">
+                        Global Footer Text
+                      </Label>
+                      <Input
+                        id="footer-text"
+                        value={defaultFooterText}
+                        onChange={(e) => setDefaultFooterText(e.target.value)}
+                        placeholder="e.g. Dreamscape Esports • Official Server"
+                        className="text-xs font-mono h-9 rounded-lg"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        This footer text automatically applies to all alerts, welcome messages, and announcements.
                       </p>
                     </div>
-                    <Switch
-                      checked={customBrandingEnabled}
-                      onCheckedChange={setCustomBrandingEnabled}
-                    />
-                  </div>
 
-                  {customBrandingEnabled && (
-                    <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="footer-text" className="text-xs font-semibold">
-                          Global Footer Text
-                        </Label>
-                        <Input
-                          id="footer-text"
-                          value={defaultFooterText}
-                          onChange={(e) => setDefaultFooterText(e.target.value)}
-                          placeholder="e.g. Dreamscape Esports • Official Server"
-                          className="text-xs font-mono h-9 rounded-lg"
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          This footer text automatically applies to all alerts, welcome messages, and embed builder announcements.
-                        </p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="footer-icon" className="text-xs font-semibold">
-                          Global Footer Icon URL (Optional)
-                        </Label>
-                        <Input
-                          id="footer-icon"
-                          value={defaultFooterIconUrl}
-                          onChange={(e) => setDefaultFooterIconUrl(e.target.value)}
-                          placeholder="https://example.com/logo.png"
-                          className="text-xs font-mono h-9 rounded-lg"
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="footer-icon" className="text-xs font-semibold">
+                        Global Footer Icon URL (Optional)
+                      </Label>
+                      <Input
+                        id="footer-icon"
+                        value={defaultFooterIconUrl}
+                        onChange={(e) => setDefaultFooterIconUrl(e.target.value)}
+                        placeholder="https://example.com/logo.png"
+                        className="text-xs font-mono h-9 rounded-lg"
+                      />
                     </div>
-                  )}
-                </div>
-              )}
-
-              <Separator className="opacity-60" />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <span className="text-xs font-semibold text-foreground">Include Live Timestamp by Default</span>
-                  <p className="text-[11px] text-muted-foreground">
-                    Automatically append viewer-relative timestamp to embeds.
-                  </p>
-                </div>
-                <Switch
-                  checked={showTimestampDefault}
-                  onCheckedChange={setShowTimestampDefault}
-                />
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            <Separator className="opacity-60" />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-foreground">Include Live Timestamp by Default</span>
+                <p className="text-[11px] text-muted-foreground">
+                  Automatically append viewer-relative timestamp to embeds.
+                </p>
+              </div>
+              <Switch
+                checked={showTimestampDefault}
+                onCheckedChange={setShowTimestampDefault}
+              />
+            </div>
+          </section>
         </div>
 
         {/* Right Live Preview Column (5 cols) */}
         <div className="lg:col-span-5 sticky top-6 space-y-4">
-          <Card className="border-border/80 shadow-md bg-card/60 backdrop-blur-xl overflow-hidden">
-            {/* Discord Window Bar Mockup */}
-            <div className="bg-[#1e1f22] px-3.5 py-2.5 border-b border-black/30 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-[#80848e]" />
-                <span className="text-xs font-bold text-white tracking-wide">
-                  {previewEvent === "error" ? selectedAlertChannelName.replace("#", "") : "announcements"}
-                </span>
-                <span className="text-[10px] text-[#80848e] hidden sm:inline">| Darklin3 Live Preview</span>
-              </div>
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 font-mono bg-[#2b2d31] text-[#949ba4] border border-[#35373c]">
-                DISCORD CLIENT
-              </Badge>
-            </div>
-
-            {/* Event Selector Tabs (With fixed Discord colors) */}
-            <div className="p-3 bg-[#2b2d31]/80 border-b border-[#383a40] flex items-center justify-between gap-1.5">
-              <span className="text-[10px] uppercase font-bold text-[#949ba4] tracking-wider">Preview Event:</span>
-              <div className="flex items-center gap-1.5">
+          <DiscordChatPreview
+            channelName={previewEvent === "error" ? selectedAlertChannelName : selectedNotificationChannelName}
+            botName={botName}
+            botAvatarUrl={botAvatarUrl}
+            timestamp={`Today at ${formattedLocalTime}`}
+            headerRightSlot={
+              <div className="flex items-center gap-1.5 bg-black/40 p-0.5 rounded-md border border-white/5">
                 <button
                   type="button"
                   onClick={() => setPreviewEvent("stream")}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
                     previewEvent === "stream"
-                      ? "bg-[#5865F2] text-white shadow-xs font-bold ring-1 ring-[#5865F2]/50"
-                      : "text-[#949ba4] hover:text-white hover:bg-[#35373c]"
+                      ? "bg-[#5865F2] text-white shadow-xs font-bold"
+                      : "text-[#949ba4] hover:text-white"
                   }`}
                 >
-                  <Radio className="h-3 w-3" />
-                  <span>Stream</span>
+                  Stream
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewEvent("error")}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
                     previewEvent === "error"
-                      ? "bg-rose-600 text-white shadow-xs font-bold ring-1 ring-rose-500/50"
-                      : "text-[#949ba4] hover:text-white hover:bg-[#35373c]"
+                      ? "bg-rose-600 text-white shadow-xs font-bold"
+                      : "text-[#949ba4] hover:text-white"
                   }`}
                 >
-                  <ShieldAlert className="h-3 w-3" />
-                  <span>Error</span>
+                  Error
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewEvent("welcome")}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
                     previewEvent === "welcome"
-                      ? "bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50"
-                      : "text-[#949ba4] hover:text-white hover:bg-[#35373c]"
+                      ? "bg-emerald-600 text-white shadow-xs font-bold"
+                      : "text-[#949ba4] hover:text-white"
                   }`}
                 >
-                  <UserCheck className="h-3 w-3" />
-                  <span>Welcome</span>
+                  Welcome
                 </button>
               </div>
-            </div>
-
-            <CardContent className="p-4 bg-[#313338] space-y-3 font-sans">
-              {/* Bot Message Header */}
-              <div className="flex items-start gap-3">
-                <div className="relative">
-                  <div className="h-9 w-9 rounded-full bg-linear-to-br from-indigo-500 via-primary to-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                    D
-                  </div>
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#313338]" />
-                </div>
-                <div className="space-y-1 w-full min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-white hover:underline cursor-pointer">
-                      Darklin3 Bot
-                    </span>
-                    <span className="inline-flex items-center rounded px-1 py-0 text-[9px] font-bold bg-[#5865F2] text-white leading-tight">
-                      APP
-                    </span>
-                    <span className="text-[10px] text-[#949ba4] font-mono">Today at {formattedLocalTime}</span>
-                  </div>
+            }
+          >
 
                   {/* Embed Box */}
                   <div
@@ -738,26 +672,22 @@ export function SettingsView({
                       ) : null}
                       <span className="truncate">{activeFooterText}</span>
                       {showTimestampDefault && <span>•</span>}
-                      {showTimestampDefault && <span>Today at {formattedLocalTime}</span>}
                     </div>
                   </div>
-                </div>
-              </div>
+                </DiscordChatPreview>
 
-              {/* Automatic inheritance reassurance card */}
-              <div className="p-3 rounded-lg bg-[#2b2d31] border border-[#383a40] text-xs space-y-1">
-                <div className="font-semibold text-white flex items-center gap-1.5 text-[11px]">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Darklin3 Bot Centralized Sync</span>
+                {/* Automatic inheritance reassurance card */}
+                <div className="p-3 rounded-lg bg-card/40 border border-border/60 text-xs space-y-1">
+                  <div className="font-semibold text-foreground flex items-center gap-1.5 text-[11px]">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Darklin3 Bot Centralized Sync</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    Every alert, welcome message, and visual embed builder card automatically inherits this theme color and footer branding.
+                  </p>
                 </div>
-                <p className="text-[10px] text-[#949ba4] leading-relaxed">
-                  Every alert, welcome message, and visual embed builder card automatically inherits this theme color and footer branding.
-                </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
+            </div>
+          </div>
+        );
+      }

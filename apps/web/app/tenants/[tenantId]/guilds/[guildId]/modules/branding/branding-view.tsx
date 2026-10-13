@@ -15,7 +15,6 @@ import {
   Clock,
   X,
   AlertCircle,
-  ImageIcon,
   Sparkles,
 } from "lucide-react";
 import {
@@ -26,6 +25,7 @@ import {
 import { PageHeader, ProBadge } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { ImageCropperModal } from "./image-cropper-modal";
+import { DiscordAppBadge } from "@/components/discord/discord-chat-preview";
 
 interface BrandingViewProps {
   tenantId: string;
@@ -370,7 +370,7 @@ export function BrandingView({
           setSaved(true);
         } else {
           if (uploadedAny) {
-            setSuccessMessage("Images stored successfully in CreatorCore storage.");
+            setSuccessMessage("Images stored successfully in Darklin3 storage.");
             setSaved(true);
             setUploadError(`Note on Discord sync: ${saveRes.error || "Throttled or missing permissions"}`);
           } else {
@@ -509,8 +509,7 @@ export function BrandingView({
           {/* Server Identity Card */}
           <Card className="border-border/80 bg-card/60 shadow-xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Bot className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base font-semibold">
                 Server Identity
               </CardTitle>
               <CardDescription className="text-xs">
@@ -569,8 +568,7 @@ export function BrandingView({
           {/* Media Assets Card */}
           <Card className="border-border/80 bg-card/60 shadow-xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base font-semibold">
                 Bot Media Assets
               </CardTitle>
               <CardDescription className="text-xs">
@@ -895,9 +893,7 @@ export function BrandingView({
                       <span className="text-base font-bold text-white tracking-tight">
                         {displayNickname || botName}
                       </span>
-                      <span className="bg-[#5865F2] text-white text-[10px] font-bold px-1.5 py-0.5 rounded leading-none flex items-center gap-0.5">
-                        ✓ BOT
-                      </span>
+                      <DiscordAppBadge />
                     </div>
                     <span className="text-xs text-[#949ba4] font-mono block">
                       {globalHandle}

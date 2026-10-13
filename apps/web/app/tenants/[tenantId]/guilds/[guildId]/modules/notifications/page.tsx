@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { callApiServer, getServerSession } from "../../../../../../../lib/api";
 import { readStoredStreams } from "../../../../../../../lib/streams-storage";
+import { getGuildBotBranding } from "../../../../../../../lib/bot-branding";
 import type { LiveDiscordChannel, LiveDiscordRole } from "../welcome/welcome-types";
 import { NotificationsView } from "./notifications-view";
 
@@ -32,15 +33,19 @@ export default async function NotificationsPage({ params }: NotificationsPagePro
         ? subRes.data.plan
         : "FREE";
 
-  // Fetch real live Discord channels & roles
-  const discordResourcesRes = await callApiServer<{
-    ok: boolean;
-    data: {
-      guildName: string;
-      channels: LiveDiscordChannel[];
-      roles: LiveDiscordRole[];
-    };
-  }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`);
+  // Fetch real live Discord channels & roles, bot branding in parallel
+  const [discordResourcesRes, branding, initialConfig] = await Promise.all([
+    callApiServer<{
+      ok: boolean;
+      data: {
+        guildName: string;
+        channels: LiveDiscordChannel[];
+        roles: LiveDiscordRole[];
+      };
+    }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`),
+    getGuildBotBranding(tenantId, guildId, "Darklin3 Bot"),
+    readStoredStreams(tenantId, guildId),
+  ]);
 
   const liveChannels =
     discordResourcesRes.ok && discordResourcesRes.data?.data
@@ -51,14 +56,13 @@ export default async function NotificationsPage({ params }: NotificationsPagePro
       ? discordResourcesRes.data.data.roles
       : [];
 
-  // Read stored streams configuration
-  const initialConfig = await readStoredStreams(tenantId, guildId);
-
   return (
     <NotificationsView
       tenantId={tenantId}
       guildId={guildId}
       currentPlan={currentPlan}
+      botName={branding.botName}
+      botAvatarUrl={branding.botAvatarUrl}
       initialConfig={initialConfig}
       liveChannels={liveChannels}
       liveRoles={liveRoles}

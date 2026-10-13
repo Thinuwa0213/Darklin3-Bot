@@ -10,17 +10,15 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Radar,
   Plus,
   Save,
   Loader2,
-  Lock,
-  Tag,
-  Shield,
-  MessageSquare,
   Clock,
   X,
   Check,
+  Lock,
+  Tag,
+  Shield,
   Sparkles,
 } from "lucide-react";
 import { VariableChips } from "@/components/modules/variable-chips";
@@ -30,11 +28,14 @@ import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-hea
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import type { CommunityRadarConfig } from "@/lib/streams-storage";
 import type { LiveDiscordChannel, LiveDiscordRole } from "../welcome/welcome-types";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 
 interface CommunityRadarViewProps {
   tenantId: string;
   guildId: string;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
+  botName?: string | undefined;
+  botAvatarUrl?: string | null | undefined;
   initialRadar?: CommunityRadarConfig | undefined;
   liveChannels?: LiveDiscordChannel[] | undefined;
   liveRoles?: LiveDiscordRole[] | undefined;
@@ -44,6 +45,8 @@ export function CommunityRadarView({
   tenantId,
   guildId,
   currentPlan,
+  botName = "Darklin3 Bot",
+  botAvatarUrl = null,
   initialRadar,
   liveChannels = [],
   liveRoles = [],
@@ -259,9 +262,8 @@ export function CommunityRadarView({
           {/* Card 1: Keywords & Title Detection */}
           <Card className="border-border/80">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Tag className="h-4 w-4 text-primary" />
-                <span>Title Keywords &amp; Tags</span>
+              <CardTitle className="text-sm font-semibold">
+                Title Keywords &amp; Tags
               </CardTitle>
               <CardDescription className="text-xs">
                 Radar scans Discord streaming presences for any of these tags in the stream title.
@@ -351,9 +353,8 @@ export function CommunityRadarView({
           {/* Card 2: Roles & Permissions */}
           <Card className="border-border/80">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Shield className="h-4 w-4 text-purple-400" />
-                <span>Member Roles &amp; Live Auto-Role</span>
+              <CardTitle className="text-sm font-semibold">
+                Member Roles &amp; Live Auto-Role
               </CardTitle>
               <CardDescription className="text-xs">
                 Control who is allowed to trigger the radar and assign a temporary live role.
@@ -409,9 +410,8 @@ export function CommunityRadarView({
           {/* Card 3: Announcement Channel & Message Template */}
           <Card className="border-border/80">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-blue-400" />
-                <span>Channel, Ping &amp; Template</span>
+              <CardTitle className="text-sm font-semibold">
+                Channel, Ping &amp; Template
               </CardTitle>
               <CardDescription className="text-xs">
                 Configure where radar alerts are posted and format the notification text.
@@ -507,9 +507,8 @@ export function CommunityRadarView({
           <Card className="border-border/80">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  <span>Alert Branding &amp; Watermark</span>
+                <CardTitle className="text-sm font-semibold">
+                  Alert Branding &amp; Watermark
                 </CardTitle>
                 <Badge
                   variant="outline"
@@ -529,10 +528,10 @@ export function CommunityRadarView({
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5 text-xs text-amber-600 dark:text-amber-400 space-y-1.5">
                   <div className="flex items-center gap-2 font-semibold">
                     <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                    <span>CreatorCore Branding Active</span>
+                    <span>Darklin3 Bot Branding Active</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Free plan alerts display <strong className="text-foreground">⚡ Community Radar powered by CreatorCore • creatorcore.app</strong> in the Discord embed footer. Upgrade to PRO to enable white-labeling or use your own custom server footer.
+                    Free plan alerts display <strong className="text-foreground">⚡ Community Radar powered by Darklin3 Bot</strong> in the Discord embed footer. Upgrade to PRO to enable white-labeling or use your own custom server footer.
                   </p>
                 </div>
               ) : (
@@ -541,7 +540,7 @@ export function CommunityRadarView({
                     <div className="space-y-0.5">
                       <Label className="text-xs font-semibold">Custom Branding / White-Label</Label>
                       <p className="text-[11px] text-muted-foreground">
-                        Remove default CreatorCore branding from alert embeds.
+                        Remove default Darklin3 Bot branding from alert embeds.
                       </p>
                     </div>
                     <Switch
@@ -575,23 +574,17 @@ export function CommunityRadarView({
 
         {/* Right Column: Live Discord Radar Mockup */}
         <div className="lg:col-span-5 space-y-4">
-          <Card className="border-border/80 sticky top-4 overflow-hidden shadow-sm">
-            <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Radar className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Discord Radar Preview</span>
-                </CardTitle>
+          <div className="sticky top-4 space-y-3">
+            <DiscordChatPreview
+              channelName={channels.find((c) => c.id === discordChannelId)?.name ?? "community-streams"}
+              botName={botName}
+              botAvatarUrl={botAvatarUrl}
+              headerRightSlot={
                 <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
                   {channels.find((c) => c.id === discordChannelId)?.name ?? "#community-streams"}
                 </Badge>
-              </div>
-              <CardDescription className="text-[11px]">
-                Clean, native Discord embed simulation reflecting live stream detection.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-4 space-y-3 bg-[#313338] text-white">
+              }
+            >
               {/* Message Ping & Description */}
               <div className="space-y-1 text-xs">
                 <div className="text-white/95 leading-relaxed font-sans">
@@ -607,9 +600,9 @@ export function CommunityRadarView({
                   {" "}
                   <span>
                     {customMessage
-                      .replace(/{member}/g, "Kasun_SLRP")
+                      .replace(/{member}/g, "NeonPulse")
                       .replace(/{game}/g, gameFilter || "Grand Theft Auto V")
-                      .replace(/{keyword}/g, keywords[0] || "[SLRP]")
+                      .replace(/{keyword}/g, keywords[0] || "[LIVE]")
                       .replace(/{url}/g, "")}
                   </span>
                 </div>
@@ -618,7 +611,7 @@ export function CommunityRadarView({
                   onClick={(e) => e.preventDefault()}
                   className="text-[#00a8fc] hover:underline break-all block font-sans"
                 >
-                  https://twitch.tv/kasun_slrp
+                  https://twitch.tv/neonpulse
                 </a>
               </div>
 
@@ -627,19 +620,19 @@ export function CommunityRadarView({
                 {/* Author Header */}
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                    K
+                    N
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-[#949ba4] font-medium leading-none">Twitch</span>
                     <span className="text-xs font-bold text-white leading-tight">
-                      Kasun_SLRP is live with {keywords[0] || "[SLRP]"} tag!
+                      NeonPulse is live with {keywords[0] || "[LIVE]"} tag!
                     </span>
                   </div>
                 </div>
 
                 {/* Clickable Blue Stream Title */}
                 <p className="text-sm font-semibold text-[#00a8fc] hover:underline cursor-pointer leading-snug">
-                  Police Patrol Duty! {keywords[0] || "[SLRP]"} Sri Lanka Server #1
+                  Grand RP & Community Hangout! {keywords[0] || "[LIVE]"} Server #1
                 </p>
 
                 {/* 16:9 Thumbnail Banner */}
@@ -649,7 +642,7 @@ export function CommunityRadarView({
                     <span>LIVE</span>
                   </div>
                   <div className="text-center p-3">
-                    <p className="text-xs font-bold text-white/90">Kasun_SLRP</p>
+                    <p className="text-xs font-bold text-white/90">NeonPulse</p>
                     <p className="text-[11px] text-white/60">{gameFilter || "Grand Theft Auto V"}</p>
                   </div>
                 </div>
@@ -659,7 +652,7 @@ export function CommunityRadarView({
                   {customBranding && isPro ? (
                     <span>{customFooterText || "Custom Server Alerts"}</span>
                   ) : (
-                    <span>⚡ Community Radar powered by CreatorCore • creatorcore.app</span>
+                    <span>⚡ Community Radar powered by Darklin3 Bot</span>
                   )}
                   <span>Today at 10:10 AM</span>
                 </div>
@@ -676,8 +669,8 @@ export function CommunityRadarView({
                   <span>Cooldown: {Math.round(cooldownMinutes / 60)}h</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </DiscordChatPreview>
+          </div>
         </div>
       </div>
     </div>

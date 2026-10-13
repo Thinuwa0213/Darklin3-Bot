@@ -3,14 +3,12 @@
 import * as React from "react";
 import { useState, useTransition, useMemo } from "react";
 import {
-  Sparkles,
-  Rocket,
   Save,
   Send,
-  Palette,
   Image as ImageIcon,
   Mail,
   Hash,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,13 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import type { BoosterConfig } from "@/lib/booster-storage";
 import type { GuildSettings } from "@/lib/settings-storage";
 import type { LiveDiscordChannel } from "../welcome/welcome-types";
 import { saveBoosterConfigAction, sendTestBoostAlertAction } from "@/app/actions";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 
 interface BoosterViewProps {
   tenantId: string;
@@ -166,24 +165,30 @@ export function BoosterView({
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <ModuleToggle
+              enabled={config.enabled}
+              onToggle={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
+              activeLabel="Active"
+              disabledLabel="Paused"
+            />
             <Button
               variant="outline"
               size="sm"
               onClick={handleSendTestAlert}
               disabled={testSending || !config.channelId}
-              className="gap-2 shadow-2xs h-9 cursor-pointer"
+              className="gap-2 shadow-2xs h-9 cursor-pointer text-xs"
             >
-              <Send className="h-4 w-4 text-pink-500" />
-              <span>{testSending ? "Sending..." : "Test Alert in Discord"}</span>
+              <Send className="h-3.5 w-3.5 text-pink-500" />
+              <span>{testSending ? "Sending..." : "Test Alert"}</span>
             </Button>
             <Button
               onClick={handleSave}
               disabled={isPending}
               size="sm"
-              className="gap-2 shadow-2xs h-9 bg-pink-600 hover:bg-pink-700 text-white cursor-pointer"
+              className="gap-2 shadow-2xs h-9 bg-pink-600 hover:bg-pink-700 text-white cursor-pointer font-semibold text-xs px-4"
             >
-              <Save className="h-4 w-4" />
+              {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               <span>{isPending ? "Saving..." : "Save Changes"}</span>
             </Button>
           </div>
@@ -202,25 +207,14 @@ export function BoosterView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Form Controls (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Master Toggle Card */}
+          {/* Master Configuration Card */}
           <Card className="border-border/80 bg-card/60 backdrop-blur-xs shadow-2xs">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-pink-500/10 text-pink-500 border border-pink-500/20">
-                    <Rocket className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-semibold">Booster Alert System</CardTitle>
-                    <CardDescription className="text-xs">
-                      Automatically detect server boosts and announce them in Discord.
-                    </CardDescription>
-                  </div>
-                </div>
-                <Switch
-                  checked={config.enabled}
-                  onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
-                />
+              <div>
+                <CardTitle className="text-base font-semibold">Booster Alert System</CardTitle>
+                <CardDescription className="text-xs">
+                  Automatically detect server boosts and announce them in Discord.
+                </CardDescription>
               </div>
             </CardHeader>
 
@@ -282,9 +276,8 @@ export function BoosterView({
           {/* Visual Styling Card */}
           <Card className="border-border/80 bg-card/60 backdrop-blur-xs shadow-2xs">
             <CardHeader className="pb-3">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Palette className="h-4 w-4 text-pink-500" />
-                <span>Message & Visual Customization</span>
+              <div className="text-sm font-semibold">
+                Message &amp; Visual Customization
               </div>
               <CardDescription className="text-xs">
                 Personalize your server's appreciation message, brand colors, and banner imagery.
@@ -518,113 +511,70 @@ export function BoosterView({
         {/* Right Column: Live Discord Interactive Mockup (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="sticky top-6 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-pink-500" />
-                <span>Live Discord Preview</span>
-              </div>
-              <Badge variant="outline" className="text-[10px] font-mono border-pink-500/30 text-pink-400 bg-pink-500/10">
-                REAL-TIME
-              </Badge>
-            </div>
-
-            {/* Discord Chat Window Mockup */}
-            <div className="rounded-xl border border-border/80 bg-[#1e1f22] text-[#dbdee1] p-4 shadow-xl font-sans overflow-hidden">
-              {/* Channel Header Bar */}
-              <div className="flex items-center gap-2 pb-3 mb-3 border-b border-[#313338] text-xs text-[#949ba4]">
-                <span className="text-base font-semibold leading-none">#</span>
-                <span className="font-semibold text-white">
-                  {(liveChannels.find((c) => c.id === config.channelId)?.name || "announcements").replace(/^#+/, "")}
-                </span>
-                <span className="text-[10px] text-[#949ba4] ml-auto">Channel Preview</span>
-              </div>
-
-              {/* Bot Message Header */}
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#5865F2] flex items-center justify-center shrink-0 overflow-hidden text-white font-bold text-sm shadow-xs">
-                  {botAvatarUrl ? (
-                    <img src={botAvatarUrl} alt={botName} className="w-full h-full object-cover" />
-                  ) : (
-                    "D3"
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-white text-sm hover:underline cursor-pointer">
-                      {botName}
-                    </span>
-                    <span className="bg-[#5865F2] text-white text-[9px] font-bold px-1 rounded uppercase tracking-wider">
-                      BOT
-                    </span>
-                    <span className="text-[10px] text-[#949ba4]">Today at 4:20 PM</span>
+            <DiscordChatPreview
+              channelName={(liveChannels.find((c) => c.id === config.channelId)?.name || "announcements")}
+              botName={botName}
+              botAvatarUrl={botAvatarUrl}
+              mention={config.pingUser ? "@BoosterChampion" : undefined}
+              headerRightSlot={
+                <Badge variant="outline" className="text-[10px] font-mono border-pink-500/30 text-pink-400 bg-pink-500/10">
+                  REAL-TIME
+                </Badge>
+              }
+            >
+              {/* Rich Embed vs Plain Text */}
+              {config.useEmbed ? (
+                <div
+                  className="mt-2 rounded-md bg-[#2b2d31] p-3 border-l-4 text-xs space-y-2 max-w-sm"
+                  style={{ borderLeftColor: config.accentColor || "#F43F5E" }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-white text-sm leading-tight">
+                        {previewFormattedTitle}
+                      </h4>
+                      <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">
+                        {previewFormattedMessage}
+                      </p>
+                    </div>
+                    {/* Booster Avatar Thumbnail */}
+                    <div className="w-10 h-10 rounded-full bg-pink-500/20 border border-pink-500/40 flex items-center justify-center shrink-0 text-pink-400 font-bold text-xs">
+                      💎
+                    </div>
                   </div>
 
-                  {/* Mention User Content */}
-                  {config.pingUser && (
-                    <p className="text-xs text-[#c9cdfb] bg-[#5865f2]/20 px-1 py-0.5 rounded inline-block mt-1 font-medium">
-                      @BoosterChampion
-                    </p>
-                  )}
-
-                  {/* Rich Embed vs Plain Text */}
-                  {config.useEmbed ? (
-                    <div
-                      className="mt-2 rounded-md bg-[#2b2d31] p-3 border-l-4 text-xs space-y-2 max-w-sm"
-                      style={{ borderLeftColor: config.accentColor || "#F43F5E" }}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <h4 className="font-bold text-white text-sm leading-tight">
-                            {previewFormattedTitle}
-                          </h4>
-                          <p className="text-[#dbdee1] text-xs leading-relaxed whitespace-pre-wrap">
-                            {previewFormattedMessage}
-                          </p>
-                        </div>
-                        {/* Booster Avatar Thumbnail */}
-                        <div className="w-10 h-10 rounded-full bg-pink-500/20 border border-pink-500/40 flex items-center justify-center shrink-0 text-pink-400 font-bold text-xs">
-                          💎
-                        </div>
-                      </div>
-
-                      {/* Banner Image Preview */}
-                      {config.bannerUrl && (
-                        <div className="mt-2 rounded overflow-hidden max-h-40 border border-white/5">
-                          <img
-                            src={config.bannerUrl}
-                            alt="Banner Preview"
-                            className="w-full h-auto object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        </div>
-                      )}
-
-                      {/* Embed Footer */}
-                      <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[#949ba4]">
-                        {resolvedFooterIcon ? (
-                          <img
-                            src={resolvedFooterIcon}
-                            alt="Footer Icon"
-                            className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
-                          />
-                        ) : null}
-                        <span>{resolvedFooterText}</span>
-                      </div>
+                  {/* Banner Image Preview */}
+                  {config.bannerUrl && (
+                    <div className="mt-2 rounded overflow-hidden max-h-40 border border-white/5">
+                      <img
+                        src={config.bannerUrl}
+                        alt="Banner Preview"
+                        className="w-full h-auto object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
                     </div>
-                  ) : (
-                    <p className="text-xs text-[#dbdee1] mt-1.5 whitespace-pre-wrap leading-relaxed">
-                      {previewFormattedMessage}
-                    </p>
                   )}
+
+                  {/* Embed Footer */}
+                  <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[#949ba4]">
+                    {resolvedFooterIcon ? (
+                      <img
+                        src={resolvedFooterIcon}
+                        alt="Footer Icon"
+                        className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
+                      />
+                    ) : null}
+                    <span>{resolvedFooterText}</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-
-
+              ) : (
+                <p className="text-xs text-[#dbdee1] mt-1.5 whitespace-pre-wrap leading-relaxed">
+                  {previewFormattedMessage}
+                </p>
+              )}
+            </DiscordChatPreview>
           </div>
         </div>
       </div>

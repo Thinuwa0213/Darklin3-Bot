@@ -35,6 +35,7 @@ export class RealDiscordClient implements IDiscordClient {
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildInvites,
       ],
       partials: [
         Partials.Message,

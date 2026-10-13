@@ -58,7 +58,7 @@ export const STREAM_ALERT_VARIABLES: TemplateVariable[] = [
     token: "{streamer}",
     label: "Streamer Name",
     description: "The name of the streamer or channel",
-    example: "ALWIZ 2.0",
+    example: "CreatorPulse",
     category: "user",
   },
   {
@@ -89,7 +89,7 @@ export const VIDEO_UPLOAD_VARIABLES: TemplateVariable[] = [
     token: "{streamer}",
     label: "Creator Name",
     description: "The name of the video creator",
-    example: "ALWIZ 2.0",
+    example: "CreatorPulse",
     category: "user",
   },
   {

@@ -11,19 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import {
   Trophy,
   Award,
-  Zap,
   Save,
   Plus,
   Trash2,
   Users,
   Settings2,
   Clock,
-  Sparkles,
   Loader2,
   Hash,
-  Mic,
-  Gift,
-  Rocket,
   Palette,
   Check,
 } from "lucide-react";
@@ -298,28 +293,11 @@ export function LevelsView({
       {/* TAB 1: CONFIGURATION */}
       {activeTab === "settings" && (
         <div className="space-y-5">
-          {/* Master Enable Switch */}
-          <Card className="border-border">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-emerald-500" />
-                  <span className="text-sm font-semibold text-foreground">Enable Leveling & XP</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  When enabled, non-bot messages award XP points and unlock milestone roles.
-                </p>
-              </div>
-              <Switch checked={enabled} onCheckedChange={setEnabled} />
-            </CardContent>
-          </Card>
-
           {/* XP Calculation & Cooldown Settings */}
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-500" />
-                <span>Message XP & Cooldown Rules</span>
+              <CardTitle className="text-sm font-semibold">
+                Message XP &amp; Cooldown Rules
               </CardTitle>
               <CardDescription className="text-xs">
                 Configure random XP bounds awarded per message and anti-spam rate limiting.
@@ -378,8 +356,7 @@ export function LevelsView({
               </div>
 
               <div className="p-3 rounded-lg border border-border bg-muted/20 text-xs text-muted-foreground">
-                📐 <strong>Level Formula:</strong> <code className="text-foreground font-mono">Total XP = 100 × Level²</code>.
-                Example: Level 1 = 100 XP, Level 5 = 2,500 XP, Level 10 = 10,000 XP.
+                <span className="font-semibold text-foreground">Level Formula:</span> <code className="text-foreground font-mono">Total XP = 100 × Level²</code>. Example: Level 1 = 100 XP, Level 5 = 2,500 XP, Level 10 = 10,000 XP.
               </div>
             </CardContent>
           </Card>
@@ -389,9 +366,8 @@ export function LevelsView({
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-indigo-400" />
-                    <span>Level-Up Announcements</span>
+                  <CardTitle className="text-sm font-semibold">
+                    Level-Up Announcements
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Post celebratory embeds when members level up in the community.
@@ -437,9 +413,8 @@ export function LevelsView({
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Mic className="h-4 w-4 text-emerald-400" />
-                    <span>Voice Channel XP</span>
+                  <CardTitle className="text-sm font-semibold">
+                    Voice Channel XP
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Reward active voice channel discussions with periodic XP points.
@@ -486,7 +461,7 @@ export function LevelsView({
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border bg-muted/20 text-[11px] text-muted-foreground">
-                  🛡️ <strong>Anti-AFK Protection:</strong> Members who are server-deafened or self-deafened are automatically skipped.
+                  <span className="font-semibold text-foreground">Anti-AFK Protection:</span> Members who are server-deafened or self-deafened are automatically skipped.
                 </div>
               </CardContent>
             )}
@@ -499,9 +474,8 @@ export function LevelsView({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                      <Rocket className="h-4 w-4 text-purple-400" />
-                      <span>Server Booster Multiplier</span>
+                    <CardTitle className="text-sm font-semibold">
+                      Server Booster Multiplier
                     </CardTitle>
                     <CardDescription className="text-xs">
                       Bonus XP for Nitro Boosters.
@@ -538,9 +512,8 @@ export function LevelsView({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                      <Gift className="h-4 w-4 text-emerald-400" />
-                      <span>Daily Reward (/daily)</span>
+                    <CardTitle className="text-sm font-semibold">
+                      Daily Reward (/daily)
                     </CardTitle>
                     <CardDescription className="text-xs">
                       Allow members to claim free daily XP.
@@ -578,9 +551,8 @@ export function LevelsView({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400" />
-                  <span>Interactive Card Preview</span>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Interactive Card Preview
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Real-time preview of how <code className="text-indigo-400 font-mono">/rank</code> appears to Discord members.
@@ -660,7 +632,7 @@ export function LevelsView({
                         Assistance
                       </span>
                       <span className="text-[11px] font-mono opacity-60 block" style={{ color: cardTextColor }}>
-                        CreatorCore Member
+                        Darklin3 Member
                       </span>
                     </div>
                   </div>
@@ -749,12 +721,9 @@ export function LevelsView({
           <Card className="border-border">
             <CardContent className="flex items-center justify-between p-4">
               <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Palette className="h-4 w-4 text-indigo-500" />
-                  <span className="text-sm font-semibold text-foreground">
-                    Enable High-Resolution Canvas Card
-                  </span>
-                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  High-Resolution Canvas Card
+                </span>
                 <p className="text-xs text-muted-foreground">
                   When enabled, /rank generates and attaches the graphical Rank Card image. When disabled, it falls back to the classic text embed.
                 </p>
@@ -766,12 +735,11 @@ export function LevelsView({
           {/* Background Preset Selector */}
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-400" />
-                <span>Card Background Wallpaper</span>
+              <CardTitle className="text-sm font-semibold">
+                Card Background Wallpaper
               </CardTitle>
               <CardDescription className="text-xs">
-                Choose one of 4 curated backgrounds or themes for your server's rank cards.
+                Choose one of 4 curated backgrounds or themes for your server&apos;s rank cards.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -835,9 +803,8 @@ export function LevelsView({
           {/* Color Customization Panel */}
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Palette className="h-4 w-4 text-primary" />
-                <span>Theme Colors & Accents</span>
+              <CardTitle className="text-sm font-semibold">
+                Theme Colors &amp; Accents
               </CardTitle>
               <CardDescription className="text-xs">
                 Fine-tune progress bar, avatar glow ring, and typography colors to match your server branding.
@@ -977,12 +944,9 @@ export function LevelsView({
           <Card className="border-border">
             <CardContent className="flex items-center justify-between p-4">
               <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-semibold text-foreground">
-                    Enable Milestone Role Rewards
-                  </span>
-                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  Milestone Role Rewards
+                </span>
                 <p className="text-xs text-muted-foreground">
                   Automatically grant Discord roles when members achieve milestone levels. If disabled, members level up without receiving roles.
                 </p>
@@ -995,9 +959,8 @@ export function LevelsView({
             <>
               <Card className="border-border">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Plus className="h-4 w-4 text-primary" />
-                    <span>Add Milestone Role Reward</span>
+                  <CardTitle className="text-sm font-semibold">
+                    Add Milestone Role Reward
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Select a milestone level and pick an existing Discord server role to grant automatically.
@@ -1127,9 +1090,8 @@ export function LevelsView({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-400" />
-                  <span>Server XP Leaderboard</span>
+                <CardTitle className="text-sm font-semibold">
+                  Server XP Leaderboard
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Real-time member activity rankings based on chat engagement.

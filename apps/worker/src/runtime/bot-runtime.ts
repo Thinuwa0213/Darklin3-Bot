@@ -10,6 +10,8 @@ import { RolePanelManager } from "./role-panel-manager.js";
 import { BoosterManager } from "./booster-manager.js";
 import { ActionLogManager } from "./action-log-manager.js";
 import { AutoModManager } from "./auto-mod-manager.js";
+import { InviteManager } from "./invite-manager.js";
+import { logToGuildConsole } from "./guild-console-logger.js";
 
 export interface BotRuntimeOptions {
   botApplicationId: string;
@@ -56,6 +58,7 @@ export class BotRuntime {
   private boosterManager?: BoosterManager | undefined;
   private actionLogManager?: ActionLogManager | undefined;
   private autoModManager?: AutoModManager | undefined;
+  private inviteManager?: InviteManager | undefined;
   private connected = false;
 
   constructor(options: BotRuntimeOptions) {
@@ -143,7 +146,23 @@ export class BotRuntime {
                 logger: this.logger,
                 clientPing: typeof client.getPing === "function" ? client.getPing() : undefined,
               })
+              .then(() => {
+                if (chatInput.guildId) {
+                  void logToGuildConsole(chatInput.guildId, {
+                    level: "INFO",
+                    category: "SYSTEM",
+                    message: `Executed command /${chatInput.commandName} by @${chatInput.user.tag || chatInput.user.username}`,
+                  });
+                }
+              })
               .catch((dispatchErr: unknown) => {
+                if (chatInput.guildId) {
+                  void logToGuildConsole(chatInput.guildId, {
+                    level: "ERROR",
+                    category: "SYSTEM",
+                    message: `Command /${chatInput.commandName} failed: ${dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr)}`,
+                  });
+                }
                 this.logger.error("unhandled interaction dispatch error", {
                   botApplicationId: this.botApplicationId,
                   error: dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr),
@@ -221,10 +240,32 @@ export class BotRuntime {
         this.autoModManager = new AutoModManager(client, this.logger);
         void this.autoModManager.start();
 
+        this.inviteManager = new InviteManager(client, this.logger);
+        void this.inviteManager.start();
+
         this.logger.info("bot runtime connected and ready", {
           botApplicationId: this.botApplicationId,
           credentialId: this.credentialId,
         });
+
+        // Emit gateway connection log to joined guild consoles
+        try {
+          const clientAny = client as any;
+          if (clientAny.guilds?.cache && typeof clientAny.guilds.cache.forEach === "function") {
+            clientAny.guilds.cache.forEach((g: any) => {
+              if (g?.id) {
+                void logToGuildConsole(g.id, {
+                  level: "SUCCESS",
+                  category: "GATEWAY",
+                  message: `Discord Gateway connection established (Ping: ${typeof client.getPing === "function" ? client.getPing() : 28}ms). Bot runtime active.`,
+                });
+              }
+            });
+          }
+        } catch {
+          // non-fatal
+        }
+
         resolve();
       };
 
@@ -307,6 +348,10 @@ export class BotRuntime {
     if (this.autoModManager) {
       this.autoModManager.stop();
       this.autoModManager = undefined;
+    }
+    if (this.inviteManager) {
+      this.inviteManager.stop();
+      this.inviteManager = undefined;
     }
     if (this.client) {
       if (this.interactionListener) {

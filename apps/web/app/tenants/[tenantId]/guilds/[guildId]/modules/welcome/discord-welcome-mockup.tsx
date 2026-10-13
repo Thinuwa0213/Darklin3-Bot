@@ -4,14 +4,13 @@ import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Users,
-  User,
   Bell,
-  Sparkles,
   Hash,
   CheckCircle,
   ExternalLink,
+  User,
 } from "lucide-react";
+import { DiscordAppBadge } from "@/components/discord/discord-chat-preview";
 import type { WelcomeBannerConfig } from "./welcome-types";
 
 interface DiscordWelcomeMockupProps {
@@ -77,26 +76,29 @@ export function DiscordWelcomeMockup({
     return <span dangerouslySetInnerHTML={{ __html: text }} />;
   };
 
+  // Dynamic formatted time
+  const [localTime, setLocalTime] = useState("Today at 8:42 PM");
+  useEffect(() => {
+    try {
+      const now = new Date();
+      setLocalTime(`Today at ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}`);
+    } catch {}
+  }, []);
+
   return (
-    <div className="rounded-2xl border border-zinc-800/80 bg-[#313338] shadow-2xl overflow-hidden flex flex-col">
-      {/* Top Bar - Discord Channel Bar Header */}
-      <div className="bg-[#2B2D31] px-4 py-2.5 flex items-center justify-between border-b border-zinc-800/60 select-none">
+    <div className="rounded-xl border border-zinc-800/90 bg-[#313338] shadow-2xl overflow-hidden flex flex-col font-sans select-none">
+      {/* Top Bar - Discord Channel Bar Header (Authentic 2024 UI) */}
+      <div className="bg-[#2B2D31] px-4 py-2.5 flex items-center justify-between border-b border-zinc-800/80">
         <div className="flex items-center gap-2">
-          <div className="flex gap-1.5 mr-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
-          </div>
-          <Hash className="h-4 w-4 text-zinc-400" />
+          <Hash className="h-4 w-4 text-zinc-400 shrink-0" />
           <span className="text-xs font-semibold text-zinc-200">
-            {channelName ? channelName.replace(/^#/, "") : "welcome-and-rules"}
+            {channelName ? channelName.replace(/^#+/, "") : "welcome-and-rules"}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-          <Users className="w-3.5 h-3.5" />
-          <span>Discord Live Preview</span>
-        </div>
+        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider font-mono">
+          Discord Live Preview
+        </span>
       </div>
 
       {/* Main Chat Box */}
@@ -111,7 +113,7 @@ export function DiscordWelcomeMockup({
         <div className="flex items-start gap-3.5">
           {/* Bot Avatar */}
           <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-full bg-[#1e1f22] overflow-hidden flex items-center justify-center font-bold text-xs text-white border border-white/5">
+            <div className="w-10 h-10 rounded-full bg-[#5865F2] overflow-hidden flex items-center justify-center font-bold text-xs text-white border border-white/5 shadow-xs">
               {botAvatarUrl ? (
                 <img
                   src={botAvatarUrl}
@@ -119,27 +121,25 @@ export function DiscordWelcomeMockup({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-indigo-600/30 text-indigo-300 flex items-center justify-center font-bold">
-                  {botName.slice(0, 2).toUpperCase()}
-                </div>
+                <span>{botName.slice(0, 2).toUpperCase()}</span>
               )}
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#313338] flex items-center justify-center">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#23a55a] block" />
             </div>
           </div>
 
           {/* Message Content */}
           <div className="flex-1 min-w-0 space-y-2">
-            {/* Author info line */}
-            <div className="flex items-baseline gap-2">
+            {/* Author info line with official APP badge */}
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-sm font-semibold text-white hover:underline cursor-pointer">
                 {botName}
               </span>
-              <span className="bg-[#5865F2] text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider">
-                BOT
+              <DiscordAppBadge />
+              <span suppressHydrationWarning className="text-[11px] text-[#949ba4] font-mono">
+                {localTime}
               </span>
-              <span className="text-[11px] text-zinc-400">Today at 12:00 PM</span>
             </div>
 
             {/* Message Body */}
@@ -270,7 +270,7 @@ export function DiscordWelcomeMockup({
                             }`}
                           >
                             <div className="w-full h-full rounded-[inherit] overflow-hidden bg-zinc-800 flex items-center justify-center text-white font-bold text-base select-none">
-                              CC
+                              D3
                             </div>
                           </div>
                         )}
@@ -317,8 +317,8 @@ export function DiscordWelcomeMockup({
       {/* Footer Helper bar */}
       {customCanvasCard && onOpenStudio && (
         <div className="px-4 py-2.5 bg-[#2B2D31]/80 border-t border-zinc-800/80 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+          <div className="flex items-center gap-2 text-xs text-zinc-300 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
             <span>Dynamic Canvas Card is Active</span>
           </div>
           <Button

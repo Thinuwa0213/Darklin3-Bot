@@ -11,13 +11,13 @@ import {
   Layers,
   CreditCard,
   ShieldAlert,
-  FileText,
   Palette,
   Activity,
   Radar,
   Settings,
   Rocket,
   ScrollText,
+  UserCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -64,9 +64,9 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
   const radarUrl = `${guildBase}/modules/radar`;
   const rolesUrl = `${guildBase}/modules/roles`;
   const boosterUrl = `${guildBase}/modules/booster`;
-  const embedsUrl = `${guildBase}/modules/embeds`;
   const moderationUrl = `${guildBase}/modules/moderation`;
   const actionLogsUrl = `${guildBase}/modules/action-logs`;
+  const invitesUrl = `${guildBase}/modules/invites`;
   const billingUrl = `/tenants/${currentGuild.tenantId}/billing`;
 
   return (
@@ -183,6 +183,17 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
 
             <SidebarMenuItem>
               <SidebarMenuButton
+                id="nav-module-invites"
+                href={invitesUrl}
+                isActive={pathname === invitesUrl}
+              >
+                <UserCheck className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {(state === "expanded" || isMobile) && <span>Invite Tracker</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
                 id="nav-module-levels"
                 href={levelsUrl}
                 isActive={pathname === levelsUrl}
@@ -242,24 +253,6 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 {(state === "expanded" || isMobile) && (
                   <div className="flex items-center justify-between w-full">
                     <span>Server Booster</span>
-                    <Badge variant="outline" className="text-[9px] font-mono border-zinc-700/80 text-zinc-300 bg-zinc-900/60 px-1 py-0">
-                      PRO
-                    </Badge>
-                  </div>
-                )}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                id="nav-module-embeds"
-                href={embedsUrl}
-                isActive={pathname === embedsUrl}
-              >
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && (
-                  <div className="flex items-center justify-between w-full">
-                    <span>Embed Builder</span>
                     <Badge variant="outline" className="text-[9px] font-mono border-zinc-700/80 text-zinc-300 bg-zinc-900/60 px-1 py-0">
                       PRO
                     </Badge>

@@ -14,9 +14,9 @@ import {
   Trash2,
   Save,
   MousePointerClick,
-  Sliders,
   Send,
   Sparkles,
+  Sliders,
   ChevronDown,
   Layers,
   CheckCircle2,
@@ -35,6 +35,7 @@ import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import { EmojiPicker, parseDiscordCustomEmoji } from "@/components/ui/emoji-picker";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 import { cn } from "@/lib/utils";
 import type { LiveDiscordChannel, LiveDiscordRole, LiveDiscordEmoji } from "../welcome/welcome-types";
 import type {
@@ -800,9 +801,8 @@ export function RolesView({
               <Card className="border-border/80 shadow-2xs">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <Sliders className="h-4 w-4 text-primary" />
-                      Panel Setup & Target Destination
+                    <CardTitle className="text-base font-semibold">
+                      Panel Setup &amp; Target Destination
                     </CardTitle>
                     <CardDescription className="text-xs">
                       Configure which channel this role panel targets and how it behaves.
@@ -950,9 +950,8 @@ export function RolesView({
             {/* 2. Discord Embed Customizer */}
             <Card className="border-border/80 shadow-2xs">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Embed Presentation & Styling
+                <CardTitle className="text-base font-semibold">
+                  Embed Presentation &amp; Styling
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Customize how the role selection message looks inside Discord.
@@ -1230,42 +1229,20 @@ export function RolesView({
 
           {/* Right Column: Authentic Discord Live Preview (5 cols) */}
           <div className="lg:col-span-5 space-y-4 sticky top-6">
-            <Card className="border-border bg-card/60 shadow-xs">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <MousePointerClick className="h-4 w-4 text-emerald-500" />
-                  Discord Component Preview
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Pixel-perfect representation of how members see this panel in Discord.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Discord Dark Theme Message Container (#313338) */}
-                <div className="rounded-xl border border-zinc-800 bg-[#313338] text-[#dbdee1] p-4 space-y-3 font-sans shadow-lg">
-                  {/* Bot Header */}
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-                      {botAvatarUrl ? (
-                        <img
-                          src={botAvatarUrl}
-                          alt={botName}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        botName.slice(0, 2).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-white hover:underline cursor-pointer">
-                        {botName}
-                      </span>
-                      <span className="bg-[#5865F2] text-white text-[10px] font-bold px-1 py-0.5 rounded leading-none">
-                        BOT
-                      </span>
-                      <span className="text-[11px] text-[#949ba4] ml-1">Today at 10:15 AM</span>
-                    </div>
-                  </div>
+            <DiscordChatPreview
+              channelName={(() => {
+                const ch = channels.find((c) => c.id === activePanel.channelId);
+                const raw = ch?.name || activePanel.channelName;
+                return raw ? raw.replace(/^#+/, "") : "reaction-roles";
+              })()}
+              botName={botName}
+              botAvatarUrl={botAvatarUrl}
+              headerRightSlot={
+                <Badge variant="outline" className="text-[10px] font-mono border-emerald-500/30 text-emerald-400 bg-emerald-500/10">
+                  {activePanel.type} PREVIEW
+                </Badge>
+              }
+            >
 
                   {/* Embed Card */}
                   <div
@@ -1372,26 +1349,24 @@ export function RolesView({
                       )}
                     </div>
                   )}
-                </div>
+            </DiscordChatPreview>
 
-                <div className="pt-3 text-[11px] text-muted-foreground flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                    Bot hierarchy checked on click
-                  </span>
-                  <span>
-                    Target:{" "}
-                    <strong className="text-foreground">
-                      {(() => {
-                        const ch = channels.find((c) => c.id === activePanel.channelId);
-                        const raw = ch?.name || activePanel.channelName;
-                        return raw ? `#${raw.replace(/^#+/, "")}` : "Not Set";
-                      })()}
-                    </strong>
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="p-3 rounded-lg border border-border/60 bg-card/40 text-[11px] text-muted-foreground flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                Bot hierarchy checked on click
+              </span>
+              <span>
+                Target:{" "}
+                <strong className="text-foreground">
+                  {(() => {
+                    const ch = channels.find((c) => c.id === activePanel.channelId);
+                    const raw = ch?.name || activePanel.channelName;
+                    return raw ? `#${raw.replace(/^#+/, "")}` : "Not Set";
+                  })()}
+                </strong>
+              </span>
+            </div>
           </div>
         </div>
         </>
