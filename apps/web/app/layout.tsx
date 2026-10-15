@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Darklin3 Bot Operations & Management.",
 };
 
+import { PlatformBroadcastBanner } from "@/components/platform-broadcast-banner";
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
@@ -29,6 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           enableSystem
           disableTransitionOnChange
         >
+          <PlatformBroadcastBanner platform="BOT_WEB" />
           {children}
         </ThemeProvider>
       </body>
