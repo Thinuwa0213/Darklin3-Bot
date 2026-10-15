@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { readStoredSettings } from "@/lib/settings-storage";
 import { readStoredConsoleLogs } from "@/lib/console-logs-storage";
 import { GuildLiveConsole } from "./guild-live-console";
+import { BotPowerControls } from "@/app/components/bot-power-controls";
 import {
   ShieldAlert,
   Bot,
@@ -21,6 +22,7 @@ import {
   MessageSquareText,
   Radio,
   Lock,
+  HardDrive,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +42,7 @@ export default async function GuildOverviewPage({ params }: PageProps) {
 
   const { tenantId, guildId } = await params;
 
-  const [res, settings, initialLogs] = await Promise.all([
+  const [res, settings, initialLogs, brandingRes] = await Promise.all([
     callApiServer<{
       status:
         | "NOT_CONFIGURED"
@@ -49,14 +51,23 @@ export default async function GuildOverviewPage({ params }: PageProps) {
         | "ACTIVE_ASSIGNMENT"
         | "ONLINE"
         | "DEGRADED"
-        | "OFFLINE";
+        | "OFFLINE"
+        | "STOPPED";
       botApplicationId: string | null;
       botName?: string | null;
+      botPublic?: boolean | null;
     }>(
       `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`,
     ),
     readStoredSettings(tenantId, guildId),
     readStoredConsoleLogs(tenantId, guildId),
+    callApiServer<{
+      plan: "FREE" | "PRO" | "ENTERPRISE";
+      maxStorageBytes: number;
+      usedStorageBytes: number;
+    }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/branding`,
+    ),
   ]);
 
   if (!res.ok || !res.data) {
@@ -81,7 +92,18 @@ export default async function GuildOverviewPage({ params }: PageProps) {
     );
   }
 
-  const { status, botApplicationId, botName } = res.data;
+  const { status, botApplicationId, botName, botPublic } = res.data;
+
+  const brandingData = brandingRes.ok && brandingRes.data ? brandingRes.data : null;
+  const currentPlan = brandingData?.plan ?? "FREE";
+  const maxStorageBytes = brandingData?.maxStorageBytes ?? 30 * 1024 * 1024;
+  const usedStorageBytes = brandingData?.usedStorageBytes ?? 0;
+  const usedMb = (usedStorageBytes / (1024 * 1024)).toFixed(1);
+  const maxMb = Math.round(maxStorageBytes / (1024 * 1024));
+  const storagePercent =
+    maxStorageBytes > 0
+      ? Math.min(100, Math.round((usedStorageBytes / maxStorageBytes) * 100))
+      : 0;
 
   const getBadgeVariant = (
     st: string,
@@ -94,6 +116,7 @@ export default async function GuildOverviewPage({ params }: PageProps) {
       case "UNASSIGNED":
         return "warning";
       case "NOT_CONFIGURED":
+      case "STOPPED":
         return "secondary";
       case "DEGRADED":
       case "OFFLINE":
@@ -103,6 +126,7 @@ export default async function GuildOverviewPage({ params }: PageProps) {
   };
 
   const badgeVariant = getBadgeVariant(status);
+  const isBotConfigured = Boolean(botApplicationId);
   const isIntentsActive = status === "ONLINE" || status === "ACTIVE_ASSIGNMENT";
 
   return (
@@ -150,6 +174,51 @@ export default async function GuildOverviewPage({ params }: PageProps) {
               </a>
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Public Bot Security Warning Banner */}
+      {botPublic === true && (
+        <div
+          id="public-bot-warning-banner"
+          role="alert"
+          className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-amber-700 dark:text-amber-400 animate-in fade-in"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5 sm:mt-0">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                <span>Security Notice: Public Bot is Enabled in Discord</span>
+                <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400 font-mono text-[9px]">
+                  ACTION RECOMMENDED
+                </Badge>
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Your bot can currently be invited to unauthorized servers by anyone who has your Client ID, which can deplete your rate limits. To enforce dedicated 1-server isolation, turn off <strong>PUBLIC BOT</strong> in the Discord Developer Portal.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            asChild
+            className="h-8 text-xs font-semibold shrink-0 bg-amber-600 hover:bg-amber-700 text-white shadow-xs cursor-pointer"
+          >
+            <a
+              href={
+                botApplicationId
+                  ? `https://discord.com/developers/applications/${botApplicationId}/bot`
+                  : "https://discord.com/developers/applications"
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5"
+            >
+              <span>Disable Public Bot</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </Button>
         </div>
       )}
 
@@ -211,82 +280,127 @@ export default async function GuildOverviewPage({ params }: PageProps) {
 
         {/* Cell 3: Runtime & Operations */}
         <div className="p-5 space-y-2.5 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <Activity className="h-3.5 w-3.5" />
-                <span>Gateway Runtime</span>
-              </div>
-              <Badge
-                id="overview-runtime-status-badge"
-                data-status={status}
-                variant={badgeVariant}
-                className="text-[10px] font-semibold px-2 py-0.5"
-              >
-                {status}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              {status === "ONLINE"
-                ? "Bot worker active and connected to Discord Gateway."
-                : status === "ACTIVE_ASSIGNMENT"
-                  ? "Assigned to an active bot worker replica."
-                  : status === "UNASSIGNED"
-                    ? "Application configured; awaiting worker assignment."
-                    : status === "DEGRADED"
-                      ? "Discord rejected credentials. Token rotation required."
-                      : status === "OFFLINE"
-                        ? "Bot runtime worker is offline."
-                        : "Bot credentials required to activate this server."}
-            </p>
-          </div>
-
-          {/* Quick Actions Container */}
-          <div
-            id="setup-action-container"
-            className="pt-2 flex items-center justify-between gap-2"
-          >
-            {status === "NOT_CONFIGURED" ? (
-              <Button id="setup-bot-link" asChild size="sm" className="w-full text-xs font-semibold">
-                <a
-                  href={`/tenants/${tenantId}/guilds/${guildId}/setup`}
-                  className="flex items-center justify-center gap-2"
-                >
-                  <span>Configure Discord Bot</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </a>
-              </Button>
-            ) : (
-              <>
-                <div
-                  id="bot-configured-notice"
-                  className={`flex items-center gap-1.5 text-xs font-medium ${
-                    status === "DEGRADED" ? "text-destructive" : "text-emerald-500"
-                  }`}
-                >
-                  {status === "DEGRADED" ? (
-                    <>
-                      <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-                      <span>Attention required</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                      <span>Runtime Active</span>
-                    </>
-                  )}
+          {status === "NOT_CONFIGURED" ? (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Activity className="h-3.5 w-3.5" />
+                    <span>Gateway Runtime</span>
+                  </div>
+                  <Badge
+                    id="overview-runtime-status-badge"
+                    data-status={status}
+                    variant={badgeVariant}
+                    className="text-[10px] font-semibold px-2 py-0.5"
+                  >
+                    {status}
+                  </Badge>
                 </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Bot credentials required to activate this server.
+                </p>
+              </div>
 
-                <Button variant="outline" size="sm" asChild className="h-8 text-xs cursor-pointer">
+              <div id="setup-action-container" className="pt-2">
+                <Button id="setup-bot-link" asChild size="sm" className="w-full text-xs font-semibold">
                   <a
                     href={`/tenants/${tenantId}/guilds/${guildId}/setup`}
-                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                    className="flex items-center justify-center gap-2"
                   >
-                    <KeyRound className="h-3 w-3" />
-                    <span>Credentials</span>
+                    <span>Configure Discord Bot</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </a>
                 </Button>
-              </>
+              </div>
+            </>
+          ) : (
+            <BotPowerControls
+              tenantId={tenantId}
+              guildId={guildId}
+              initialStatus={status}
+              botApplicationId={botApplicationId}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Storage & Resource Quota Rail */}
+      <div
+        id="overview-storage-quota-card"
+        className="rounded-xl border border-border/80 bg-card/60 backdrop-blur-xs p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary">
+            <HardDrive className="h-5 w-5" />
+          </div>
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-foreground">Branding &amp; Media Storage</span>
+              <Badge
+                variant="outline"
+                className={`text-[10px] font-mono px-2 py-0 uppercase ${
+                  currentPlan === "ENTERPRISE"
+                    ? "border-purple-500/30 text-purple-400 bg-purple-500/10"
+                    : currentPlan === "PRO"
+                      ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                      : "border-primary/30 text-primary bg-primary/10"
+                }`}
+              >
+                {currentPlan} Plan
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground truncate">
+              Avatars, welcome banners, dynamic canvas graphics &amp; bot assets
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 shrink-0">
+          <div className="space-y-1.5 min-w-[200px] sm:min-w-[240px]">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">Storage Used</span>
+              <span className="text-foreground font-mono font-medium">
+                {usedMb} MB / {maxMb} MB{" "}
+                <span className="text-muted-foreground font-normal">({storagePercent}%)</span>
+              </span>
+            </div>
+            <div className="w-full bg-muted/60 rounded-full h-2 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  storagePercent > 90
+                    ? "bg-destructive"
+                    : storagePercent > 70
+                      ? "bg-amber-500"
+                      : "bg-primary"
+                }`}
+                style={{ width: `${storagePercent}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-8 text-xs font-medium cursor-pointer"
+            >
+              <a href={`/tenants/${tenantId}/guilds/${guildId}/modules/branding`}>
+                <span>Manage Assets</span>
+              </a>
+            </Button>
+            {currentPlan === "FREE" && (
+              <Button
+                size="sm"
+                asChild
+                className="h-8 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-xs"
+              >
+                <a href={`/tenants/${tenantId}/billing`}>
+                  <span>Upgrade to Pro</span>
+                  <ArrowRight className="h-3 w-3" />
+                </a>
+              </Button>
             )}
           </div>
         </div>
@@ -319,7 +433,7 @@ export default async function GuildOverviewPage({ params }: PageProps) {
           </a>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Server Members Intent */}
           <div className="rounded-lg border border-border/60 bg-background/40 p-3.5 space-y-1.5">
             <div className="flex items-center justify-between">
@@ -332,13 +446,20 @@ export default async function GuildOverviewPage({ params }: PageProps) {
                 className={`text-[10px] font-mono flex items-center gap-1 ${
                   isIntentsActive
                     ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
-                    : "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                    : isBotConfigured
+                      ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                      : "border-amber-500/30 text-amber-500 bg-amber-500/10"
                 }`}
               >
                 {isIntentsActive ? (
                   <>
                     <CheckCircle2 className="h-3 w-3" />
                     <span>ACTIVE</span>
+                  </>
+                ) : isBotConfigured ? (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>CONFIGURED</span>
                   </>
                 ) : (
                   <span>REQUIRED</span>
@@ -362,13 +483,20 @@ export default async function GuildOverviewPage({ params }: PageProps) {
                 className={`text-[10px] font-mono flex items-center gap-1 ${
                   isIntentsActive
                     ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
-                    : "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                    : isBotConfigured
+                      ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                      : "border-amber-500/30 text-amber-500 bg-amber-500/10"
                 }`}
               >
                 {isIntentsActive ? (
                   <>
                     <CheckCircle2 className="h-3 w-3" />
                     <span>ACTIVE</span>
+                  </>
+                ) : isBotConfigured ? (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>CONFIGURED</span>
                   </>
                 ) : (
                   <span>REQUIRED</span>
@@ -409,10 +537,49 @@ export default async function GuildOverviewPage({ params }: PageProps) {
               Required for dynamic bot presence cycling, live activity tracking, and online member counters.
             </p>
           </div>
+
+          {/* Public Bot Isolation Setting */}
+          <div className="rounded-lg border border-border/60 bg-background/40 p-3.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lock className={`h-3.5 w-3.5 ${botPublic === false ? "text-emerald-500" : "text-amber-500"}`} />
+                <span className="text-xs font-semibold text-foreground">Public Bot Toggle</span>
+              </div>
+              <Badge
+                variant="outline"
+                className={`text-[10px] font-mono flex items-center gap-1 ${
+                  botPublic === false
+                    ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                    : botPublic === true
+                      ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                      : "border-border text-muted-foreground"
+                }`}
+              >
+                {botPublic === false ? (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>PRIVATE (OFF)</span>
+                  </>
+                ) : botPublic === true ? (
+                  <>
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>PUBLIC (ON)</span>
+                  </>
+                ) : (
+                  <span>RECOMMENDED OFF</span>
+                )}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {botPublic === false
+                ? "Turned OFF. Bot is strictly private and cannot be added to unauthorized external servers."
+                : "Should be turned OFF in Developer Portal to guarantee dedicated 1-server rate limits."}
+            </p>
+          </div>
         </div>
 
-        {/* Module Locking Safeguard Notice when Bot is NOT Active */}
-        {!isIntentsActive && (
+        {/* Module Setup Notice when Bot is NOT Configured */}
+        {!isBotConfigured && (
           <div
             id="modules-locked-alert"
             className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-500"
@@ -420,7 +587,7 @@ export default async function GuildOverviewPage({ params }: PageProps) {
             <div className="flex items-center gap-2.5">
               <Lock className="h-4 w-4 shrink-0 text-amber-500" />
               <span>
-                <strong>Modules Locked:</strong> Bot is currently not online. Gateway Intents must be enabled in the Discord Developer Portal before modules can be activated.
+                <strong>Setup Required:</strong> Bot application is not configured. Gateway Intents must be enabled in the Discord Developer Portal before modules can be activated.
               </span>
             </div>
             <Button

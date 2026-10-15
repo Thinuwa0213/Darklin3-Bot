@@ -15,7 +15,7 @@ import {
   Clock,
   Users,
 } from "lucide-react";
-import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { PageHeader } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
 interface GiveawaysViewProps {
@@ -36,7 +36,7 @@ interface GiveawayItem {
   endsAt: string;
 }
 
-export function GiveawaysView({ tenantId, guildId, currentPlan = "FREE" }: GiveawaysViewProps) {
+export function GiveawaysView({ tenantId, guildId, currentPlan: _currentPlan = "FREE" }: GiveawaysViewProps) {
   const [giveaways, setGiveaways] = useState<GiveawayItem[]>([
     {
       id: "1",
@@ -94,14 +94,7 @@ export function GiveawaysView({ tenantId, guildId, currentPlan = "FREE" }: Givea
           <Badge key="count" variant="default" className="text-xs">
             {giveaways.length} Active
           </Badge>,
-          currentPlan !== "FREE" ? (
-            <ProBadge key="plan" label={currentPlan} />
-          ) : (
-            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          ),
-        ].filter(Boolean)}
+        ]}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
       />

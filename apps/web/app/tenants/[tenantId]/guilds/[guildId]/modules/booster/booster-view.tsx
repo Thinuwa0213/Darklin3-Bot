@@ -9,6 +9,8 @@ import {
   Mail,
   Hash,
   Loader2,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import type { BoosterConfig } from "@/lib/booster-storage";
@@ -93,6 +95,11 @@ export function BoosterView({
   }, [liveChannels]);
 
   const handleSave = () => {
+    if (!isPro) {
+      setFeedback({ type: "error", message: "Server Booster announcements require an active PRO subscription." });
+      return;
+    }
+
     startTransition(async () => {
       setFeedback(null);
       const res = await saveBoosterConfigAction(tenantId, guildId, config);
@@ -106,6 +113,11 @@ export function BoosterView({
   };
 
   const handleSendTestAlert = async () => {
+    if (!isPro) {
+      setFeedback({ type: "error", message: "Server Booster announcements require an active PRO subscription." });
+      return;
+    }
+
     if (!config.channelId) {
       setFeedback({ type: "error", message: "Please select an announcement channel first." });
       return;
@@ -153,22 +165,16 @@ export function BoosterView({
         category="Community Engagement"
         title="Server Booster Announcements"
         description="Celebrate members when they boost your server with dynamic Nitro embeds, pings, and DM appreciation."
-        badge={
-          currentPlan !== "FREE" ? (
-            <ProBadge label={currentPlan} />
-          ) : (
-            <Badge variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          )
-        }
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={
           <div className="flex items-center gap-2.5">
             <ModuleToggle
-              enabled={config.enabled}
-              onToggle={(checked) => setConfig((prev) => ({ ...prev, enabled: checked }))}
+              enabled={config.enabled && isPro}
+              onToggle={(checked) => {
+                if (!isPro) return;
+                setConfig((prev) => ({ ...prev, enabled: checked }));
+              }}
               activeLabel="Active"
               disabledLabel="Paused"
             />
@@ -176,21 +182,34 @@ export function BoosterView({
               variant="outline"
               size="sm"
               onClick={handleSendTestAlert}
-              disabled={testSending || !config.channelId}
+              disabled={!isPro || testSending || !config.channelId}
               className="gap-2 shadow-2xs h-9 cursor-pointer text-xs"
             >
               <Send className="h-3.5 w-3.5 text-pink-500" />
               <span>{testSending ? "Sending..." : "Test Alert"}</span>
             </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isPending}
-              size="sm"
-              className="gap-2 shadow-2xs h-9 bg-pink-600 hover:bg-pink-700 text-white cursor-pointer font-semibold text-xs px-4"
-            >
-              {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              <span>{isPending ? "Saving..." : "Save Changes"}</span>
-            </Button>
+            {isPro ? (
+              <Button
+                onClick={handleSave}
+                disabled={isPending}
+                size="sm"
+                className="gap-2 shadow-2xs h-9 bg-pink-600 hover:bg-pink-700 text-white cursor-pointer font-semibold text-xs px-4"
+              >
+                {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                <span>{isPending ? "Saving..." : "Save Changes"}</span>
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                asChild
+                className="gap-1.5 shadow-2xs h-9 bg-pink-600 hover:bg-pink-700 text-white cursor-pointer font-semibold text-xs px-3"
+              >
+                <a href={`/tenants/${tenantId}/billing`}>
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>Upgrade to Pro</span>
+                </a>
+              </Button>
+            )}
           </div>
         }
       />
@@ -203,10 +222,44 @@ export function BoosterView({
         />
       )}
 
+      {/* Pro Locked Callout Banner for Free Tier */}
+      {!isPro && (
+        <Card className="border-pink-500/30 bg-pink-500/5 shadow-2xs">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-500 shrink-0">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <span>Server Booster Announcements is a PRO Feature</span>
+                  <Badge variant="outline" className="text-[10px] border-pink-500/40 text-pink-500 font-mono">
+                    PRO
+                  </Badge>
+                </h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Upgrade your server to Creator Pro to celebrate Nitro boosts with automated embeds, thank-you DMs, and custom role rewards.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              asChild
+              className="bg-pink-600 hover:bg-pink-700 text-white font-semibold text-xs h-8 shrink-0 shadow-xs cursor-pointer"
+            >
+              <a href={`/tenants/${tenantId}/billing`}>
+                <span>Upgrade to Pro</span>
+                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Main Grid: Settings & Live Mockup */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Form Controls (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        {/* Left Column: Form Controls (7 cols) - Dimmed & non-interactive for Free tier */}
+        <div className={`lg:col-span-7 space-y-6 ${!isPro ? "opacity-50 pointer-events-none select-none cursor-not-allowed" : ""}`}>
           {/* Master Configuration Card */}
           <Card className="border-border/80 bg-card/60 backdrop-blur-xs shadow-2xs">
             <CardHeader className="pb-3">

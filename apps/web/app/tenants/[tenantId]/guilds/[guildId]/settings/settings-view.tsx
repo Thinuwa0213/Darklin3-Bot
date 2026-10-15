@@ -21,7 +21,7 @@ import {
   Zap,
   Check,
 } from "lucide-react";
-import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { PageHeader } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import type { LiveDiscordChannel } from "../modules/welcome/welcome-types";
 import type { GuildSettings } from "@/lib/settings-storage";
@@ -204,15 +204,6 @@ export function SettingsView({
         category="Server Control Plane"
         title="Server Settings & Operations"
         description={`Configure system notification routing, timezone localization, and global Darklin3 Bot branding across ${guildName}.`}
-        badge={
-          isPro ? (
-            <ProBadge label="PRO" />
-          ) : (
-            <Badge variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          )
-        }
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={
@@ -456,72 +447,77 @@ export function SettingsView({
 
             <Separator className="opacity-60" />
 
-            {/* White-Label Toggle */}
-            {!isPro ? (
+            {/* White-Label Settings (Dimmed for Free Tier) */}
+            {!isPro && (
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-600 dark:text-amber-400 space-y-2.5">
-                <div className="flex items-center gap-2 font-semibold">
-                  <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span>White-Labeling Requires PRO Plan</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
+                    <span>White-Labeling Requires PRO Plan</span>
+                  </div>
+                  <Button size="sm" className="text-xs h-7 gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold" asChild>
+                    <a href={`/tenants/${tenantId}/billing`}>
+                      <span>Upgrade to PRO</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                  </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Free servers display <strong className="text-foreground">⚡ Alert powered by Darklin3 Bot</strong> in all embed footers. Upgrade to Pro to customize footer text, set custom icons, or remove watermarks globally.
                 </p>
-                <Button size="sm" variant="outline" className="text-xs h-7 gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 font-semibold" asChild>
-                  <a href={`/tenants/${tenantId}/billing`}>
-                    <span>Upgrade to PRO</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </a>
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Custom White-Label Footer</Label>
-                    <p className="text-[11px] text-muted-foreground">
-                      Replace default Darklin3 Bot watermark with your custom community branding.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={customBrandingEnabled}
-                    onCheckedChange={setCustomBrandingEnabled}
-                  />
-                </div>
-
-                {customBrandingEnabled && (
-                  <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="footer-text" className="text-xs font-semibold">
-                        Global Footer Text
-                      </Label>
-                      <Input
-                        id="footer-text"
-                        value={defaultFooterText}
-                        onChange={(e) => setDefaultFooterText(e.target.value)}
-                        placeholder="e.g. Dreamscape Esports • Official Server"
-                        className="text-xs font-mono h-9 rounded-lg"
-                      />
-                      <p className="text-[10px] text-muted-foreground">
-                        This footer text automatically applies to all alerts, welcome messages, and announcements.
-                      </p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="footer-icon" className="text-xs font-semibold">
-                        Global Footer Icon URL (Optional)
-                      </Label>
-                      <Input
-                        id="footer-icon"
-                        value={defaultFooterIconUrl}
-                        onChange={(e) => setDefaultFooterIconUrl(e.target.value)}
-                        placeholder="https://example.com/logo.png"
-                        className="text-xs font-mono h-9 rounded-lg"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             )}
+
+            <div className={`space-y-4 ${!isPro ? "opacity-50 pointer-events-none select-none cursor-not-allowed" : ""}`}>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-semibold">Custom White-Label Footer</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Replace default Darklin3 Bot watermark with your custom community branding.
+                  </p>
+                </div>
+                <Switch
+                  checked={isPro ? customBrandingEnabled : false}
+                  disabled={!isPro}
+                  onCheckedChange={setCustomBrandingEnabled}
+                />
+              </div>
+
+              {(customBrandingEnabled || !isPro) && (
+                <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="footer-text" className="text-xs font-semibold">
+                      Global Footer Text
+                    </Label>
+                    <Input
+                      id="footer-text"
+                      value={defaultFooterText}
+                      disabled={!isPro}
+                      onChange={(e) => setDefaultFooterText(e.target.value)}
+                      placeholder="e.g. Dreamscape Esports • Official Server"
+                      className="text-xs font-mono h-9 rounded-lg"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      This footer text automatically applies to all alerts, welcome messages, and announcements.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="footer-icon" className="text-xs font-semibold">
+                      Global Footer Icon URL (Optional)
+                    </Label>
+                    <Input
+                      id="footer-icon"
+                      value={defaultFooterIconUrl}
+                      disabled={!isPro}
+                      onChange={(e) => setDefaultFooterIconUrl(e.target.value)}
+                      placeholder="https://example.com/logo.png"
+                      className="text-xs font-mono h-9 rounded-lg"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Separator className="opacity-60" />
 

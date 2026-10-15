@@ -44,6 +44,7 @@ export { isDuplicateKeyError } from "./lib/duplicate-key-error.js";
 export {
   recordRuntimeStatus,
   findRuntimeStatusForTenantBotApplication,
+  setBotRuntimeState,
 } from "./repositories/bot-runtime-status.js";
 export type {
   RuntimeState,
@@ -93,6 +94,7 @@ export {
   claimAssignment,
   renewAssignment,
   releaseAssignment,
+  releaseAnyAssignmentForBotApplication,
   findAssignment,
   listActiveAssignmentsForWorker,
   DEFAULT_LEASE_DURATION_MS,

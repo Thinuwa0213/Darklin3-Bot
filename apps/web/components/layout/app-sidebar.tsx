@@ -38,6 +38,7 @@ interface AppSidebarProps {
     id: string;
     tenantId: string;
     name?: string | undefined;
+    icon?: string | null | undefined;
   };
   connectedGuilds: ConnectedGuildItem[];
   user: {
@@ -250,14 +251,7 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
                 isActive={pathname === boosterUrl}
               >
                 <Rocket className="h-4 w-4 shrink-0 text-muted-foreground" />
-                {(state === "expanded" || isMobile) && (
-                  <div className="flex items-center justify-between w-full">
-                    <span>Server Booster</span>
-                    <Badge variant="outline" className="text-[9px] font-mono border-zinc-700/80 text-zinc-300 bg-zinc-900/60 px-1 py-0">
-                      PRO
-                    </Badge>
-                  </div>
-                )}
+                {(state === "expanded" || isMobile) && <span>Server Booster</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

@@ -21,7 +21,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
   const { tenantId, guildId } = await params;
 
-  const [subRes, branding, presenceRes] = await Promise.all([
+  const [subRes, branding, presenceRes, directStored] = await Promise.all([
     callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
       `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
     ),
@@ -38,6 +38,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
     }>(
       `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/presence`,
     ),
+    readStoredPresence(tenantId, guildId),
   ]);
 
   const currentPlan = subRes.ok && subRes.data ? subRes.data.plan : "FREE";
@@ -46,11 +47,8 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
   let presenceData = presenceRes.ok && presenceRes.data ? presenceRes.data : null;
 
-  if (!presenceData) {
-    const directStored = await readStoredPresence(tenantId, guildId);
-    if (directStored) {
-      presenceData = directStored;
-    }
+  if (!presenceData && directStored) {
+    presenceData = directStored;
   }
 
   if (!presenceData) {

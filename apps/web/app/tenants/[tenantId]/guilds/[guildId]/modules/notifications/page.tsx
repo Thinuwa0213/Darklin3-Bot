@@ -22,19 +22,11 @@ export default async function NotificationsPage({ params }: NotificationsPagePro
 
   const { tenantId, guildId } = await params;
 
-  // Retrieve current subscription plan for feature gating
-  const subRes = await callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
-    `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
-  );
-  const currentPlan =
-    guildId === "1408151223076655104"
-      ? "PRO"
-      : subRes.ok && subRes.data
-        ? subRes.data.plan
-        : "FREE";
-
-  // Fetch real live Discord channels & roles, bot branding in parallel
-  const [discordResourcesRes, branding, initialConfig] = await Promise.all([
+  // Fetch subscription, live Discord channels/roles, bot branding, and stored config in parallel
+  const [subRes, discordResourcesRes, branding, initialConfig] = await Promise.all([
+    callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
+    ),
     callApiServer<{
       ok: boolean;
       data: {
@@ -46,6 +38,13 @@ export default async function NotificationsPage({ params }: NotificationsPagePro
     getGuildBotBranding(tenantId, guildId, "Darklin3 Bot"),
     readStoredStreams(tenantId, guildId),
   ]);
+
+  const currentPlan =
+    guildId === "1408151223076655104"
+      ? "PRO"
+      : subRes.ok && subRes.data
+        ? subRes.data.plan
+        : "FREE";
 
   const liveChannels =
     discordResourcesRes.ok && discordResourcesRes.data?.data

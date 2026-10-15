@@ -20,11 +20,12 @@ import {
   Tag,
   Shield,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { VariableChips } from "@/components/modules/variable-chips";
 import { RADAR_VARIABLES } from "@/lib/template-variables";
 import { saveCommunityRadarAction } from "@/app/actions";
-import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import type { CommunityRadarConfig } from "@/lib/streams-storage";
 import type { LiveDiscordChannel, LiveDiscordRole } from "../welcome/welcome-types";
@@ -185,7 +186,6 @@ export function CommunityRadarView({
         category="Community Stream Discovery"
         title="Community Stream Radar"
         description="Automatically detect and announce server members streaming on Twitch, YouTube, or Kick when their stream title contains your server keyword or tag."
-        badge={<ProBadge />}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={
@@ -198,21 +198,34 @@ export function CommunityRadarView({
               disabled={!isPro}
             />
 
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              size="sm"
-              className="gap-1.5 h-9 font-medium shadow-2xs cursor-pointer"
-            >
-              {isSaving ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : saved ? (
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-              ) : (
-                <Save className="h-3.5 w-3.5" />
-              )}
-              <span>{isSaving ? "Saving..." : saved ? "Saved" : "Save Changes"}</span>
-            </Button>
+            {isPro ? (
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                size="sm"
+                className="gap-1.5 h-9 font-medium shadow-2xs cursor-pointer"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : saved ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                <span>{isSaving ? "Saving..." : saved ? "Saved" : "Save Changes"}</span>
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                asChild
+                className="gap-1.5 h-9 font-medium shadow-2xs bg-amber-600 hover:bg-amber-700 text-white cursor-pointer text-xs px-3"
+              >
+                <a href={`/tenants/${tenantId}/billing`}>
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>Upgrade to Pro</span>
+                </a>
+              </Button>
+            )}
           </div>
         }
       />
@@ -248,17 +261,24 @@ export function CommunityRadarView({
                 </p>
               </div>
             </div>
-            <Badge variant="default" className="bg-amber-600 hover:bg-amber-700 text-white text-xs shrink-0 font-medium">
-              Upgrade to PRO
-            </Badge>
+            <Button
+              size="sm"
+              asChild
+              className="bg-amber-600 hover:bg-amber-700 text-white text-xs shrink-0 font-medium h-8"
+            >
+              <a href={`/tenants/${tenantId}/billing`}>
+                <span>Upgrade to PRO</span>
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </a>
+            </Button>
           </CardContent>
         </Card>
       )}
 
       {/* Main Grid: Left Controls (7 cols) + Right Preview (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column Controls */}
-        <div className="lg:col-span-7 space-y-5">
+        {/* Left Column Controls - Dimmed and non-interactive for Free tier */}
+        <div className={`lg:col-span-7 space-y-5 ${!isPro ? "opacity-50 pointer-events-none select-none cursor-not-allowed" : ""}`}>
           {/* Card 1: Keywords & Title Detection */}
           <Card className="border-border/80">
             <CardHeader className="pb-3">

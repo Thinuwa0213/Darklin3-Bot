@@ -33,8 +33,9 @@ import {
   Check,
   Play,
   Pencil,
+  ArrowRight,
 } from "lucide-react";
-import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { VariableChips } from "@/components/modules/variable-chips";
 import {
@@ -470,15 +471,6 @@ export function NotificationsView({
         category="Stream & Video Alerts"
         title="Content Alerts"
         description="Instant live broadcast and video upload announcements for Twitch, YouTube, Kick, and TikTok."
-        badges={[
-          isPro ? (
-            <ProBadge key="pro" label={currentPlan} />
-          ) : (
-            <Badge key="plan" variant="outline" className="font-mono text-[10px] tracking-wider">
-              {currentPlan}
-            </Badge>
-          ),
-        ]}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={
@@ -852,57 +844,67 @@ export function NotificationsView({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!isPro ? (
-                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5 text-xs text-amber-600 dark:text-amber-400 space-y-1.5">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Darklin3 Bot Branding Active</span>
+                {!isPro && (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5 text-xs text-amber-600 dark:text-amber-400 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        <span>White-Labeling Requires PRO</span>
+                      </div>
+                      <Button size="sm" asChild className="h-7 text-xs px-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold">
+                        <a href={`/tenants/${tenantId}/billing`}>
+                          <span>Upgrade to PRO</span>
+                          <ArrowRight className="h-3 w-3 ml-1" />
+                        </a>
+                      </Button>
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                       Free plan alerts display <strong className="text-foreground">⚡ Alert powered by Darklin3 Bot</strong> in the Discord embed footer. Upgrade to PRO to enable white-labeling or use your own custom server footer.
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-xs font-semibold">Custom Branding / White-Label</Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Remove default Darklin3 Bot branding from alert embeds.
-                        </p>
-                      </div>
-                      <Switch
-                        checked={customBranding}
-                        onCheckedChange={setCustomBranding}
-                      />
-                    </div>
-
-                    {customBranding && (
-                      <div className="space-y-1.5 pt-2 border-t border-border/50 animate-in fade-in">
-                        <Label htmlFor="custom-footer" className="text-xs font-semibold">
-                          Custom Footer Text (Optional)
-                        </Label>
-                        <Input
-                          id="custom-footer"
-                          placeholder="e.g. My Server Alerts (leave empty to hide footer)"
-                          value={customFooterText}
-                          onChange={(e) => setCustomFooterText(e.target.value)}
-                          className="text-xs font-mono h-8.5"
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          Leave empty to post totally clean embeds with no footer text at all.
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 )}
+
+                <div className={`space-y-3 ${!isPro ? "opacity-50 pointer-events-none select-none cursor-not-allowed" : ""}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-semibold">Custom Branding / White-Label</Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Remove default Darklin3 Bot branding from alert embeds.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isPro ? customBranding : false}
+                      disabled={!isPro}
+                      onCheckedChange={setCustomBranding}
+                    />
+                  </div>
+
+                  {(customBranding || !isPro) && (
+                    <div className="space-y-1.5 pt-2 border-t border-border/50 animate-in fade-in">
+                      <Label htmlFor="custom-footer" className="text-xs font-semibold">
+                        Custom Footer Text (Optional)
+                      </Label>
+                      <Input
+                        id="custom-footer"
+                        disabled={!isPro}
+                        placeholder="e.g. My Server Alerts (leave empty to hide footer)"
+                        value={customFooterText}
+                        onChange={(e) => setCustomFooterText(e.target.value)}
+                        className="text-xs font-mono h-8.5"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Leave empty to post totally clean embeds with no footer text at all.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
             {/* Offline Auto-Cleanup Card */}
             <Card className="border-border/80">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
+                <div className={`flex items-center justify-between gap-4 ${!isPro ? "opacity-50 pointer-events-none select-none" : ""}`}>
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-semibold text-foreground">Offline Message Auto-Cleanup</span>
@@ -1244,39 +1246,49 @@ export function NotificationsView({
             )}
 
             {/* Platform Selection Tabs */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Platform</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {(["twitch", "youtube", "kick", "tiktok"] as PlatformType[]).map((plt) => {
-                  const conf = PLATFORM_CONFIG[plt];
-                  const isSelected = modalPlatform === plt;
-                  return (
-                    <button
-                      key={plt}
-                      type="button"
-                      onClick={() => {
-                        setModalPlatform(plt);
-                        setAutoDetected(null);
-                        if (plt === "youtube" || plt === "tiktok") {
-                          setNotifyUploads(true);
-                        } else {
-                          setNotifyUploads(false);
-                          setNotifyLive(true);
-                        }
-                      }}
-                      className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-secondary text-foreground border-primary shadow-xs font-semibold"
-                          : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-                      }`}
-                    >
-                      <span className="text-base">{conf.icon}</span>
-                      <span className="mt-1 capitalize text-[11px]">{conf.name}</span>
-                    </button>
-                  );
-                })}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Platform</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(["twitch", "youtube", "kick", "tiktok"] as PlatformType[]).map((plt) => {
+                    const conf = PLATFORM_CONFIG[plt];
+                    const isSelected = modalPlatform === plt;
+                    const isAtLimit =
+                      !isPro &&
+                      platformCounts[plt] >= 1 &&
+                      (!editingStreamerId ||
+                        streamers.find((s) => s.id === editingStreamerId)?.platform !== plt);
+                    return (
+                      <button
+                        key={plt}
+                        type="button"
+                        onClick={() => {
+                          setModalPlatform(plt);
+                          setAutoDetected(null);
+                          if (plt === "youtube" || plt === "tiktok") {
+                            setNotifyUploads(true);
+                          } else {
+                            setNotifyUploads(false);
+                            setNotifyLive(true);
+                          }
+                        }}
+                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-secondary text-foreground border-primary shadow-xs font-semibold"
+                            : "border-border/60 hover:bg-muted/40 text-muted-foreground"
+                        } ${isAtLimit ? "opacity-75" : ""}`}
+                      >
+                        {isAtLimit && (
+                          <span className="absolute -top-1.5 right-1 px-1 py-0 rounded text-[9px] font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                            1/1 PRO
+                          </span>
+                        )}
+                        <span className="text-base">{conf.icon}</span>
+                        <span className="mt-1 capitalize text-[11px]">{conf.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
             {/* Channel URL or Handle Input */}
             <div className="space-y-1.5">

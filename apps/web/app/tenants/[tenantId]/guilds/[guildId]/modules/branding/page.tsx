@@ -48,7 +48,7 @@ export default async function BrandingPage({ params }: BrandingPageProps) {
       botBannerSizeBytes={data?.customBannerSizeBytes ?? 0}
       botTag={data?.botTag ?? "@creatorbot"}
       initialUsedBytes={data?.usedStorageBytes ?? 0}
-      maxStorageBytes={data?.maxStorageBytes ?? 10 * 1024 * 1024}
+      maxStorageBytes={data?.maxStorageBytes ?? 30 * 1024 * 1024}
     />
   );
 }

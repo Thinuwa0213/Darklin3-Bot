@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles } from "lucide-react";
+import { Code } from "lucide-react";
 import type { TemplateVariable } from "@/lib/template-variables";
 
 interface VariableChipsProps {
@@ -15,8 +15,8 @@ export function VariableChips({ variables, onInsert, className = "" }: VariableC
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-          <Sparkles className="h-3 w-3 text-amber-500" />
-          <span>Click to insert standardized variables:</span>
+          <Code className="h-3 w-3 text-primary" />
+          <span>Insert dynamic variables:</span>
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">

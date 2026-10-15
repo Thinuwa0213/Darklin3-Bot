@@ -22,19 +22,11 @@ export default async function ServerSettingsPage({ params }: SettingsPageProps) 
 
   const { tenantId, guildId } = await params;
 
-  // Retrieve current subscription plan for feature gating
-  const subRes = await callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
-    `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
-  );
-  const currentPlan =
-    guildId === "1408151223076655104"
-      ? "PRO"
-      : subRes.ok && subRes.data
-        ? subRes.data.plan
-        : "FREE";
-
-  // Fetch real live Discord channels and guild branding in parallel
-  const [discordResourcesRes, branding] = await Promise.all([
+  // Fetch subscription, live Discord channels, branding, and stored settings in parallel
+  const [subRes, discordResourcesRes, branding, initialSettings] = await Promise.all([
+    callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
+    ),
     callApiServer<{
       ok: boolean;
       data: {
@@ -43,7 +35,15 @@ export default async function ServerSettingsPage({ params }: SettingsPageProps) 
       };
     }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`),
     getGuildBotBranding(tenantId, guildId),
+    readStoredSettings(tenantId, guildId),
   ]);
+
+  const currentPlan =
+    guildId === "1408151223076655104"
+      ? "PRO"
+      : subRes.ok && subRes.data
+        ? subRes.data.plan
+        : "FREE";
 
   const liveChannels =
     discordResourcesRes.ok && discordResourcesRes.data?.data
@@ -54,9 +54,6 @@ export default async function ServerSettingsPage({ params }: SettingsPageProps) 
     discordResourcesRes.ok && discordResourcesRes.data?.data?.guildName
       ? discordResourcesRes.data.data.guildName
       : "Discord Server";
-
-  // Read stored settings
-  const initialSettings = await readStoredSettings(tenantId, guildId);
 
   return (
     <SettingsView

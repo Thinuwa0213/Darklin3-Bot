@@ -30,7 +30,7 @@ import {
   Radio,
 } from "lucide-react";
 import Link from "next/link";
-import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
@@ -475,13 +475,6 @@ export function RolesView({
               <Badge key="roles" variant="outline" className="text-xs">
                 {totalRoles} Configured Roles
               </Badge>,
-              currentPlan !== "FREE" ? (
-                <ProBadge key="plan" label={currentPlan} />
-              ) : (
-                <Badge key="plan" variant="outline" className="font-mono text-[10px]">
-                  FREE
-                </Badge>
-              ),
             ].filter(Boolean)}
             actions={
               <div className="flex items-center gap-2.5">

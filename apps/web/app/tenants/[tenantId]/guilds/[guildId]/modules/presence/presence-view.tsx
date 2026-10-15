@@ -24,7 +24,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { savePresenceAction } from "@/app/actions";
-import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { PageHeader } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { DiscordAppBadge } from "@/components/discord/discord-chat-preview";
 
@@ -191,15 +191,6 @@ export function PresenceView({
         category="Gateway Presence"
         title="Rich Presence & Activities"
         description="Configure dynamic rotating Rich Presence activities displayed underneath the bot's username in Discord."
-        badge={
-          currentPlan === "FREE" ? (
-            <Badge variant="outline" className="text-[10px] font-mono">
-              FREE
-            </Badge>
-          ) : (
-            <ProBadge label={currentPlan} />
-          )
-        }
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={

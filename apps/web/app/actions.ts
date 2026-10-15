@@ -168,6 +168,103 @@ export async function rotateBotCredentialAction(
   return { ok: true };
 }
 
+export interface BotPowerActionResult {
+  ok: boolean;
+  status?: string;
+  error?: string;
+}
+
+/**
+ * Server Action to restart an active Discord bot instance.
+ */
+export async function restartBotAction(
+  tenantId: string,
+  guildId: string,
+): Promise<BotPowerActionResult> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+
+  const res = await callApiServer<{ ok: boolean; status: string }>(
+    `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/bot/restart`,
+    { method: "POST" },
+  );
+
+  if (!res.ok) {
+    return { ok: false, error: res.error ?? "Failed to restart bot instance" };
+  }
+
+  return { ok: true, status: res.data?.status ?? "STARTING" };
+}
+
+/**
+ * Server Action to pause an active Discord bot instance.
+ */
+export async function pauseBotAction(
+  tenantId: string,
+  guildId: string,
+): Promise<BotPowerActionResult> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+
+  const res = await callApiServer<{ ok: boolean; status: string }>(
+    `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/bot/pause`,
+    { method: "POST" },
+  );
+
+  if (!res.ok) {
+    return { ok: false, error: res.error ?? "Failed to pause bot instance" };
+  }
+
+  return { ok: true, status: res.data?.status ?? "STOPPED" };
+}
+
+/**
+ * Server Action to resume a paused Discord bot instance.
+ */
+export async function resumeBotAction(
+  tenantId: string,
+  guildId: string,
+): Promise<BotPowerActionResult> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+
+  const res = await callApiServer<{ ok: boolean; status: string }>(
+    `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/bot/resume`,
+    { method: "POST" },
+  );
+
+  if (!res.ok) {
+    return { ok: false, error: res.error ?? "Failed to resume bot instance" };
+  }
+
+  return { ok: true, status: res.data?.status ?? "STARTING" };
+}
+
+/**
+ * Server Action to get fresh runtime status for a guild bot.
+ */
+export async function getBotRuntimeStatusAction(
+  tenantId: string,
+  guildId: string,
+): Promise<{ ok: boolean; status?: string; error?: string }> {
+  if (!tenantId || !guildId) {
+    return { ok: false, error: "Missing tenant or guild ID" };
+  }
+
+  const res = await callApiServer<{ status: string }>(
+    `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`,
+  );
+
+  if (!res.ok || !res.data) {
+    return { ok: false, error: res.error ?? "Failed to fetch runtime status" };
+  }
+
+  return { ok: true, status: res.data.status };
+}
+
 export interface BillingActionResult {
   ok: boolean;
   plan?: string;

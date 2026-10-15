@@ -7,7 +7,8 @@ export type DashboardRuntimeStatus =
   | "UNASSIGNED"
   | "ACTIVE_ASSIGNMENT"
   | "ONLINE"
-  | "DEGRADED";
+  | "DEGRADED"
+  | "STOPPED";
 
 export interface RuntimeStatusInputs {
   botApplicationId: string | undefined;
@@ -38,6 +39,11 @@ export function deriveRuntimeStatus(inputs: RuntimeStatusInputs): DashboardRunti
   }
   if (!inputs.credential) {
     return "PENDING_CREDENTIAL";
+  }
+
+  // Explicit user pause/stop state
+  if (inputs.runtimeStatus?.state === "STOPPED") {
+    return "STOPPED";
   }
 
   const assignmentIsLive =

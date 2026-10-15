@@ -22,19 +22,11 @@ export default async function InvitesPage({ params }: InvitesPageProps) {
 
   const { tenantId, guildId } = await params;
 
-  // 1. Retrieve current subscription plan for feature gating
-  const subRes = await callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
-    `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
-  );
-  const currentPlan =
-    guildId === "1408151223076655104"
-      ? "PRO"
-      : subRes.ok && subRes.data
-        ? subRes.data.plan
-        : "FREE";
-
-  // 2. Fetch live Discord resources, bot branding, and stored config in parallel
-  const [discordResourcesRes, branding, storedConfig, runtimeRes] = await Promise.all([
+  // Fetch subscription plan, discord resources, bot branding, stored config, and runtime in parallel
+  const [subRes, discordResourcesRes, branding, storedConfig, runtimeRes] = await Promise.all([
+    callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
+    ),
     callApiServer<{
       ok: boolean;
       data: {
@@ -50,6 +42,13 @@ export default async function InvitesPage({ params }: InvitesPageProps) {
       botApplicationId: string | null;
     }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`),
   ]);
+
+  const currentPlan =
+    guildId === "1408151223076655104"
+      ? "PRO"
+      : subRes.ok && subRes.data
+        ? subRes.data.plan
+        : "FREE";
 
   const liveResources =
     discordResourcesRes.ok && discordResourcesRes.data?.data ? discordResourcesRes.data.data : null;

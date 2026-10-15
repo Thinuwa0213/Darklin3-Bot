@@ -18,11 +18,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { PageHeader, ModuleToggle, ProBadge } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import {
@@ -51,7 +50,7 @@ interface ModerationViewProps {
 export function ModerationView({
   tenantId,
   guildId,
-  currentPlan,
+  currentPlan: _currentPlan,
   initialConfig,
   serverName: _serverName,
   liveChannels,
@@ -282,15 +281,6 @@ export function ModerationView({
         category="Server Security & Defense"
         title="Auto Moderation"
         description="Keep your server safe with automated filters, spam protection, and real-time rule enforcement."
-        badges={[
-          currentPlan !== "FREE" ? (
-            <ProBadge key="plan" label={currentPlan} />
-          ) : (
-            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          ),
-        ].filter(Boolean)}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={

@@ -12,7 +12,9 @@ import {
   getTenantTotalStorageUsed,
   listGuildsForBotApplication,
   recordAuditEvent,
+  releaseAnyAssignmentForBotApplication,
   resolveBotApplicationForGuild,
+  setBotRuntimeState,
   upsertMediaAsset,
   type DatabaseClient,
 } from "@creatorcore/db";
@@ -255,7 +257,7 @@ export function createTenantResourceRoutes(
     const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
     const botApplicationId = resolved?.botApplicationId;
 
-    const [credential, assignment, runtimeStatus] = await Promise.all([
+    const [credential, assignment, runtimeStatus, botProfile] = await Promise.all([
       botApplicationId
         ? findCredentialStatusForTenantBotApplication(deps.db, tenantId, botApplicationId)
         : Promise.resolve(undefined),
@@ -263,6 +265,9 @@ export function createTenantResourceRoutes(
       botApplicationId
         ? findRuntimeStatusForTenantBotApplication(deps.db, tenantId, botApplicationId)
         : Promise.resolve(undefined),
+      botApplicationId
+        ? deps.credentialService.getBotUserProfile(botApplicationId)
+        : Promise.resolve(null),
     ]);
 
     const status = deriveRuntimeStatus({
@@ -277,7 +282,153 @@ export function createTenantResourceRoutes(
       status,
       botApplicationId: botApplicationId ?? null,
       botName: resolved?.botName ?? null,
+      botPublic: botProfile?.botPublic ?? null,
     });
+  });
+
+  const restartCooldowns = new Map<string, number>();
+
+  /**
+   * Restarts the assigned bot instance (drops and reconnects Discord Gateway).
+   */
+  route.post("/guilds/:guildId/bot/restart", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) {
+      return c.json({ error: "invalid_request" }, 400);
+    }
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) {
+      return c.json({ error: "INVALID_GUILD_ID" }, 400);
+    }
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    const lastRestart = restartCooldowns.get(resolved.botApplicationId) ?? 0;
+    const cooldownMs = 20_000;
+    const elapsed = Date.now() - lastRestart;
+    if (elapsed < cooldownMs) {
+      const remainingSec = Math.ceil((cooldownMs - elapsed) / 1000);
+      return c.json({ error: `Please wait ${remainingSec}s before restarting again.` }, 429);
+    }
+    restartCooldowns.set(resolved.botApplicationId, Date.now());
+
+    // Release active assignment so worker drops runtime and reconnects
+    await releaseAnyAssignmentForBotApplication(deps.db, resolved.botApplicationId);
+    await setBotRuntimeState(deps.db, resolved.botApplicationId, "STARTING");
+
+    await recordAuditEvent(deps.db, {
+      actorType: "USER",
+      actorUserId: userId,
+      tenantId,
+      guildId,
+      targetType: "BotApplication",
+      targetId: resolved.botApplicationId,
+      action: "bot.restart_requested",
+      outcome: "SUCCESS",
+    });
+
+    return c.json({ ok: true, status: "STARTING" });
+  });
+
+  /**
+   * Pauses the assigned bot instance (disconnects from Discord Gateway until manually resumed).
+   */
+  route.post("/guilds/:guildId/bot/pause", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) {
+      return c.json({ error: "invalid_request" }, 400);
+    }
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) {
+      return c.json({ error: "INVALID_GUILD_ID" }, 400);
+    }
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    // Mark as STOPPED and release assignment from active worker
+    await releaseAnyAssignmentForBotApplication(deps.db, resolved.botApplicationId);
+    await setBotRuntimeState(deps.db, resolved.botApplicationId, "STOPPED");
+
+    await recordAuditEvent(deps.db, {
+      actorType: "USER",
+      actorUserId: userId,
+      tenantId,
+      guildId,
+      targetType: "BotApplication",
+      targetId: resolved.botApplicationId,
+      action: "bot.paused",
+      outcome: "SUCCESS",
+    });
+
+    return c.json({ ok: true, status: "STOPPED" });
+  });
+
+  /**
+   * Resumes the assigned bot instance (makes it discoverable again for active workers).
+   */
+  route.post("/guilds/:guildId/bot/resume", async (c) => {
+    const userId = c.get("userId");
+    const tenantId = c.req.param("tenantId");
+    if (!tenantId) {
+      return c.json({ error: "invalid_request" }, 400);
+    }
+    const guildId = parseDiscordSnowflake(c.req.param("guildId"));
+    if (guildId === undefined) {
+      return c.json({ error: "INVALID_GUILD_ID" }, 400);
+    }
+
+    try {
+      await requireGuildAccess(deps.db, userId, tenantId, guildId);
+    } catch (error) {
+      const response = respondToAuthorizationError(c, error);
+      if (response) return response;
+      throw error;
+    }
+
+    const resolved = await resolveBotApplicationForGuild(deps.db, tenantId, guildId);
+    if (!resolved?.botApplicationId) {
+      return c.json({ error: "BOT_NOT_CONFIGURED" }, 400);
+    }
+
+    // Set state back to STARTING so workers discover and claim it
+    await setBotRuntimeState(deps.db, resolved.botApplicationId, "STARTING");
+
+    await recordAuditEvent(deps.db, {
+      actorType: "USER",
+      actorUserId: userId,
+      tenantId,
+      guildId,
+      targetType: "BotApplication",
+      targetId: resolved.botApplicationId,
+      action: "bot.resumed",
+      outcome: "SUCCESS",
+    });
+
+    return c.json({ ok: true, status: "STARTING" });
   });
 
   /**
@@ -362,9 +513,9 @@ export function createTenantResourceRoutes(
 
     const plan = subscription?.plan ?? "FREE";
     const limits = {
-      FREE: 10 * 1024 * 1024,
+      FREE: 30 * 1024 * 1024,
       PRO: 100 * 1024 * 1024,
-      ENTERPRISE: 250 * 1024 * 1024,
+      ENTERPRISE: 300 * 1024 * 1024,
     };
     const maxStorageBytes = limits[plan];
 
@@ -388,6 +539,7 @@ export function createTenantResourceRoutes(
       botName,
       botTag,
       discordAvatarUrl,
+      botPublic: botProfile?.botPublic ?? null,
       customAvatarUrl: customAvatar ? `/storage/${customAvatar.storagePath}` : null,
       customAvatarSizeBytes: customAvatar?.fileSizeBytes ?? 0,
       customBannerUrl: customBanner ? `/storage/${customBanner.storagePath}` : null,
@@ -479,9 +631,9 @@ export function createTenantResourceRoutes(
 
     const plan = subscription?.plan ?? "FREE";
     const limits = {
-      FREE: 10 * 1024 * 1024,
+      FREE: 30 * 1024 * 1024,
       PRO: 100 * 1024 * 1024,
-      ENTERPRISE: 250 * 1024 * 1024,
+      ENTERPRISE: 300 * 1024 * 1024,
     };
     const maxStorageBytes = limits[plan];
 
@@ -616,9 +768,9 @@ export function createTenantResourceRoutes(
 
     const plan = subscription?.plan ?? "FREE";
     const limits = {
-      FREE: 10 * 1024 * 1024,
+      FREE: 30 * 1024 * 1024,
       PRO: 100 * 1024 * 1024,
-      ENTERPRISE: 250 * 1024 * 1024,
+      ENTERPRISE: 300 * 1024 * 1024,
     };
     const maxStorageBytes = limits[plan];
 

@@ -36,8 +36,15 @@ export default async function TenantGuildLayout({ children, params }: LayoutProp
         id: guildId,
         tenantId,
         name: currentGuildItem?.name,
+        icon: currentGuildItem?.icon ?? null,
       }}
-      connectedGuilds={connectedGuilds}
+      connectedGuilds={connectedGuilds.map((g) => ({
+        id: g.id,
+        name: g.name,
+        connected: g.connected,
+        tenantId: g.tenantId,
+        icon: g.icon ?? null,
+      }))}
       user={session.user}
       breadcrumbs={[
         {

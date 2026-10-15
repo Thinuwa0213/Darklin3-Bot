@@ -1,6 +1,6 @@
 # CreatorCore — Design System Rules
 
-**Status:** Phase 0 engineering contract. No dashboard, brand aesthetic, or component library exists yet — this document defines _rules and anti-patterns_ the future dashboard must follow, not the visual design itself. Choosing an actual brand aesthetic, color palette, or component library is `[UNRESOLVED]`/deferred until explicitly requested.
+**Status:** Phase 1 Operational Dashboard Standards locked in `DESIGN.md` (root). Defines concrete visual rules, header standards, tier entitlement matrix, and anti-patterns for Darklin3 dashboard operations.
 
 ## Intent
 

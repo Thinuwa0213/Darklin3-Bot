@@ -21,7 +21,7 @@ import {
 import { WELCOME_VARIABLES } from "@/lib/template-variables";
 import { VariableChips } from "@/components/modules/variable-chips";
 import { saveWelcomeAction, refreshGuildDiscordResourcesAction } from "@/app/actions";
-import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import {
@@ -292,9 +292,6 @@ export function WelcomeView({
               <span>Standby Mode</span>
             </Badge>
           ),
-          currentPlan !== "FREE" ? (
-            <ProBadge key="plan" label={currentPlan} />
-          ) : null,
         ].filter(Boolean)}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"

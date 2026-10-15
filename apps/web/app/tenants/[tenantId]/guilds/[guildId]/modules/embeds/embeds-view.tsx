@@ -18,8 +18,8 @@ import {
   Lock,
   Hash,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 import Link from "next/link";
-import { PageHeader, ProBadge } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import type { GuildSettings } from "@/lib/settings-storage";
@@ -190,15 +190,6 @@ export function EmbedsView({ tenantId, guildId, currentPlan, globalSettings, liv
         category="Visual Messaging"
         title="Visual Embed Builder"
         description="Craft rich Discord announcement embeds with formatted fields, custom brand colors, and instant previews."
-        badge={
-          currentPlan !== "FREE" ? (
-            <ProBadge label={currentPlan} />
-          ) : (
-            <Badge variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          )
-        }
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={

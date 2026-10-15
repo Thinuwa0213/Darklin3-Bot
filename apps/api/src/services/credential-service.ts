@@ -47,6 +47,19 @@ export class CredentialService {
         avatar: string | null;
         avatarUrl: string | null;
         globalName: string | null;
+        botPublic: boolean | null;
+      };
+      expiresAt: number;
+    }
+  >();
+  private readonly guildDiscordResourcesCache = new Map<
+    string,
+    {
+      resources: {
+        guildName: string;
+        channels: { id: string; name: string; type: number; position: number }[];
+        roles: { id: string; name: string; color: string; position: number }[];
+        emojis: { id: string; name: string; animated: boolean }[];
       };
       expiresAt: number;
     }
@@ -386,6 +399,7 @@ export class CredentialService {
     avatar: string | null;
     avatarUrl: string | null;
     globalName: string | null;
+    botPublic: boolean | null;
   } | null> {
     const cached = this.botProfileCache.get(botApplicationId);
     if (cached && cached.expiresAt > Date.now()) {
@@ -410,9 +424,15 @@ export class CredentialService {
         this.keys,
       );
 
-      const res = await fetch("https://discord.com/api/v10/users/@me", {
-        headers: { Authorization: `Bot ${plaintext}` },
-      });
+      const [res, appRes] = await Promise.all([
+        fetch("https://discord.com/api/v10/users/@me", {
+          headers: { Authorization: `Bot ${plaintext}` },
+        }),
+        fetch("https://discord.com/api/v10/oauth2/applications/@me", {
+          headers: { Authorization: `Bot ${plaintext}` },
+        }).catch(() => null),
+      ]);
+
       if (!res.ok) {
         return null;
       }
@@ -423,6 +443,18 @@ export class CredentialService {
         avatar: string | null;
         global_name: string | null;
       };
+
+      let botPublic: boolean | null = null;
+      if (appRes && appRes.ok) {
+        try {
+          const appData = (await appRes.json()) as { bot_public?: boolean };
+          if (typeof appData.bot_public === "boolean") {
+            botPublic = appData.bot_public;
+          }
+        } catch {
+          // ignore application JSON parsing errors
+        }
+      }
 
       const avatarUrl = data.avatar
         ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.${data.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
@@ -435,6 +467,7 @@ export class CredentialService {
         avatar: data.avatar,
         avatarUrl,
         globalName: data.global_name,
+        botPublic,
       };
 
       this.botProfileCache.set(botApplicationId, {
@@ -601,6 +634,12 @@ export class CredentialService {
       emojis: { id: string; name: string; animated: boolean }[];
     };
   } | { ok: false; error: string }> {
+    const cacheKey = `${botApplicationId}:${guildId.toString()}`;
+    const cached = this.guildDiscordResourcesCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return { ok: true, data: cached.resources };
+    }
+
     const credRow = await findActiveCredential(this.db, botApplicationId);
     if (!credRow) {
       return { ok: false, error: "NO_ACTIVE_CREDENTIAL" };
@@ -709,14 +748,22 @@ export class CredentialService {
         }
       }
 
+      const resourcesData = {
+        guildName,
+        channels,
+        roles: formattedRoles,
+        emojis,
+      };
+
+      // Cache resources for 60 seconds to avoid hitting Discord API rate limits and speed up tab navigation
+      this.guildDiscordResourcesCache.set(cacheKey, {
+        resources: resourcesData,
+        expiresAt: Date.now() + 60_000,
+      });
+
       return {
         ok: true,
-        data: {
-          guildName,
-          channels,
-          roles: formattedRoles,
-          emojis,
-        },
+        data: resourcesData,
       };
     } catch (err) {
       this.logger.warn("discord.fetch_resources_failed", { err });

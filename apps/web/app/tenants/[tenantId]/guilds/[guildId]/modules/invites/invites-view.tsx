@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader, ProBadge, ModuleToggle } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import type { InvitesConfig } from "@/lib/invites-types";
@@ -46,7 +46,7 @@ type TabType = "settings" | "history";
 export function InvitesView({
   tenantId,
   guildId,
-  currentPlan = "FREE",
+  currentPlan: _currentPlan = "FREE",
   initialConfig,
   serverName: _serverName,
   botName = "Darklin3 Bot",
@@ -129,15 +129,6 @@ export function InvitesView({
         category="Community Growth & Security"
         title="Invite Tracker & Logger"
         description="Track invite origins, calculate inviter leaderboards, detect alt/fake accounts, and log member joins in real-time."
-        badges={[
-          currentPlan !== "FREE" ? (
-            <ProBadge key="plan" label={currentPlan} />
-          ) : (
-            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          ),
-        ].filter(Boolean)}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={

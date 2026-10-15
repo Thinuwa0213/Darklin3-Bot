@@ -21,10 +21,26 @@ export default async function ActionLogsPage({ params }: ActionLogsPageProps) {
 
   const { tenantId, guildId } = await params;
 
-  // 1. Retrieve current subscription plan for feature gating
-  const subRes = await callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
-    `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
-  );
+  // Parallelize all calls to eliminate waterfall latency
+  const [subRes, discordResourcesRes, storedConfig, runtimeRes] = await Promise.all([
+    callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
+    ),
+    callApiServer<{
+      ok: boolean;
+      data: {
+        guildName: string;
+        channels: LiveDiscordChannel[];
+        roles: LiveDiscordRole[];
+      };
+    }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`),
+    readStoredActionLogsConfig(tenantId, guildId),
+    callApiServer<{
+      status: string;
+      botApplicationId: string | null;
+    }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`),
+  ]);
+
   const currentPlan =
     guildId === "1408151223076655104"
       ? "PRO"
@@ -32,27 +48,8 @@ export default async function ActionLogsPage({ params }: ActionLogsPageProps) {
         ? subRes.data.plan
         : "FREE";
 
-  // 2. Fetch live Discord resources (channels, roles, guild name)
-  const discordResourcesRes = await callApiServer<{
-    ok: boolean;
-    data: {
-      guildName: string;
-      channels: LiveDiscordChannel[];
-      roles: LiveDiscordRole[];
-    };
-  }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`);
-
   const liveResources =
     discordResourcesRes.ok && discordResourcesRes.data?.data ? discordResourcesRes.data.data : null;
-
-  // 3. Load persistent action logs configuration
-  const storedConfig = await readStoredActionLogsConfig(tenantId, guildId);
-
-  // 4. Fetch authoritative bot runtime status
-  const runtimeRes = await callApiServer<{
-    status: string;
-    botApplicationId: string | null;
-  }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`);
 
   const botRuntimeStatus = runtimeRes.ok && runtimeRes.data ? runtimeRes.data.status : "NOT_CONFIGURED";
   const isBotOnline = botRuntimeStatus === "ONLINE" || botRuntimeStatus === "ACTIVE_ASSIGNMENT";

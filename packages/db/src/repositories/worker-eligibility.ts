@@ -1,6 +1,7 @@
-import { and, asc, eq, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import {
   botApplications,
+  botRuntimeStatus,
   tenants,
   workerAssignments,
   workerEligibility,
@@ -82,7 +83,8 @@ export interface ClaimableWorkItem {
  * 1. The worker is active (findWorkerById checks ACTIVE status)
  * 2. The worker is assigned eligibility (workerEligibility)
  * 3. The owning tenant is currently ACTIVE (disabled tenants have work omitted)
- * 4. The BotApplication is currently claimable:
+ * 4. The BotApplication is not explicitly STOPPED/PAUSED by the server administrator
+ * 5. The BotApplication is currently claimable:
  *    - never claimed (no workerAssignments row), OR
  *    - status is 'RELEASED', OR
  *    - status is 'ACTIVE' but the lease has expired against MySQL now()
@@ -112,10 +114,18 @@ export async function listClaimableWorkForWorker(
       workerAssignments,
       eq(workerAssignments.botApplicationId, workerEligibility.botApplicationId),
     )
+    .leftJoin(
+      botRuntimeStatus,
+      eq(botRuntimeStatus.botApplicationId, workerEligibility.botApplicationId),
+    )
     .where(
       and(
         eq(workerEligibility.workerId, workerId),
         eq(tenants.status, "ACTIVE"),
+        or(
+          isNull(botRuntimeStatus.state),
+          ne(botRuntimeStatus.state, "STOPPED"),
+        ),
         or(
           isNull(workerAssignments.botApplicationId),
           eq(workerAssignments.status, "RELEASED"),

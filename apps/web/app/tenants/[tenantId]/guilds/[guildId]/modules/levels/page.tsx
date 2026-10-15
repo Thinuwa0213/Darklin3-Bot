@@ -27,31 +27,31 @@ export default async function LevelsPage({ params }: LevelsPageProps) {
 
   const { tenantId, guildId } = await params;
 
-  const subRes = await callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
-    `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
-  );
+  // Parallelize all data fetching for levels module
+  const [subRes, [initialSettings, initialUsers], discordResourcesRes] = await Promise.all([
+    callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
+      `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
+    ),
+    Promise.all([
+      readStoredLevelSettings(tenantId, guildId),
+      readStoredGuildUsers(tenantId, guildId),
+    ]),
+    callApiServer<{
+      ok: boolean;
+      data: {
+        guildName: string;
+        channels: LiveDiscordChannel[];
+        roles: LiveDiscordRole[];
+      };
+    }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`),
+  ]);
+
   const currentPlan =
     guildId === "1408151223076655104"
       ? "PRO"
       : subRes.ok && subRes.data
         ? subRes.data.plan
         : "FREE";
-
-  // Load stored level settings and users
-  const [initialSettings, initialUsers] = await Promise.all([
-    readStoredLevelSettings(tenantId, guildId),
-    readStoredGuildUsers(tenantId, guildId),
-  ]);
-
-  // Fetch real live Discord channels and roles for channel and role picker
-  const discordResourcesRes = await callApiServer<{
-    ok: boolean;
-    data: {
-      guildName: string;
-      channels: LiveDiscordChannel[];
-      roles: LiveDiscordRole[];
-    };
-  }>(`/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/discord-resources`);
 
   const liveResources =
     discordResourcesRes.ok && discordResourcesRes.data?.data

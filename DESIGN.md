@@ -1,3 +1,75 @@
+# Darklin3 / CreatorCore — Design Rules & Product Standards
+
+## 0. Darklin3 Locked Product Design Rules
+
+These rules represent the locked design contract for Darklin3's operational dashboard. Every module, page, and component must adhere to these standards to prevent UI fragmentation and cognitive clutter.
+
+---
+
+### Rule 1: Header Architecture & The "No Clutter" Badge Standard
+* **Page Header Elements**: A Page Header (`PageHeader`) must contain:
+  1. `category` (uppercase tracking-wide breadcrumb label, e.g. "Server Control Plane", "Content Alerts")
+  2. `title` (semantic, clean title, e.g. "Welcome & Rules", "Reaction Roles")
+  3. `description` (one clear sentence stating the operational purpose)
+  4. `actions` (ModuleToggle, primary Save button, or action controls)
+  5. `backHref` & `backLabel` (quick navigation back to Server Overview)
+* **Strict Anti-Pattern — Repetitive PRO/FREE Badges**:
+  - **Never** attach `[PRO]` or `[FREE]` badges to standard module page headers.
+  - Doing so clutters the UI and creates user fatigue.
+  - Plan and subscription tiers must be displayed in **only two centralized locations**:
+    1. The **Overview Page Storage & Quota Rail** (`#overview-storage-quota-card`)
+    2. The **Sidebar User/Billing Profile Menu** and the dedicated **Billing Page** (`/billing`).
+
+---
+
+### Rule 2: Semantic Badges vs Marketing Labels
+* Badges exist solely to communicate **real operational runtime state**:
+  - `ONLINE` (Emerald/Success)
+  - `ACTIVE` / `ACTIVE_ASSIGNMENT` (Primary/Default)
+  - `DEGRADED` / `OFFLINE` (Destructive)
+  - `REQUIRED` / `ATTENTION` (Amber/Warning)
+* Badges must never be used as decorative marketing stickers on operational screens.
+
+---
+
+### Rule 3: Dynamic Variable Helpers & Tooling Icons
+* Helper tools (such as `VariableChips` for inserting `{user}`, `{server}`, `{memberCount}`) are utility aids, not AI or locked features.
+* **Icon Standard**: Use neutral, subtle developer tokens (such as `Code` or `Braces` in muted tone).
+* **Text Standard**: Use concise, functional copy (e.g. `Insert dynamic variables:`), avoiding verbose or sales-heavy prompts.
+* Avoid bright amber sparkles (`Sparkles text-amber-500`) for standard tokens to avoid confusing users into thinking free variables are locked Pro/AI features.
+
+---
+
+### Rule 4: Feature Tier Matrix & Entitlements Contract
+
+| Feature Area | Free (Starter) Plan | Creator Pro ($9.99/mo) | Studio Enterprise |
+| :--- | :--- | :--- | :--- |
+| **Connected Discord Guilds** | 1 Guild Limit | Up to 3 Guilds | Unlimited Guilds |
+| **Media & Branding Storage** | 10 MB Storage Quota | **100 MB Storage Quota (10x)** | 250 MB Storage Quota |
+| **White-Label & Watermarks** | Default Watermark (`⚡ Alert powered by Darklin3 Bot`) | **100% White-Label** (Remove watermark, custom footer & icon) | Custom Client SLA & Whitelabel |
+| **Role Panels (Buttons/Menus)**| Up to 2 Panels | **Up to 10 Panels** | Unlimited Panels |
+| **Live Stream Alerts** | 1 Twitch Alert | **Unlimited Alerts** (Twitch, YouTube, Kick, TikTok) | Unlimited Alerts |
+| **Community Stream Radar** | **Locked 🔒** (Pro required) | **Unlocked** (Auto-detect keyword/game streams in server) | Unlocked + Custom Webhooks |
+| **Rich Presence Status Slots** | 2 Status Slots | **5 Status Slots** (Cycling intervals) | 10 Status Slots |
+| **Leveling Rank Cards** | Default SVG/CSS card | Custom Canvas Rank Cards & Multipliers | Priority Canvas GPU Worker |
+| **Worker Process Architecture** | Shared Worker Process | 99.9% High-Availability Priority Worker SLA | Dedicated Isolated Process |
+
+---
+
+### Rule 5: Live Discord Previews & WYSIWYG Standard
+* Every module that generates a Discord user-facing message (Welcome, Booster, Roles, Alerts, Radar) **must** provide a pixel-accurate Discord live mockup preview.
+* Changes in form controls (title, description, embed color, buttons) must reflect immediately in the live preview before saving.
+* Channel and Role pickers (`SearchableSelect`) must sanitize `#` double prefixes and provide fallback items if live Discord channels are unavailable.
+
+---
+
+### Rule 6: Server Performance & Parallel Fetching Standard
+* **No Sequential Waterfall Awaits**: Module pages must run independent data queries via `Promise.all`.
+* **Session Memoization**: `getServerSession()` must remain wrapped in React `cache()`.
+* **Discord API Caching**: All gateway/channel/role live queries against Discord's REST API must maintain in-memory TTL caching (60s minimum) to prevent 429 rate-limiting.
+
+---
+
 # Vercel — Design Language Reference
 
 ## 1. Visual Theme & Atmosphere

@@ -81,6 +81,7 @@ export function createGuildRoutes(deps: GuildRoutesDeps): Hono<AuthenticatedUser
           connected: Boolean(connected),
           tenantId: connected?.tenantId,
           botName: connected?.botName ?? null,
+          botConfigured: Boolean(connected?.botApplicationId || connected?.botName),
         };
       }),
     });

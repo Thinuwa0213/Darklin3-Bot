@@ -10,6 +10,7 @@ export interface ConnectedGuildDetails {
   guildId: bigint;
   tenantId: string;
   botName: string | null;
+  botApplicationId?: string | null;
 }
 
 /**
@@ -25,6 +26,7 @@ export async function listConnectedGuildsForUser(
       guildId: guilds.id,
       tenantId: guilds.tenantId,
       botName: botApplications.name,
+      botApplicationId: botApplications.id,
     })
     .from(guilds)
     .innerJoin(tenantMemberships, eq(tenantMemberships.tenantId, guilds.tenantId))
@@ -36,6 +38,7 @@ export async function listConnectedGuildsForUser(
     guildId: r.guildId,
     tenantId: r.tenantId,
     botName: r.botName ?? null,
+    botApplicationId: r.botApplicationId ?? null,
   }));
 }
 

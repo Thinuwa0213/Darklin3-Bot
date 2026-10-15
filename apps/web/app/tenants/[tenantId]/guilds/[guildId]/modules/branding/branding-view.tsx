@@ -16,13 +16,14 @@ import {
   X,
   AlertCircle,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import {
   saveBrandingAction,
   removeBrandingAvatarAction,
   removeBrandingBannerAction,
 } from "@/app/actions";
-import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { PageHeader } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { ImageCropperModal } from "./image-cropper-modal";
 import { DiscordAppBadge } from "@/components/discord/discord-chat-preview";
@@ -52,7 +53,7 @@ export function BrandingView({
   botBannerSizeBytes = 0,
   botTag = null,
   initialUsedBytes = 0,
-  maxStorageBytes = 10 * 1024 * 1024,
+  maxStorageBytes = 30 * 1024 * 1024,
 }: BrandingViewProps) {
   // Live values from server
   const [displayNickname, setDisplayNickname] = useState(botName);
@@ -146,6 +147,7 @@ export function BrandingView({
   const usedMb = parseFloat((currentTotalBytes / (1024 * 1024)).toFixed(2));
   const maxMb = parseFloat((maxBytes / (1024 * 1024)).toFixed(0));
   const storagePercent = Math.min(100, Math.round((currentTotalBytes / maxBytes) * 100));
+  const isStorageFull = currentTotalBytes >= maxBytes;
 
   const hasStagedChanges = Boolean(avatarFile || bannerFile);
 
@@ -166,6 +168,11 @@ export function BrandingView({
 
   const handleImageFilePick = (file: File, type: "avatar" | "banner") => {
     setUploadError(null);
+    if (isStorageFull) {
+      setUploadError(`Storage limit of ${maxMb}MB reached. Please delete existing media or upgrade your plan to upload more files.`);
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       setUploadError("Please upload a valid image file (PNG, JPG, GIF, WebP).");
       return;
@@ -404,15 +411,6 @@ export function BrandingView({
         category="White-Label Identity"
         title="Bot Identity & Branding"
         description="Customize your bot's server display nickname, uploaded icon, banner, and brand colors."
-        badge={
-          currentPlan === "FREE" ? (
-            <Badge variant="outline" className="text-[10px] font-mono">
-              FREE
-            </Badge>
-          ) : (
-            <ProBadge label={currentPlan} />
-          )
-        }
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={
@@ -684,38 +682,56 @@ export function BrandingView({
                       </div>
                     </div>
                   ) : (
-                    <div
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsAvatarDragging(false);
-                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                          handleImageFilePick(e.dataTransfer.files[0], "avatar");
-                        }
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsAvatarDragging(true);
-                      }}
-                      onDragLeave={() => setIsAvatarDragging(false)}
-                      onClick={() => avatarInputRef.current?.click()}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 cursor-pointer transition-all w-full ${
-                        isAvatarDragging
-                          ? "border-primary bg-primary/5 scale-[0.99]"
-                          : "border-border/80 hover:border-primary/50 hover:bg-muted/30"
-                      }`}
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Upload className="h-4 w-4" />
+                      <div
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsAvatarDragging(false);
+                          if (isStorageFull) {
+                            setUploadError(`Storage limit of ${maxMb}MB reached. Upgrade to Pro for more space.`);
+                            return;
+                          }
+                          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                            handleImageFilePick(e.dataTransfer.files[0], "avatar");
+                          }
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (!isStorageFull) setIsAvatarDragging(true);
+                        }}
+                        onDragLeave={() => setIsAvatarDragging(false)}
+                        onClick={() => {
+                          if (isStorageFull) {
+                            setUploadError(`Storage limit of ${maxMb}MB reached. Upgrade to Pro for more space.`);
+                            return;
+                          }
+                          avatarInputRef.current?.click();
+                        }}
+                        className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 transition-all w-full ${
+                          isStorageFull
+                            ? "border-destructive/40 bg-destructive/5 opacity-60 cursor-not-allowed"
+                            : isAvatarDragging
+                              ? "border-primary bg-primary/5 scale-[0.99] cursor-pointer"
+                              : "border-border/80 hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
+                        }`}
+                      >
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isStorageFull ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                          <Upload className="h-4 w-4" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-medium text-foreground">
+                            {isStorageFull ? (
+                              <span className="text-destructive font-semibold">Storage Full ({maxMb}MB limit)</span>
+                            ) : (
+                              <>
+                                <span className="text-primary hover:underline">Click to upload</span> or drag and drop
+                              </>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {isStorageFull ? "Delete media or upgrade plan" : "1:1 Square • Max 3MB"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs font-medium text-foreground">
-                          <span className="text-primary hover:underline">Click to upload</span> or drag and drop
-                        </p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          1:1 Square • Max 3MB
-                        </p>
-                      </div>
-                    </div>
                   )}
                 </div>
               </div>
@@ -794,31 +810,47 @@ export function BrandingView({
                       onDrop={(e) => {
                         e.preventDefault();
                         setIsBannerDragging(false);
+                        if (isStorageFull) {
+                          setUploadError(`Storage limit of ${maxMb}MB reached. Upgrade to Pro for more space.`);
+                          return;
+                        }
                         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                           handleImageFilePick(e.dataTransfer.files[0], "banner");
                         }
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
-                        setIsBannerDragging(true);
+                        if (!isStorageFull) setIsBannerDragging(true);
                       }}
                       onDragLeave={() => setIsBannerDragging(false)}
-                      onClick={() => bannerInputRef.current?.click()}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 cursor-pointer transition-all w-full aspect-[17/6] ${
-                        isBannerDragging
-                          ? "border-primary bg-primary/5 scale-[0.99]"
-                          : "border-border/80 hover:border-primary/50 hover:bg-muted/30"
+                      onClick={() => {
+                        if (isStorageFull) {
+                          setUploadError(`Storage limit of ${maxMb}MB reached. Upgrade to Pro for more space.`);
+                          return;
+                        }
+                        bannerInputRef.current?.click();
+                      }}
+                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 transition-all w-full aspect-[17/6] ${
+                        isStorageFull
+                          ? "border-destructive/40 bg-destructive/5 opacity-60 cursor-not-allowed"
+                          : isBannerDragging
+                            ? "border-primary bg-primary/5 scale-[0.99] cursor-pointer"
+                            : "border-border/80 hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
                       }`}
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isStorageFull ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
                         <Upload className="h-4 w-4" />
                       </div>
                       <div className="text-center">
                         <p className="text-xs font-medium text-foreground">
-                          <span className="text-primary hover:underline">Drag or click to upload</span>
+                          {isStorageFull ? (
+                            <span className="text-destructive font-semibold">Storage Full ({maxMb}MB limit)</span>
+                          ) : (
+                            <span className="text-primary hover:underline">Drag or click to upload</span>
+                          )}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          17:6 ratio • Max 3MB
+                          {isStorageFull ? "Delete media or upgrade plan" : "17:6 ratio • Max 3MB"}
                         </p>
                       </div>
                     </div>
@@ -924,6 +956,81 @@ export function BrandingView({
               <p className="text-[11px] text-muted-foreground text-center mt-3">
                 Updates in real-time as you modify display nickname, icon, banner, and accent color.
               </p>
+            </CardContent>
+          </Card>
+
+          {/* Storage Quota Usage Card */}
+          <Card className="border-border/80 shadow-xs bg-card/60 backdrop-blur-xs mt-4">
+            <CardHeader className="pb-2.5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+                  <HardDrive className="h-3.5 w-3.5 text-primary" />
+                  <span>Media Storage Quota</span>
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className={`text-[9px] font-mono uppercase ${
+                    currentPlan === "ENTERPRISE"
+                      ? "border-purple-500/30 text-purple-400 bg-purple-500/10"
+                      : currentPlan === "PRO"
+                        ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                        : "border-primary/30 text-primary bg-primary/10"
+                  }`}
+                >
+                  {currentPlan} • {maxMb}MB
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground">Used Space</span>
+                  <span className="text-foreground font-mono font-medium">
+                    {usedMb} MB / {maxMb} MB ({storagePercent}%)
+                  </span>
+                </div>
+                <div className="w-full bg-muted/60 rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 rounded-full ${
+                      storagePercent >= 100
+                        ? "bg-destructive"
+                        : storagePercent > 80
+                          ? "bg-amber-500"
+                          : "bg-primary"
+                    }`}
+                    style={{ width: `${storagePercent}%` }}
+                  />
+                </div>
+              </div>
+
+              {isStorageFull ? (
+                <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[11px] space-y-2">
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>Storage Limit Reached</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-normal">
+                    You have reached the {maxMb}MB storage quota. Please remove existing assets or upgrade your plan to upload more images.
+                  </p>
+                  <Button size="sm" variant="destructive" asChild className="w-full h-7 text-xs font-semibold">
+                    <a href={`/tenants/${tenantId}/billing`}>
+                      <span>Upgrade Plan</span>
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </a>
+                  </Button>
+                </div>
+              ) : currentPlan === "FREE" ? (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] text-muted-foreground">Need more space?</span>
+                  <a
+                    href={`/tenants/${tenantId}/billing`}
+                    className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span>Upgrade to Pro (100MB)</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </a>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>

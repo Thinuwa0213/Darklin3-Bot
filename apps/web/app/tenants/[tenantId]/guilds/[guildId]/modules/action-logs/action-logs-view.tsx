@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader, ModuleToggle, ProBadge } from "@/components/layout/page-header";
+import { PageHeader, ModuleToggle } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 import type { ActionLogsConfig } from "@/lib/action-logs-types";
@@ -39,7 +39,7 @@ interface ActionLogsViewProps {
 export function ActionLogsView({
   tenantId,
   guildId,
-  currentPlan,
+  currentPlan: _currentPlan,
   initialConfig,
   serverName: _serverName,
   liveChannels,
@@ -174,15 +174,6 @@ export function ActionLogsView({
         category="Server Defense & Audit"
         title="Action Logs"
         description="Track server modifications with advanced filters, per-event routing, and high-fidelity embeds."
-        badges={[
-          currentPlan !== "FREE" ? (
-            <ProBadge key="plan" label={currentPlan} />
-          ) : (
-            <Badge key="plan" variant="outline" className="font-mono text-[10px]">
-              FREE
-            </Badge>
-          ),
-        ].filter(Boolean)}
         backHref={`/tenants/${tenantId}/guilds/${guildId}`}
         backLabel="Server Overview"
         actions={

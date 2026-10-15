@@ -1,4 +1,5 @@
 import { cookies, headers } from "next/headers";
+import { cache } from "react";
 import { loadWebServerConfig } from "@creatorcore/config/web-server";
 
 export interface SessionData {
@@ -20,8 +21,9 @@ export interface SessionData {
  *
  * Runs only on the server (Server Components / Server Actions).
  * Forwards the browser's incoming cookies verbatim.
+ * Memoized per server request with React cache to eliminate duplicate auth round-trips.
  */
-export async function getServerSession(): Promise<SessionData | null> {
+export const getServerSession = cache(async function getServerSession(): Promise<SessionData | null> {
   const { API_INTERNAL_URL } = loadWebServerConfig();
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
@@ -50,7 +52,7 @@ export async function getServerSession(): Promise<SessionData | null> {
   } catch {
     return null;
   }
-}
+});
 
 /**
  * Server-side helper to make authenticated, origin-checked calls to apps/api.
