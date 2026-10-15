@@ -58,18 +58,33 @@ export function DiscordWelcomeMockup({
     return () => observer.disconnect();
   }, []);
 
+  // Escape HTML entities to prevent script injection (XSS)
+  const escapeHtml = (str: string) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   // Render message with rich tokens and Markdown bolding
   const renderFormattedMessage = (rawText: string) => {
     if (!rawText) {
       return <span className="text-zinc-500 italic">No welcome message configured...</span>;
     }
 
-    let text = rawText
+    // Sanitize raw text and parameters first
+    const sanitized = escapeHtml(rawText);
+    const safeServer = escapeHtml(serverName || 'My Server');
+    const safeChannel = escapeHtml(channelName || 'general');
+
+    let text = sanitized
       .replace(/{user}/g, `<span class="bg-[#5865F2]/20 text-[#858df3] font-medium px-1 rounded hover:bg-[#5865F2] hover:text-white cursor-pointer transition-colors">@NewMember</span>`)
       .replace(/{user\.name}/g, `<strong>Alex</strong>`)
-      .replace(/{server}/g, `<strong>${serverName}</strong>`)
+      .replace(/{server}/g, `<strong>${safeServer}</strong>`)
       .replace(/{memberCount}/g, `<strong>1,420</strong>`)
-      .replace(/{channel}/g, `<span class="bg-[#35373c] text-[#a4a9b2] px-1 rounded font-medium">${channelName}</span>`);
+      .replace(/{channel}/g, `<span class="bg-[#35373c] text-[#a4a9b2] px-1 rounded font-medium">${safeChannel}</span>`);
 
     text = text.replace(/\*\*(.*?)\*\*/g, `<strong>$1</strong>`);
 

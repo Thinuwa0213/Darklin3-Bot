@@ -7,6 +7,7 @@ export interface Guild {
   id: bigint;
   tenantId: string;
   name: string;
+  icon?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
