@@ -25,9 +25,11 @@ export default async function HomePage() {
 
       <Card className="w-full max-w-md shadow-2xs border-border/80">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-xl shadow-xs">
-            C
-          </div>
+          <img
+            src="/logo-icon.png"
+            alt="Darklin3"
+            className="mx-auto mb-3 h-14 w-14 rounded-2xl object-cover shadow-md border border-border"
+          />
           <CardTitle className="text-2xl font-bold tracking-tight">
             {config.NEXT_PUBLIC_APP_NAME}
           </CardTitle>

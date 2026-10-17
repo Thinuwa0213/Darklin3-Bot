@@ -75,9 +75,11 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
       {/* Brand Header */}
       <SidebarHeader>
         <div className="flex items-center gap-2.5 px-2 py-1">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-950 font-black text-sm">
-            D
-          </div>
+          <img
+            src="/logo-icon.png"
+            alt="Darklin3"
+            className="h-7 w-7 shrink-0 rounded-md object-cover shadow-xs"
+          />
           {(state === "expanded" || isMobile) && (
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight leading-none text-sidebar-foreground">

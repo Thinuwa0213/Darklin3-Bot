@@ -135,7 +135,11 @@ export function DiscordChatPreview({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span>{botName.slice(0, 2).toUpperCase()}</span>
+                <img
+                  src="/logo-icon.png"
+                  alt={botName}
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
             <span
