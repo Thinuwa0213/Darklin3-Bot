@@ -45,6 +45,46 @@ export function BotPowerControls({
     setStatus(initialStatus);
   }, [initialStatus]);
 
+  // Auto-poll on mount if bot is in a connecting/transitional state (e.g. fresh onboarding or worker claim)
+  useEffect(() => {
+    const isTransitional =
+      initialStatus === "UNASSIGNED" ||
+      initialStatus === "ACTIVE_ASSIGNMENT" ||
+      initialStatus === "RESTARTING" ||
+      initialStatus === "STARTING";
+
+    if (!isTransitional || !botApplicationId) return;
+
+    let attempts = 0;
+    const maxAttempts = 15; // 30s max
+    setFeedback("Connecting to Discord Gateway...");
+
+    const pollTimer = setInterval(async () => {
+      attempts++;
+      const poll = await getBotRuntimeStatusAction(tenantId, guildId);
+      if (poll.ok && poll.status === "ONLINE") {
+        clearInterval(pollTimer);
+        setStatus("ONLINE");
+        setFeedback("🎉 Bot connected to Discord Gateway successfully!");
+        router.refresh();
+        setTimeout(() => setFeedback(null), 4000);
+      } else if (poll.ok && poll.status && poll.status !== "UNASSIGNED" && poll.status !== "ACTIVE_ASSIGNMENT") {
+        setStatus(poll.status);
+        if (poll.status === "DEGRADED" || poll.status === "STOPPED") {
+          clearInterval(pollTimer);
+          setFeedback(null);
+          router.refresh();
+        }
+      } else if (attempts >= maxAttempts) {
+        clearInterval(pollTimer);
+        setFeedback(null);
+        router.refresh();
+      }
+    }, 2000);
+
+    return () => clearInterval(pollTimer);
+  }, [initialStatus, tenantId, guildId, botApplicationId, router]);
+
   // Countdown timer effect for restart rate-limit cooldown
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -188,6 +228,13 @@ export function BotPowerControls({
             ACTIVE
           </Badge>
         );
+      case "UNASSIGNED":
+        return (
+          <Badge className="text-[10px] font-semibold px-2 py-0.5 bg-amber-500/15 text-amber-500 border-amber-500/30 animate-pulse flex items-center gap-1">
+            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            <span>UNASSIGNED</span>
+          </Badge>
+        );
       case "DEGRADED":
         return (
           <Badge variant="destructive" className="text-[10px] font-semibold px-2 py-0.5">
@@ -206,6 +253,9 @@ export function BotPowerControls({
   const getStatusDescription = () => {
     if (status === "ONLINE") {
       return "Bot worker active and connected to Discord Gateway.";
+    }
+    if (status === "UNASSIGNED") {
+      return "Establishing Discord Gateway session. Worker is claiming assignment...";
     }
     if (status === "STOPPED") {
       return "Bot instance has been paused by administrator. Gateway connection closed.";
@@ -240,8 +290,12 @@ export function BotPowerControls({
 
       {/* Inline Feedback or Error Message */}
       {feedback && (
-        <div className="flex items-center gap-1.5 text-[11px] text-sky-400 font-medium bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 rounded-md">
-          <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+        <div className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-md animate-in fade-in duration-200 ${
+          feedback.includes("🎉")
+            ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+            : "text-sky-400 bg-sky-500/10 border border-sky-500/20"
+        }`}>
+          {!feedback.includes("🎉") && <Loader2 className="h-3 w-3 animate-spin shrink-0" />}
           <span>{feedback}</span>
         </div>
       )}

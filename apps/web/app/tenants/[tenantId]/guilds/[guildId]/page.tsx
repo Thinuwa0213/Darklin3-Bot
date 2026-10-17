@@ -136,7 +136,14 @@ export default async function GuildOverviewPage({ params }: PageProps) {
         title="Guild Overview"
         description="Operational status and bot application configuration for this server."
         badge={
-          <Badge variant={badgeVariant} className="text-xs">
+          <Badge
+            variant={badgeVariant}
+            className={`text-xs ${
+              status === "UNASSIGNED" || status === "ACTIVE_ASSIGNMENT"
+                ? "animate-pulse"
+                : ""
+            }`}
+          >
             {status}
           </Badge>
         }
