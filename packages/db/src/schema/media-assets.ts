@@ -3,7 +3,7 @@ import { tenants } from "./tenants.js";
 import { guilds } from "./guilds.js";
 
 /**
- * Physical media assets table for CreatorCore branding uploads (Phase 5 §Branding).
+ * Physical media assets table for Darklin3 Bot branding uploads (Phase 5 §Branding).
  * Stores relative storage paths (e.g. tenants/{tenantId}/guilds/{guildId}/avatar/{filename})
  * and exact file sizes for strict tenant storage quota enforcement.
  */

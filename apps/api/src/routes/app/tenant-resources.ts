@@ -17,7 +17,7 @@ import {
   setBotRuntimeState,
   upsertMediaAsset,
   type DatabaseClient,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import {
   AuthorizationError,
   requireBotApplicationAccess,

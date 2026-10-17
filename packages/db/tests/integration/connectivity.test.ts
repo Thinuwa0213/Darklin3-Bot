@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import mysql from "mysql2/promise";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
   const envPath = path.resolve(fileURLToPath(import.meta.url), "../../../../../.env");

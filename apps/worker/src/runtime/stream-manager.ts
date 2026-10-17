@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import { ActivityType, EmbedBuilder } from "discord.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import type { IDiscordClient } from "./discord-client.js";
 
 export interface StoredStreamerAlert {
@@ -566,7 +566,7 @@ export class StreamManager {
           embed.setFooter({ text: data.radar.customFooterText });
         }
       } else {
-        embed.setFooter({ text: "⚡ Community Radar powered by CreatorCore • creatorcore.app" });
+        embed.setFooter({ text: "⚡ Community Radar powered by Darklin3 Bot • darklin3.app" });
       }
       embed.setTimestamp();
 
@@ -638,7 +638,7 @@ export class StreamManager {
     try {
       const res = await fetch(url, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0",
           Accept: "application/json",
         },
       });
@@ -713,7 +713,7 @@ export class StreamManager {
         headers: {
           "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
           "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0",
         },
         body: JSON.stringify({
           query: `query { user(login: "${cleanLogin}") { displayName stream { id title type game { name } viewersCount previewImageURL(width: 1280, height: 720) } } }`,
@@ -804,7 +804,7 @@ export class StreamManager {
 
       const res = await fetch(liveUrl, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0",
           Accept: "text/html",
         },
         redirect: "follow",
@@ -842,7 +842,7 @@ export class StreamManager {
     try {
       const res = await fetch(`https://www.tiktok.com/@${cleanHandle}/live`, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0",
         },
       });
 
@@ -898,7 +898,7 @@ export class StreamManager {
             : `https://www.youtube.com/@${encodeURIComponent(cleanHandle)}`;
 
           const handleRes = await fetch(handleUrl, {
-            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0" },
+            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0" },
           });
 
           if (handleRes.ok) {
@@ -920,7 +920,7 @@ export class StreamManager {
         : `https://www.youtube.com/feeds/videos.xml?user=${encodeURIComponent(cleanHandle.replace("@", ""))}`;
 
       const res = await fetch(feedUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0" },
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0" },
       });
 
       if (res.ok) {
@@ -956,7 +956,7 @@ export class StreamManager {
     try {
       const oembedUrl = `https://www.tiktok.com/oembed?url=https://www.tiktok.com/@${encodeURIComponent(cleanHandle)}`;
       const res = await fetch(oembedUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CreatorCore/1.0" },
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Darklin3 Bot/1.0" },
       });
 
       if (res.ok) {
@@ -1078,14 +1078,14 @@ export class StreamManager {
         embed.setImage(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${cleanTwitch}-1280x720.jpg`);
       }
 
-      // Branding & Watermark (Free = CreatorCore branding, PRO = white-label / custom)
+      // Branding & Watermark (Free = Darklin3 Bot branding, PRO = white-label / custom)
       if (config.customBranding) {
         if (config.customFooterText) {
           embed.setFooter({ text: config.customFooterText });
         }
       } else {
         embed.setFooter({
-          text: "⚡ Stream Alert powered by CreatorCore • creatorcore.app",
+          text: "⚡ Stream Alert powered by Darklin3 Bot • darklin3.app",
         });
       }
       embed.setTimestamp();
@@ -1169,7 +1169,7 @@ export class StreamManager {
         }
       } else {
         embed.setFooter({
-          text: "⚡ Video Alert powered by CreatorCore • creatorcore.app",
+          text: "⚡ Video Alert powered by Darklin3 Bot • darklin3.app",
         });
       }
       embed.setTimestamp();

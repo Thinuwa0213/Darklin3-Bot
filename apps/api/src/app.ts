@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import type { Logger } from "@creatorcore/logger";
-import type { DatabaseClient } from "@creatorcore/db";
+import type { Logger } from "@darklin3_bot/logger";
+import type { DatabaseClient } from "@darklin3_bot/db";
 import { createHealthRoute } from "./routes/health.js";
 import { createReadyRoute, type ReadyRouteDeps } from "./routes/ready.js";
 import { createWorkerExchangeRoute } from "./routes/internal/worker-exchange.js";

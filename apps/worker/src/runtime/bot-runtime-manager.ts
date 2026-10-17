@@ -1,4 +1,4 @@
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import type { ControlPlaneClient } from "../client/control-plane-client.js";
 import { BotRuntime } from "./bot-runtime.js";
 import { type DiscordClientFactory, defaultDiscordClientFactory } from "./discord-client.js";

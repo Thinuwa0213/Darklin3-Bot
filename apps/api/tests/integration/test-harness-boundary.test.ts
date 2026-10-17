@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { isTestHarnessEnabled } from "../../src/routes/internal/test-harness.js";
-import { createLogger } from "@creatorcore/logger";
-import type { DatabaseClient } from "@creatorcore/db";
+import { createLogger } from "@darklin3_bot/logger";
+import type { DatabaseClient } from "@darklin3_bot/db";
 
 describe("Test Harness Boundary Gate (Amendment 1 & 4)", () => {
   const logger = createLogger({ service: "test-harness-gate", write: () => undefined });

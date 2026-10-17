@@ -1,6 +1,6 @@
-# CreatorCore — Instructions for Claude
+# Darklin3 Bot — Instructions for Claude
 
-CreatorCore is a commercial, multi-tenant platform for branded Discord bots. It must remain **one reusable platform + reusable modules + tenant configuration** — never a codebase that gets forked per client. Read this file before doing any substantial work in this repository.
+Darklin3 Bot is a commercial, multi-tenant platform for branded Discord bots. It must remain **one reusable platform + reusable modules + tenant configuration** — never a codebase that gets forked per client. Read this file before doing any substantial work in this repository.
 
 ## Current phase
 
@@ -69,6 +69,6 @@ Before any large or destructive change: run `git status` first. Never discard un
 - `docs/DATABASE_RULES.md` — MySQL 8.0+/InnoDB (locked), tenant/guild-scoped query rule.
 - `docs/DISCORD_RULES.md` — token handling, permission verification.
 - `docs/DESIGN_SYSTEM.md` — UI rules and anti-patterns.
-- `docs/TESTING.md` — test strategy, the per-workspace `creatorcore.testGates` contract, security regression scenarios.
+- `docs/TESTING.md` — test strategy, the per-workspace `darklin3_bot.testGates` contract, security regression scenarios.
 - `docs/DEVELOPMENT.md` — environment separation, git workflow.
 - `docs/RELEASE_GATES.md` — CI gate order and status vocabulary.

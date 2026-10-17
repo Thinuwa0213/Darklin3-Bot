@@ -1,4 +1,4 @@
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 
 /**
  * Internal to apps/worker only — not a shared contract. A future

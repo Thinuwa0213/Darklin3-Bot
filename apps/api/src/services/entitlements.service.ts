@@ -3,7 +3,7 @@ import {
   type DatabaseClient,
   type SubscriptionPlan,
   type TenantSubscription,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 
 export type FeatureKey =
   | "CUSTOM_BOT_TOKEN"

@@ -1,8 +1,8 @@
 {
-  "name": "@creatorcore/web",
+  "name": "@darklin3_bot/web",
   "private": true,
   "version": "0.0.0",
-  "description": "CreatorCore dashboard UI/BFF foundation (docs/adr/0001-dashboard-framework.md) — a minimal neutral shell, no product screens yet.",
+  "description": "Darklin3 Bot dashboard UI/BFF foundation (docs/adr/0001-dashboard-framework.md) — a minimal neutral shell, no product screens yet.",
   "license": "UNLICENSED",
   "scripts": {
     "build": "next build",
@@ -11,7 +11,7 @@
     "dev": "next dev",
     "test:e2e": "playwright test --config ../../playwright.config.ts"
   },
-  "creatorcore": {
+  "darklin3_bot": {
     "testGates": {
       "unit": false,
       "integration": false,
@@ -19,7 +19,7 @@
     }
   },
   "dependencies": {
-    "@creatorcore/config": "workspace:*",
+    "@darklin3_bot/config": "workspace:*",
     "@radix-ui/react-avatar": "^1.1.3",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",

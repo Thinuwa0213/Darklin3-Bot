@@ -37,7 +37,7 @@ The rule: at exchange time, alongside the worker's own short-lived access creden
 ## Alternatives Considered
 
 - **One shared global internal API password** — rejected: a single leak compromises every worker simultaneously, and revoking it requires re-keying the entire fleet, which is exactly the operational failure mode this ADR exists to avoid.
-- **mTLS (mutual TLS) per worker now** — a strong long-term option and an explicit future direction (see Revisit Conditions), not adopted as the initial mechanism because it requires a certificate-issuance/rotation pipeline CreatorCore doesn't have yet at Phase 1 scale; adopting it prematurely would be infrastructure ahead of demonstrated need, which `docs/ARCHITECTURE.md`/ADR-0008 both caution against.
+- **mTLS (mutual TLS) per worker now** — a strong long-term option and an explicit future direction (see Revisit Conditions), not adopted as the initial mechanism because it requires a certificate-issuance/rotation pipeline Darklin3 Bot doesn't have yet at Phase 1 scale; adopting it prematurely would be infrastructure ahead of demonstrated need, which `docs/ARCHITECTURE.md`/ADR-0008 both caution against.
 - **Long-lived per-worker API keys with no exchange step** — rejected: a leaked long-lived key is valid indefinitely until someone notices and rotates it; the short-lived exchange bounds the exposure window of the credential actually used for API calls to the 15-minute target lifetime, while still allowing the bootstrap secret to be rotated on its own, independent cadence.
 
 ## Consequences

@@ -56,16 +56,16 @@ jobs:
     needs: [unit-tests]
     runs-on: ubuntu-latest
     # Real MySQL 8.0+ service container — never SQLite (docs/DATABASE_RULES.md).
-    # packages/db and apps/api declare creatorcore.testGates.integration = true
+    # packages/db and apps/api declare darklin3_bot.testGates.integration = true
     # and connect to this service via the DATABASE_URL below.
     services:
       mysql:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: creatorcore_test
-          MYSQL_USER: creatorcore
-          MYSQL_PASSWORD: creatorcore_test_password
+          MYSQL_DATABASE: darklin3_bot_test
+          MYSQL_USER: darklin3_bot
+          MYSQL_PASSWORD: darklin3_bot_test_password
         ports:
           - 3306:3306
         options: >-
@@ -76,9 +76,9 @@ jobs:
     env:
       # CI-only, disposable test credentials — never shared with staging/production
       # (docs/DEVELOPMENT.md's environment-separation rule).
-      DATABASE_URL: mysql://creatorcore:creatorcore_test_password@127.0.0.1:3306/creatorcore_test
+      DATABASE_URL: mysql://darklin3_bot:darklin3_bot_test_password@127.0.0.1:3306/darklin3_bot_test
       # CI-only disposable worker-token signing key (docs/adr/0011) — apps/api only.
-      WORKER_TOKEN_SIGNING_KEY: creatorcore-ci-disposable-worker-token-signing-key-not-a-real-secret
+      WORKER_TOKEN_SIGNING_KEY: darklin3_bot-ci-disposable-worker-token-signing-key-not-a-real-secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -92,7 +92,7 @@ jobs:
   e2e-tests:
     needs: [unit-tests]
     runs-on: ubuntu-latest
-    # NOT APPLICABLE until a workspace declares creatorcore.testGates.e2e = true
+    # NOT APPLICABLE until a workspace declares darklin3_bot.testGates.e2e = true
     # (see docs/TESTING.md) — i.e. until a dashboard/browser-facing app exists.
     steps:
       - uses: actions/checkout@v4

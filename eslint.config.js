@@ -5,7 +5,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import globals from "globals";
 
 /**
- * Root ESLint config for the whole CreatorCore monorepo.
+ * Root ESLint config for the whole Darklin3 Bot monorepo.
  *
  * Phase 2: this is the single lint config for repo tooling files AND every
  * workspace under packages/* and apps/*, per docs/ARCHITECTURE.md's rule

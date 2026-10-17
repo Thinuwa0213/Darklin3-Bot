@@ -1,4 +1,4 @@
-# CreatorCore — Architecture Decision Records
+# Darklin3 Bot — Architecture Decision Records
 
 Each file in this directory is one architecture decision, recorded in the format:
 

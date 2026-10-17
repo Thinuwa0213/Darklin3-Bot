@@ -1,4 +1,4 @@
-# @creatorcore/db
+# @darklin3_bot/db
 
 Controlled MySQL/Drizzle data-access boundary (`docs/adr/0004-orm-data-layer.md`). Only `apps/api` depends on this package — `apps/web` and `apps/worker` never hold database credentials (`docs/adr/0002-backend-api-architecture.md`).
 

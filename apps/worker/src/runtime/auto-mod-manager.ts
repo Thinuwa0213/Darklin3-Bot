@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { EmbedBuilder, PermissionFlagsBits, type Message } from "discord.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import type { IDiscordClient } from "./discord-client.js";
 import { logToGuildConsole } from "./guild-console-logger.js";
 

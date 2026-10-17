@@ -4,8 +4,8 @@ import {
   listConnectedGuildsForUser,
   recordAuditEvent,
   type DatabaseClient,
-} from "@creatorcore/db";
-import type { Logger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import type { Logger } from "@darklin3_bot/logger";
 import { AuthorizationError, requireCurrentDiscordGuildManager } from "../../authz/index.js";
 import { DiscordUnavailableError, type DiscordGuildProvider } from "../../discord/types.js";
 import {
@@ -88,7 +88,7 @@ export function createGuildRoutes(deps: GuildRoutesDeps): Hono<AuthenticatedUser
   });
 
   /**
-   * Connects a Discord guild to CreatorCore (task §9/§11). Sequence:
+   * Connects a Discord guild to Darklin3 Bot (task §9/§11). Sequence:
    * authenticate (middleware, above) -> synchronous live Discord
    * guild-manager reverification -> transactional connect-or-resolve. A
    * guild already managed by a tenant the caller does not belong to is

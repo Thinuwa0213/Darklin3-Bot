@@ -5,12 +5,12 @@ describe("loadWebConfig", () => {
   it("accepts an empty environment by applying defaults", () => {
     const config = loadWebConfig({});
     expect(config.NODE_ENV).toBe("development");
-    expect(config.NEXT_PUBLIC_APP_NAME).toBe("CreatorCore");
+    expect(config.NEXT_PUBLIC_APP_NAME).toBe("Darklin3 Bot");
   });
 
   it("accepts an overridden public app name", () => {
-    const config = loadWebConfig({ NEXT_PUBLIC_APP_NAME: "CreatorCore Staging" });
-    expect(config.NEXT_PUBLIC_APP_NAME).toBe("CreatorCore Staging");
+    const config = loadWebConfig({ NEXT_PUBLIC_APP_NAME: "Darklin3 Bot Staging" });
+    expect(config.NEXT_PUBLIC_APP_NAME).toBe("Darklin3 Bot Staging");
   });
 
   it("rejects an invalid NODE_ENV", () => {
@@ -29,7 +29,7 @@ describe("loadWebConfig", () => {
     const fieldNames = Object.keys(webConfigSchema.shape);
     expect(fieldNames).not.toContain("DATABASE_URL");
 
-    const config = loadWebConfig({ DATABASE_URL: "mysql://creatorcore:leak@127.0.0.1:3306/db" });
+    const config = loadWebConfig({ DATABASE_URL: "mysql://darklin3_bot:leak@127.0.0.1:3306/db" });
     expect(config).not.toHaveProperty("DATABASE_URL");
   });
 

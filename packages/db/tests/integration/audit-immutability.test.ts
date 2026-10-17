@@ -24,7 +24,7 @@ if (!dbAvailable) {
 }
 
 describe("no update/delete AuditEvent function exists in the public API", () => {
-  it("@creatorcore/db exports no function capable of mutating or deleting an audit event", () => {
+  it("@darklin3_bot/db exports no function capable of mutating or deleting an audit event", () => {
     const exportNames = Object.keys(dbPackage);
     const mutatingNamePattern = /audit.*(update|delete|edit|remove)|update.*audit|delete.*audit/i;
     for (const name of exportNames) {

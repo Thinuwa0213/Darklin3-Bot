@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Hono } from "hono";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
   const envPath = path.resolve(fileURLToPath(import.meta.url), "../../../../../.env");
@@ -16,7 +16,7 @@ import {
   createDatabaseClient,
   createUser,
   type DatabaseClient,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import {
   createRequireAuthenticatedUser,
   type AuthenticatedUserEnv,
@@ -70,7 +70,7 @@ describe.skipIf(!dbAvailable)("createRequireAuthenticatedUser (real MySQL)", () 
       "INSERT INTO auth_users (id, email, email_verified, name) VALUES (?, ?, false, ?)",
       [
         KNOWN_BETTER_AUTH_USER_ID,
-        `discord-${DISCORD_ACCOUNT_ID}@users.creatorcore.internal`,
+        `discord-${DISCORD_ACCOUNT_ID}@users.darklin3_bot.internal`,
         "Test User",
       ],
     );
@@ -113,7 +113,7 @@ describe.skipIf(!dbAvailable)("createRequireAuthenticatedUser (real MySQL)", () 
     expect(res.status).toBe(401);
   });
 
-  it("resolves the CreatorCore userId (Discord snowflake) for a valid session, never trusting a client-supplied id", async () => {
+  it("resolves the Darklin3 Bot userId (Discord snowflake) for a valid session, never trusting a client-supplied id", async () => {
     const app = buildApp(fakeAuth({ user: { id: KNOWN_BETTER_AUTH_USER_ID } }));
     // A forged userId header must have no effect -- the middleware never
     // reads one.

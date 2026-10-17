@@ -11,9 +11,9 @@ Three application units, tenant/guild-scoped data, and security-sensitive operat
 - **Structured logs** (JSON, e.g. via `pino`) from all three units. Mandatory fields: timestamp, level, service name, correlation/request ID, tenant ID (when known), guild ID (when known).
 - **Mandatory secret redaction** enforced via a shared logging wrapper/serializer used by all three units — never left to per-call-site discipline. Redacted: bot tokens, session tokens, OAuth tokens, database credentials, the credential-encryption key.
 - **Security audit events**: the `AuditEvent` entity (ADR-0006) — append-only, never editable/deletable by tenant-level actors including tenant owners. Distinct in _purpose and mutability_ from operational logs, even if initially stored in the same MySQL instance.
-- **Discord moderation actions taken through the bot** are recorded as CreatorCore AuditEvents (who configured/triggered it) — CreatorCore does not need to duplicate Discord's own native audit log, only record that CreatorCore initiated the action and by whom.
+- **Discord moderation actions taken through the bot** are recorded as Darklin3 Bot AuditEvents (who configured/triggered it) — Darklin3 Bot does not need to duplicate Discord's own native audit log, only record that Darklin3 Bot initiated the action and by whom.
 - **Worker lifecycle events** (connect/disconnect/reconnect/crash) are captured structurally (not left to ephemeral stdout) and surfaced to a health-check/alerting path for crashes/repeated disconnects.
-- **Health checks:** `creatorcore-web`/`creatorcore-api` expose a public, unauthenticated, no-sensitive-data liveness/readiness endpoint; `creatorcore-worker` exposes an internal-only endpoint reporting per-`BotApplication` connection status.
+- **Health checks:** `darklin3_bot-web`/`darklin3_bot-api` expose a public, unauthenticated, no-sensitive-data liveness/readiness endpoint; `darklin3_bot-worker` exposes an internal-only endpoint reporting per-`BotApplication` connection status.
 - **Correlation IDs** generated at the edge (a dashboard request or a Discord event) and threaded through every downstream log line and internal HTTP call.
 
 ## Alternatives Considered

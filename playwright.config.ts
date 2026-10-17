@@ -13,7 +13,7 @@ if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
 }
 
 /**
- * CreatorCore E2E configuration.
+ * Darklin3 Bot E2E configuration.
  * Configured with two webServer instances:
  * 1. apps/api on port 8787 with test harness enabled and FakeDiscordGuildProvider
  * 2. apps/web on port 3000 pointing to apps/api
@@ -72,7 +72,7 @@ export default defineConfig({
         NODE_ENV: "test",
         PORT: "3000",
         API_INTERNAL_URL: "http://localhost:8787",
-        NEXT_PUBLIC_APP_NAME: "CreatorCore",
+        NEXT_PUBLIC_APP_NAME: "Darklin3 Bot",
       },
     },
   ],

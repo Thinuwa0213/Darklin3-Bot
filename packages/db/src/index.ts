@@ -161,10 +161,10 @@ export type { MediaAssetRecord } from "./repositories/media-assets.js";
 
 
 // Better Auth's own Drizzle table objects (Phase 5, docs/adr/0003) ARE
-// exported here, unlike every CreatorCore-domain table above -- they are
+// exported here, unlike every Darklin3 Bot-domain table above -- they are
 // Better Auth's own infrastructure schema, handed directly to its Drizzle
-// adapter config in apps/api, not accessed through a CreatorCore repository
-// function. Never queried directly by CreatorCore authorization code: every
+// adapter config in apps/api, not accessed through a Darklin3 Bot repository
+// function. Never queried directly by Darklin3 Bot authorization code: every
 // authorization decision still goes through the repository functions above,
-// keyed by CreatorCore's own users.id.
+// keyed by Darklin3 Bot's own users.id.
 export { authUsers, authSessions, authAccounts, authVerifications } from "./schema/index.js";

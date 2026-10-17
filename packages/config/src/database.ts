@@ -38,7 +38,7 @@ function validateMysqlUrl(value: string, ctx: z.RefinementCtx) {
 
 /**
  * Per docs/adr/0002-backend-api-architecture.md, only `apps/api` (via
- * `@creatorcore/db`) may ever load this — `apps/web` and `apps/worker` must
+ * `@darklin3_bot/db`) may ever load this — `apps/web` and `apps/worker` must
  * never hold database credentials. A single `DATABASE_URL` is the whole
  * contract (`mysql://user:password@host:port/database`); mysql2/drizzle-kit
  * consume it directly (both support a connection-string form), so this

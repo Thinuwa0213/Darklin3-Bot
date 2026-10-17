@@ -1,5 +1,5 @@
 /**
- * Standardized Template Variables for CreatorCore.
+ * Standardized Template Variables for Darklin3 Bot.
  * Used uniformly across all modules (Welcome, Boosters, Invites, Levels, Notifications).
  */
 

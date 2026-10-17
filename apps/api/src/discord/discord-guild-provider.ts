@@ -2,7 +2,7 @@ import {
   findDiscordOauthCredential,
   replaceDiscordOauthCredentialIfUnchanged,
   type DatabaseClient,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import {
   decryptDiscordOauthCredential,
   encryptDiscordOauthCredential,
@@ -52,7 +52,7 @@ const REFRESH_SKEW_MS = 60_000;
 
 /**
  * Real Discord REST implementation of `DiscordGuildProvider`. Reads/writes
- * the encrypted credential directly via `@creatorcore/db`'s
+ * the encrypted credential directly via `@darklin3_bot/db`'s
  * discord-oauth-credentials repository (never Better Auth's own OAuth
  * helper — see the Phase 5 design doc's Step 0 finding) and refreshes
  * expiring tokens itself against Discord's token endpoint.

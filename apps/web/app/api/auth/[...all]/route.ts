@@ -1,4 +1,4 @@
-import { loadWebServerConfig } from "@creatorcore/config/web-server";
+import { loadWebServerConfig } from "@darklin3_bot/config/web-server";
 
 /**
  * Transparent proxy for Better Auth's `/api/auth/*` surface (Phase 5 §1 —

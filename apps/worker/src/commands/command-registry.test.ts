@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createLogger } from "@creatorcore/logger";
+import { createLogger } from "@darklin3_bot/logger";
 import { CommandRegistry } from "./command-registry.js";
 import { PingCommand } from "./ping.command.js";
 import { HelpCommand } from "./help.command.js";

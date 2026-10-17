@@ -1036,7 +1036,7 @@ export function BrandingView({
         </div>
       </div>
 
-      {/* Interactive Crop Modal (CreatorCore theme) */}
+      {/* Interactive Crop Modal (Darklin3 Bot theme) */}
       <ImageCropperModal
         open={cropperState.open}
         imageSrc={cropperState.imageSrc}

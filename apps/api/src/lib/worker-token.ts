@@ -24,9 +24,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  */
 
 const TOKEN_VERSION = 1;
-const CONTEXT_STRING = "creatorcore-worker-access-token-v1";
-const ISSUER = "creatorcore-api";
-const AUDIENCE = "creatorcore-worker";
+const CONTEXT_STRING = "darklin3_bot-worker-access-token-v1";
+const ISSUER = "darklin3_bot-api";
+const AUDIENCE = "darklin3_bot-worker";
 const TARGET_LIFETIME_SECONDS = 15 * 60;
 const MAX_LIFETIME_SECONDS = 20 * 60;
 const CLOCK_SKEW_TOLERANCE_SECONDS = 60;

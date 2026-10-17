@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Honest per-workspace test gate for CreatorCore.
+ * Honest per-workspace test gate for Darklin3 Bot.
  *
  * Why this exists: the foundation must never report a test category as
  * "passing" when no such tests exist, and must never require an
@@ -8,7 +8,7 @@
  * Instead, each future workspace opts in explicitly via its own
  * package.json:
  *
- *   { "creatorcore": { "testGates": { "unit": true, "integration": true, "e2e": false } } }
+ *   { "darklin3_bot": { "testGates": { "unit": true, "integration": true, "e2e": false } } }
  *
  * Contract (documented in docs/TESTING.md and docs/RELEASE_GATES.md):
  *   - No workspaces exist at all              -> NOT APPLICABLE
@@ -49,13 +49,13 @@ if (workspaces.length === 0) {
   process.exit(0);
 }
 
-const declaring = workspaces.filter((w) => w.pkg.creatorcore?.testGates?.[GATE] === true);
+const declaring = workspaces.filter((w) => w.pkg.darklin3_bot?.testGates?.[GATE] === true);
 
 if (declaring.length === 0) {
   console.log(
     `${label} TESTS: NOT APPLICABLE — ${workspaces.length} workspace(s) exist ` +
       `(${workspaces.map((w) => w.name).join(", ")}) but none declare ` +
-      `creatorcore.testGates.${GATE} = true.`,
+      `darklin3_bot.testGates.${GATE} = true.`,
   );
   process.exit(0);
 }
@@ -66,7 +66,7 @@ for (const ws of declaring) {
   const hasScript = typeof ws.pkg.scripts?.[scriptName] === "string";
   if (!hasScript) {
     console.error(
-      `${label} TESTS: FAIL — ${ws.name} declares creatorcore.testGates.${GATE} = true ` +
+      `${label} TESTS: FAIL — ${ws.name} declares darklin3_bot.testGates.${GATE} = true ` +
         `but has no "${scriptName}" script.`,
     );
     failed = true;

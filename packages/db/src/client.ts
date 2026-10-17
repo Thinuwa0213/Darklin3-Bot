@@ -1,6 +1,6 @@
 import mysql from "mysql2/promise";
 import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
-import type { DatabaseConfig } from "@creatorcore/config";
+import type { DatabaseConfig } from "@darklin3_bot/config";
 import * as schema from "./schema/index.js";
 
 export interface DatabaseClient {

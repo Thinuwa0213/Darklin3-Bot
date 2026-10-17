@@ -8,8 +8,8 @@ export { ConfigValidationError } from "./errors.js";
 // entry would reopen the exact leak the /database subpath split exists to
 // close, since apps/web and apps/worker already legitimately depend on
 // this package for their own (non-DB) config. Only apps/api imports
-// @creatorcore/config/api; only apps/api (via that) and
-// @creatorcore/config/database itself ever read DATABASE_URL.
+// @darklin3_bot/config/api; only apps/api (via that) and
+// @darklin3_bot/config/database itself ever read DATABASE_URL.
 export type { DatabaseConfig } from "./database.js";
 export type { ApiConfig } from "./api.js";
 

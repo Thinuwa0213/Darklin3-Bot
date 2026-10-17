@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHmac } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 import {
   createBotApplication,
   createDatabaseClient,
@@ -13,8 +13,8 @@ import {
   revokeWorker,
   checkDatabaseConnectivity,
   type DatabaseClient,
-} from "@creatorcore/db";
-import { createLogger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import { createLogger } from "@darklin3_bot/logger";
 import { createApp } from "../../src/app.js";
 import type { WorkerTokenSigningKeys } from "../../src/lib/worker-token.js";
 
@@ -33,7 +33,7 @@ if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
  * wrong-audience HTTP-level coverage required by docs/TESTING.md (Phase 3
  * review finding H1) and the audit-attribution coverage of finding M3.
  */
-const TOKEN_CONTEXT_STRING = "creatorcore-worker-access-token-v1";
+const TOKEN_CONTEXT_STRING = "darklin3_bot-worker-access-token-v1";
 
 function forgeWorkerToken(payload: Record<string, unknown>, key: string): string {
   const payloadSegment = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
@@ -117,7 +117,7 @@ describe.skipIf(!dbAvailable)(
     });
 
     afterAll(async () => {
-      // Test-only cleanup via the raw pool @creatorcore/db already exposes on
+      // Test-only cleanup via the raw pool @darklin3_bot/db already exposes on
       // DatabaseClient (the same handle apps/api's own readiness check uses)
       // -- not a reach into packages/db's internal schema module, which
       // remains off-limits to code outside that package
@@ -210,8 +210,8 @@ describe.skipIf(!dbAvailable)(
           v: 1,
           kv: SIGNING_KEYS.currentVersion,
           sub: forgedSubject,
-          iss: "creatorcore-api",
-          aud: "creatorcore-worker",
+          iss: "darklin3_bot-api",
+          aud: "darklin3_bot-worker",
           iat: now - 2000,
           exp: now - 1100,
         },
@@ -242,8 +242,8 @@ describe.skipIf(!dbAvailable)(
           v: 1,
           kv: SIGNING_KEYS.currentVersion,
           sub: testId("worker-forged-issuer"),
-          iss: "not-creatorcore-api",
-          aud: "creatorcore-worker",
+          iss: "not-darklin3_bot-api",
+          aud: "darklin3_bot-worker",
           iat: now,
           exp: now + 900,
         },
@@ -263,8 +263,8 @@ describe.skipIf(!dbAvailable)(
           v: 1,
           kv: SIGNING_KEYS.currentVersion,
           sub: testId("worker-forged-audience"),
-          iss: "creatorcore-api",
-          aud: "not-creatorcore-worker",
+          iss: "darklin3_bot-api",
+          aud: "not-darklin3_bot-worker",
           iat: now,
           exp: now + 900,
         },

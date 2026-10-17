@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadDatabaseConfig } from "./database.js";
 import { ConfigValidationError } from "./errors.js";
 
-const VALID_URL = "mysql://creatorcore:s3cr3t-password@127.0.0.1:3306/creatorcore_test";
+const VALID_URL = "mysql://darklin3_bot:s3cr3t-password@127.0.0.1:3306/darklin3_bot_test";
 
 describe("loadDatabaseConfig", () => {
   it("accepts a valid MySQL DATABASE_URL", () => {
@@ -21,39 +21,39 @@ describe("loadDatabaseConfig", () => {
   it("rejects a non-MySQL protocol", () => {
     expect(() =>
       loadDatabaseConfig({
-        DATABASE_URL: "postgres://creatorcore:password@127.0.0.1:5432/creatorcore_test",
+        DATABASE_URL: "postgres://darklin3_bot:password@127.0.0.1:5432/darklin3_bot_test",
       }),
     ).toThrow(ConfigValidationError);
   });
 
   it("rejects a URL with no database name in its path", () => {
     expect(() =>
-      loadDatabaseConfig({ DATABASE_URL: "mysql://creatorcore:password@127.0.0.1:3306" }),
+      loadDatabaseConfig({ DATABASE_URL: "mysql://darklin3_bot:password@127.0.0.1:3306" }),
     ).toThrow(ConfigValidationError);
   });
 
   it("rejects a URL with no host", () => {
-    expect(() => loadDatabaseConfig({ DATABASE_URL: "mysql:///creatorcore_test" })).toThrow(
+    expect(() => loadDatabaseConfig({ DATABASE_URL: "mysql:///darklin3_bot_test" })).toThrow(
       ConfigValidationError,
     );
   });
 
   it("rejects an out-of-range port", () => {
     expect(() =>
-      loadDatabaseConfig({ DATABASE_URL: "mysql://127.0.0.1:99999/creatorcore_test" }),
+      loadDatabaseConfig({ DATABASE_URL: "mysql://127.0.0.1:99999/darklin3_bot_test" }),
     ).toThrow(ConfigValidationError);
   });
 
   it("accepts a URL with no userinfo (credentials supplied another way, e.g. IAM/socket auth)", () => {
     const config = loadDatabaseConfig({
-      DATABASE_URL: "mysql://127.0.0.1:3306/creatorcore_test",
+      DATABASE_URL: "mysql://127.0.0.1:3306/darklin3_bot_test",
     });
-    expect(config.DATABASE_URL).toBe("mysql://127.0.0.1:3306/creatorcore_test");
+    expect(config.DATABASE_URL).toBe("mysql://127.0.0.1:3306/darklin3_bot_test");
   });
 
   it("never includes the supplied password, or the complete URL, in the thrown error", () => {
     const secretValue = "super-secret-db-password-xyz";
-    const url = `mysql://creatorcore:${secretValue}@127.0.0.1:3306`; // missing db name -> rejected
+    const url = `mysql://darklin3_bot:${secretValue}@127.0.0.1:3306`; // missing db name -> rejected
     try {
       loadDatabaseConfig({ DATABASE_URL: url });
       expect.unreachable("expected loadDatabaseConfig to throw");
@@ -68,7 +68,7 @@ describe("loadDatabaseConfig", () => {
 
   it("never includes the password when the protocol itself is rejected", () => {
     const secretValue = "another-secret-value";
-    const url = `postgres://creatorcore:${secretValue}@127.0.0.1:5432/creatorcore_test`;
+    const url = `postgres://darklin3_bot:${secretValue}@127.0.0.1:5432/darklin3_bot_test`;
     try {
       loadDatabaseConfig({ DATABASE_URL: url });
       expect.unreachable("expected loadDatabaseConfig to throw");
@@ -82,7 +82,7 @@ describe("loadDatabaseConfig", () => {
 
   it("never includes a secret-shaped substring when userinfo is present but the host is unparseable", () => {
     const secretValue = "hostless-secret-value";
-    const url = `mysql://creatorcore:${secretValue}@/creatorcore_test`;
+    const url = `mysql://darklin3_bot:${secretValue}@/darklin3_bot_test`;
     try {
       loadDatabaseConfig({ DATABASE_URL: url });
       expect.unreachable("expected loadDatabaseConfig to throw");

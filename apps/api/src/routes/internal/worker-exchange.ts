@@ -6,7 +6,7 @@ import {
   recordWorkerSeen,
   verifyWorkerBootstrapSecret,
   type DatabaseClient,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import { issueWorkerAccessToken, type WorkerTokenSigningKeys } from "../../lib/worker-token.js";
 
 export interface WorkerExchangeDeps {

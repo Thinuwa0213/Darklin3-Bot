@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Partials, type ApplicationCommandDataResolvable } from "discord.js";
 
 /**
- * Interface abstracting Discord Gateway Client capabilities needed by CreatorCore.
+ * Interface abstracting Discord Gateway Client capabilities needed by Darklin3 Bot.
  * Allows deterministic unit and integration testing with fake clients.
  */
 export interface IDiscordClient {

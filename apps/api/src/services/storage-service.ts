@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 
 export interface StorageService {
   saveFile(relativePath: string, buffer: Buffer): Promise<string>;

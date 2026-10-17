@@ -6,7 +6,7 @@ import {
   recordAuditEvent,
   releaseAssignment,
   renewAssignment,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import {
   createWorkerAuthMiddleware,
   type WorkerAuthDeps,

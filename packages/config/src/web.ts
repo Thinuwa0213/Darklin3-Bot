@@ -12,7 +12,7 @@ import { loadConfig } from "./env.js";
  */
 export const webConfigSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
-  NEXT_PUBLIC_APP_NAME: z.string().min(1).default("CreatorCore"),
+  NEXT_PUBLIC_APP_NAME: z.string().min(1).default("Darklin3 Bot"),
 });
 
 export type WebConfig = z.infer<typeof webConfigSchema>;

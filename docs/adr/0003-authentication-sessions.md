@@ -16,10 +16,10 @@ Concrete session/cookie rules:
 - Cookie flags: **HttpOnly**, **Secure in production**, **SameSite=Lax** (Strict would break the OAuth redirect-back flow).
 - **CSRF**: SameSite=Lax plus explicit origin/referer checks on state-changing requests in `apps/api`.
 - **PKCE + state validation** on the OAuth flow (Better Auth handles this by default for the Discord provider).
-- Discord access/refresh tokens are stored **encrypted, server-side only** (same encryption approach as bot credentials, ADR-0007) — never sent to or stored in browser storage. The browser only ever holds the CreatorCore session cookie.
+- Discord access/refresh tokens are stored **encrypted, server-side only** (same encryption approach as bot credentials, ADR-0007) — never sent to or stored in browser storage. The browser only ever holds the Darklin3 Bot session cookie.
 - **Session rotation** on privilege-relevant events (tenant membership change, role change).
 - **Logout** deletes the server-side session row immediately (not just the cookie).
-- **Guild-management capability is never inferred from the OAuth scope grant.** Every privileged, guild-scoped action re-checks CreatorCore's own TenantMembership record (ADR-0006), under the explicit policy below — not "periodically/on-demand."
+- **Guild-management capability is never inferred from the OAuth scope grant.** Every privileged, guild-scoped action re-checks Darklin3 Bot's own TenantMembership record (ADR-0006), under the explicit policy below — not "periodically/on-demand."
 
 ### Discord authorization cache policy `[LOCKED — Gate 1 condition of approval]`
 

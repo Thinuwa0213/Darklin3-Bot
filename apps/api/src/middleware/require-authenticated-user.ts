@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { findDiscordAccountIdByBetterAuthUserId, type DatabaseClient } from "@creatorcore/db";
+import { findDiscordAccountIdByBetterAuthUserId, type DatabaseClient } from "@darklin3_bot/db";
 import type { Auth } from "../auth/index.js";
 
 export interface AuthenticatedUserEnv {
@@ -21,8 +21,8 @@ export interface RequireAuthenticatedUserDeps {
  * `auth.api.getSession` resolves from the forwarded `Cookie` header.
  *
  * Better Auth's own `session.userId` is its own internal identity, not
- * CreatorCore's — one additional lookup (`findDiscordAccountIdByBetterAuthUserId`)
- * bridges to the Discord snowflake, which already equals CreatorCore's
+ * Darklin3 Bot's — one additional lookup (`findDiscordAccountIdByBetterAuthUserId`)
+ * bridges to the Discord snowflake, which already equals Darklin3 Bot's
  * `users.id` (see packages/db/src/schema/users.ts). Every downstream
  * authorization check in apps/api/src/authz uses this resolved `userId`,
  * never anything read directly from the request.

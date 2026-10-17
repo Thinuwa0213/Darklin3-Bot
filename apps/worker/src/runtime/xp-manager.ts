@@ -5,7 +5,7 @@ import {
   type Message,
   type VoiceState,
 } from "discord.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import type { IDiscordClient } from "./discord-client.js";
 import { getLevelFromXp, getLevelProgress } from "./level-calculator.js";
 
@@ -361,7 +361,7 @@ export class XpManager {
               inline: true,
             },
           )
-          .setFooter({ text: "CreatorCore XP & Leveling Engine" })
+          .setFooter({ text: "Darklin3 Bot XP & Leveling Engine" })
           .setTimestamp();
 
         if ("send" in targetChannel && typeof targetChannel.send === "function") {

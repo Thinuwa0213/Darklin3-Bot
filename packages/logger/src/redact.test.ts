@@ -39,11 +39,11 @@ describe("redact", () => {
   });
 
   it("preserves non-sensitive values unchanged", () => {
-    const result = redact({ count: 3, active: true, name: "creatorcore" }) as Record<
+    const result = redact({ count: 3, active: true, name: "darklin3_bot" }) as Record<
       string,
       unknown
     >;
-    expect(result).toEqual({ count: 3, active: true, name: "creatorcore" });
+    expect(result).toEqual({ count: 3, active: true, name: "darklin3_bot" });
   });
 
   it("does not throw on an Error instance and drops no sensitive sibling fields", () => {

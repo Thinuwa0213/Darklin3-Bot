@@ -1,4 +1,4 @@
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import type { WorkerLifecycle } from "./lifecycle.js";
 
 export interface ShutdownHooks {

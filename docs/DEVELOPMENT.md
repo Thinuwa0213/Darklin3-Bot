@@ -1,4 +1,4 @@
-# CreatorCore — Development
+# Darklin3 Bot — Development
 
 **Status:** Phase 0 engineering contract.
 
@@ -15,7 +15,7 @@ No environment shares credentials with another. `.env.example` documents variabl
 
 ## Local environment setup
 
-CreatorCore's local dev environment is a single root `.env` file (`docs/adr/0008-deployment-runtime-model.md`) — not per-app env files, not `.env.local`. `scripts/check-test-gate.mjs` and the `apps/api`/`packages/db` integration suites already load it this way via Node's native `process.loadEnvFile`.
+Darklin3 Bot's local dev environment is a single root `.env` file (`docs/adr/0008-deployment-runtime-model.md`) — not per-app env files, not `.env.local`. `scripts/check-test-gate.mjs` and the `apps/api`/`packages/db` integration suites already load it this way via Node's native `process.loadEnvFile`.
 
 1. Run the bootstrap command:
 
@@ -27,7 +27,7 @@ CreatorCore's local dev environment is a single root `.env` file (`docs/adr/0008
 
 2. Open the generated `.env`.
 3. Fill in `DATABASE_URL` — your own local MySQL 8.0+ instance (`docs/DATABASE_RULES.md`).
-4. Fill in `DISCORD_CLIENT_ID` — from the Discord Developer Portal, your CreatorCore application's OAuth2 page.
+4. Fill in `DISCORD_CLIENT_ID` — from the Discord Developer Portal, your Darklin3 Bot application's OAuth2 page.
 5. Fill in `DISCORD_CLIENT_SECRET` — same page, "Reset Secret" if you don't already have one.
 6. In that same Discord application's **OAuth2 → Redirects**, add:
 
@@ -37,7 +37,7 @@ CreatorCore's local dev environment is a single root `.env` file (`docs/adr/0008
 
    This is not a guess — it follows directly from the code: Better Auth's `baseURL` is set to `WEB_APP_ORIGIN` (`apps/api/src/auth/index.ts`), Better Auth's own default callback route is `{baseURL}/callback/{providerId}` under its default `/api/auth` base path (`better-auth`'s `oauth2/utils.mjs`), the Discord provider is registered under the key `"discord"`, and `apps/web`'s `app/api/auth/[...all]/route.ts` transparently proxies every `/api/auth/*` request through to `apps/api`, byte-for-byte, so the browser only ever talks to the web origin. With the generated `.env`'s default `WEB_APP_ORIGIN=http://localhost:3000`, the exact callback URL is the one above. If you change `WEB_APP_ORIGIN`, the callback URL changes with it.
 
-7. Run CreatorCore (see "Running the apps locally" below).
+7. Run Darklin3 Bot (see "Running the apps locally" below).
 
 ### How the root `.env` actually gets loaded today
 
@@ -55,9 +55,9 @@ This is a real, current limitation — not something this bootstrap tooling chan
 
   ```powershell
   $env:NODE_ENV = "development"
-  $env:NEXT_PUBLIC_APP_NAME = "CreatorCore"
+  $env:NEXT_PUBLIC_APP_NAME = "Darklin3 Bot"
   $env:API_INTERNAL_URL = "http://localhost:8787"
-  pnpm --filter @creatorcore/web dev
+  pnpm --filter @darklin3_bot/web dev
   ```
 
 ### `WORKER_ID` and worker provisioning
@@ -81,20 +81,20 @@ pnpm audit            # dependency vulnerability check (--audit-level=high; repo
 
 ```bash
 # apps/web — dashboard UI/BFF shell
-pnpm --filter @creatorcore/web dev        # http://localhost:3000
+pnpm --filter @darklin3_bot/web dev        # http://localhost:3000
 
 # apps/api — platform backend (health/ready only in Phase 2)
-pnpm --filter @creatorcore/api build && pnpm --filter @creatorcore/api start   # http://localhost:8787/health, /ready
+pnpm --filter @darklin3_bot/api build && pnpm --filter @darklin3_bot/api start   # http://localhost:8787/health, /ready
 
 # apps/worker — Discord worker process foundation (no Gateway connection yet)
-pnpm --filter @creatorcore/worker build && pnpm --filter @creatorcore/worker start
+pnpm --filter @darklin3_bot/worker build && pnpm --filter @darklin3_bot/worker start
 ```
 
-`apps/api` needs `DATABASE_URL` set (see `.env.example`) to start — it fails fast with a safe error if it's missing or malformed, per `packages/config`'s rules. `apps/web` and `apps/worker` need no database configuration at all; they structurally cannot hold DB credentials since their package.json dependencies never include `@creatorcore/db`.
+`apps/api` needs `DATABASE_URL` set (see `.env.example`) to start — it fails fast with a safe error if it's missing or malformed, per `packages/config`'s rules. `apps/web` and `apps/worker` need no database configuration at all; they structurally cannot hold DB credentials since their package.json dependencies never include `@darklin3_bot/db`.
 
 ### MySQL for local integration testing
 
-`pnpm test:integration` requires a real MySQL 8.0+ instance reachable via `DATABASE_URL` — no SQLite substitution (`docs/DATABASE_RULES.md`). If none is reachable, the integration tests **skip visibly** (reported as `CONFIGURED BUT NOT VERIFIED`, never a faked pass) rather than failing silently or lying about coverage. A local MySQL 8 container (e.g. `docker run -e MYSQL_ROOT_PASSWORD=... -e MYSQL_DATABASE=creatorcore -p 3306:3306 mysql:8`) is one way to get a real instance; CI runs one automatically via a GitHub Actions service container.
+`pnpm test:integration` requires a real MySQL 8.0+ instance reachable via `DATABASE_URL` — no SQLite substitution (`docs/DATABASE_RULES.md`). If none is reachable, the integration tests **skip visibly** (reported as `CONFIGURED BUT NOT VERIFIED`, never a faked pass) rather than failing silently or lying about coverage. A local MySQL 8 container (e.g. `docker run -e MYSQL_ROOT_PASSWORD=... -e MYSQL_DATABASE=darklin3_bot -p 3306:3306 mysql:8`) is one way to get a real instance; CI runs one automatically via a GitHub Actions service container.
 
 ## Git workflow `[PROPOSED]`
 

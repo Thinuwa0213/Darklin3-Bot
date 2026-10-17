@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
   const envPath = path.resolve(fileURLToPath(import.meta.url), "../../../../../.env");
@@ -20,7 +20,7 @@ import {
   createUser,
   disableTenant,
   type DatabaseClient,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import {
   requireBotApplicationAccess,
   requireCurrentDiscordGuildManager,

@@ -1,9 +1,9 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import type { Auth as BetterAuthInstance } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import type { Logger } from "@creatorcore/logger";
-import type { DatabaseClient } from "@creatorcore/db";
-import { authAccounts, authSessions, authUsers, authVerifications } from "@creatorcore/db";
+import type { Logger } from "@darklin3_bot/logger";
+import type { DatabaseClient } from "@darklin3_bot/db";
+import { authAccounts, authSessions, authUsers, authVerifications } from "@darklin3_bot/db";
 import { buildDiscordSocialProvider } from "./discord-provider.js";
 import { createAccountDatabaseHooks } from "./hooks.js";
 import type { DiscordOauthTokenEncryptionKeys } from "../lib/credential-crypto.js";

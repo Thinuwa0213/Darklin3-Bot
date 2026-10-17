@@ -59,7 +59,7 @@ export class ServerInfoCommand implements SlashCommand {
           inline: true,
         },
       )
-      .setFooter({ text: "CreatorCore Guild Analytics" })
+      .setFooter({ text: "Darklin3 Bot Guild Analytics" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

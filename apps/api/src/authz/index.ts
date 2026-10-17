@@ -8,7 +8,7 @@ import {
   type DatabaseClient,
   type Guild,
   type TenantMembership,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import { DiscordUnavailableError, type DiscordGuildProvider } from "../discord/types.js";
 
 /**

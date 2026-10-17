@@ -1,10 +1,10 @@
-# CreatorCore — Design System Rules
+# Darklin3 Bot — Design System Rules
 
 **Status:** Phase 1 Operational Dashboard Standards locked in `DESIGN.md` (root). Defines concrete visual rules, header standards, tier entitlement matrix, and anti-patterns for Darklin3 dashboard operations.
 
 ## Intent
 
-CreatorCore should read as a product a team designed on purpose — operationally clear, consistent, and boring where boring is correct. It should not read as AI-generated UI. Every rule below exists to prevent a specific failure mode of AI-generated dashboards.
+Darklin3 Bot should read as a product a team designed on purpose — operationally clear, consistent, and boring where boring is correct. It should not read as AI-generated UI. Every rule below exists to prevent a specific failure mode of AI-generated dashboards.
 
 ## Rules by category (to be filled in with concrete token values in Phase 1, structure locked now)
 

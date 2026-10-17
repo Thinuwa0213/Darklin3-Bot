@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
   const envPath = path.resolve(fileURLToPath(import.meta.url), "../../../../../.env");
@@ -15,8 +15,8 @@ import {
   createDatabaseClient,
   createUser,
   type DatabaseClient,
-} from "@creatorcore/db";
-import { createLogger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import { createLogger } from "@darklin3_bot/logger";
 import { createApp } from "../../src/app.js";
 import type { WorkerTokenSigningKeys } from "../../src/lib/worker-token.js";
 import { FakeDiscordGuildProvider } from "../../src/discord/fake-discord-guild-provider.js";
@@ -27,7 +27,7 @@ const SIGNING_KEYS: WorkerTokenSigningKeys = {
   currentVersion: 1,
 };
 
-const WEB_APP_ORIGIN = "https://app.creatorcore.test";
+const WEB_APP_ORIGIN = "https://app.darklin3_bot.test";
 
 async function probeDatabase(): Promise<boolean> {
   try {
@@ -80,7 +80,7 @@ describe.skipIf(!dbAvailable)(
       await createUser(dbClient.db, userId, "Guild Route Test User");
       await dbClient.pool.query(
         "INSERT INTO auth_users (id, email, email_verified, name) VALUES (?, ?, false, ?)",
-        [betterAuthUserId, `discord-${userId}@users.creatorcore.internal`, "Guild Route Test User"],
+        [betterAuthUserId, `discord-${userId}@users.darklin3_bot.internal`, "Guild Route Test User"],
       );
       await dbClient.pool.query(
         "INSERT INTO auth_accounts (id, user_id, provider_id, account_id) VALUES (?, ?, 'discord', ?)",

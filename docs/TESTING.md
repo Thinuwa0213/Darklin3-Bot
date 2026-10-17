@@ -1,4 +1,4 @@
-# CreatorCore — Testing Strategy
+# Darklin3 Bot — Testing Strategy
 
 **Status:** Phase 0 engineering contract. No product tests exist yet — this document defines the strategy, the infrastructure, and the honesty contract that `scripts/check-test-gate.mjs` and CI enforce.
 
@@ -26,17 +26,17 @@ Full user flows through a real browser. Runner: **Playwright** (installed as fou
 
 ## The per-workspace test-gate contract `[LOCKED — mechanism]`
 
-Not every workspace needs every test category — a headless bot worker doesn't need Playwright E2E; a pure utility package may not need integration tests. So CreatorCore does **not** require "any app ⇒ all test types." Instead, each workspace declares what applies to it, explicitly, in its own `package.json`:
+Not every workspace needs every test category — a headless bot worker doesn't need Playwright E2E; a pure utility package may not need integration tests. So Darklin3 Bot does **not** require "any app ⇒ all test types." Instead, each workspace declares what applies to it, explicitly, in its own `package.json`:
 
 ```json
 {
-  "name": "@creatorcore/example",
+  "name": "@darklin3_bot/example",
   "scripts": {
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test"
   },
-  "creatorcore": {
+  "darklin3_bot": {
     "testGates": {
       "unit": true,
       "integration": true,
@@ -49,7 +49,7 @@ Not every workspace needs every test category — a headless bot worker doesn't 
 `scripts/check-test-gate.mjs <unit|integration|e2e>` (invoked by the root `pnpm test` / `pnpm test:integration` / `pnpm test:e2e`) enforces this:
 
 1. **No workspaces exist under `packages/*` or `apps/*` at all** → `NOT APPLICABLE — no workspaces exist yet.`
-2. **Workspaces exist, but none declare `creatorcore.testGates.<gate> = true`** → `NOT APPLICABLE`, naming which workspaces were checked.
+2. **Workspaces exist, but none declare `darklin3_bot.testGates.<gate> = true`** → `NOT APPLICABLE`, naming which workspaces were checked.
 3. **A workspace declares the gate `true`:**
    - No matching script (`test` / `test:integration` / `test:e2e`) in that workspace → **`FAIL`** (a declared-but-unimplemented gate is a real failure, not a skip).
    - Script exists → it is actually run, and its real exit code determines `PASS`/`FAIL`.
@@ -96,7 +96,7 @@ The Vitest and Playwright dependencies, the root `playwright.config.ts`, the hon
 
 ## Phase 2 status (2026-09-12)
 
-Real unit tests now exist and pass in `packages/config`, `packages/db`, `packages/logger`, `apps/api`, and `apps/worker` (`docs/RELEASE_GATES.md`'s Phase 2 status table has exact counts). A real MySQL 8.x integration test exists in `packages/db` and `apps/api` — it connects, runs `SELECT 1`, and asserts the response; **it skips visibly rather than faking a pass when no MySQL instance is reachable** (no local Docker in this environment — see `docs/DEVELOPMENT.md`). CI now runs this against a real MySQL 8 service container. `apps/web` declares no test gates yet — a static foundation shell has no meaningful unit logic and no user flow for E2E; both become required once real logic/flows exist, per the `creatorcore.testGates` contract above.
+Real unit tests now exist and pass in `packages/config`, `packages/db`, `packages/logger`, `apps/api`, and `apps/worker` (`docs/RELEASE_GATES.md`'s Phase 2 status table has exact counts). A real MySQL 8.x integration test exists in `packages/db` and `apps/api` — it connects, runs `SELECT 1`, and asserts the response; **it skips visibly rather than faking a pass when no MySQL instance is reachable** (no local Docker in this environment — see `docs/DEVELOPMENT.md`). CI now runs this against a real MySQL 8 service container. `apps/web` declares no test gates yet — a static foundation shell has no meaningful unit logic and no user flow for E2E; both become required once real logic/flows exist, per the `darklin3_bot.testGates` contract above.
 
 ## Phase 3 status
 
@@ -104,7 +104,7 @@ Real unit tests now exist and pass in `packages/config`, `packages/db`, `package
 
 ## Phase 4A status
 
-`apps/worker` now declares `creatorcore.testGates.integration: true` and includes a real HTTP integration suite (`tests/integration/worker-runtime.test.ts`) traversing the full boundary: real `ControlPlaneClient` → real Node HTTP server listening on an ephemeral port → real repository layer → real MySQL test database. All 10 required scenarios are verified: bootstrap authentication, capability discovery (information minimization), assignment claim, renewal, `/current` inspection, revocation handling, concurrent claim race serialization, loser runtime tracking prevention, graceful release, and ambiguous network failure transitions to `UNCERTAIN` (suspending privileged activity).
+`apps/worker` now declares `darklin3_bot.testGates.integration: true` and includes a real HTTP integration suite (`tests/integration/worker-runtime.test.ts`) traversing the full boundary: real `ControlPlaneClient` → real Node HTTP server listening on an ephemeral port → real repository layer → real MySQL test database. All 10 required scenarios are verified: bootstrap authentication, capability discovery (information minimization), assignment claim, renewal, `/current` inspection, revocation handling, concurrent claim race serialization, loser runtime tracking prevention, graceful release, and ambiguous network failure transitions to `UNCERTAIN` (suspending privileged activity).
 
 ## Phase 4B/4C status
 

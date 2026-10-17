@@ -1,5 +1,5 @@
 {
-  "name": "@creatorcore/logger",
+  "name": "@darklin3_bot/logger",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
-  "creatorcore": {
+  "darklin3_bot": {
     "testGates": {
       "unit": true,
       "integration": false,

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createLogger } from "@creatorcore/logger";
+import { createLogger } from "@darklin3_bot/logger";
 import { WorkerLifecycle } from "./lifecycle.js";
 import { registerShutdownHandlers } from "./signals.js";
 

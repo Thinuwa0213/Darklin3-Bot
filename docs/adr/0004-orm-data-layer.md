@@ -20,7 +20,7 @@ Data access is wrapped in a `packages/db` repository layer (naming only, not imp
 
 ## Consequences
 
-Drizzle's relational query API is less mature than Prisma's for deeply nested reads — occasional hand-written joins will be needed. This is treated as an acceptable tradeoff: CreatorCore's core requirement is _precise, auditable query shape_ for tenant-scoped data, not convenience for arbitrary nested fetches, so Drizzle's explicitness is a feature, not a gap, for the parts of the schema that matter most for isolation.
+Drizzle's relational query API is less mature than Prisma's for deeply nested reads — occasional hand-written joins will be needed. This is treated as an acceptable tradeoff: Darklin3 Bot's core requirement is _precise, auditable query shape_ for tenant-scoped data, not convenience for arbitrary nested fetches, so Drizzle's explicitness is a feature, not a gap, for the parts of the schema that matter most for isolation.
 
 ## Security Impact
 

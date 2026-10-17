@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createLogger } from "@creatorcore/logger";
+import { createLogger } from "@darklin3_bot/logger";
 import { WorkerLifecycle } from "./lifecycle.js";
 
 function silentLogger() {

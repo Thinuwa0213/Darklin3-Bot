@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { recordRuntimeStatus } from "@creatorcore/db";
+import { recordRuntimeStatus } from "@darklin3_bot/db";
 import {
   createWorkerAuthMiddleware,
   type WorkerAuthDeps,

@@ -1,4 +1,4 @@
-# CreatorCore — Threat Model (Phase 1 / Gate 1)
+# Darklin3 Bot — Threat Model (Phase 1 / Gate 1)
 
 **Status:** Analysis against the Phase 1 architecture, now `LOCKED` (several with a required amendment) as of Gate 1 approval on 2026-09-12 — see `docs/adr/README.md` for exact per-ADR status. This document identifies architectural mitigations, not implementations — **nothing here exists in code yet**. No risk below is claimed to be fully eliminated (`docs/SECURITY.md`'s no-false-guarantee rule applies here too). The "Gate 1 challenge scenarios" section below records the ten scenarios the user specifically required review against before approval, and their resolution status.
 
@@ -54,4 +54,4 @@ The user required these ten scenarios to be specifically challenged before appro
 
 ## No guarantee statement
 
-None of the mitigations above make CreatorCore "secure" in an absolute sense. They reduce specific, named risks. Several rows above have explicit residual risk or open items — these are not resolved by writing this document; they are resolved by implementing, testing, and reviewing the corresponding code at Gate 1 and beyond.
+None of the mitigations above make Darklin3 Bot "secure" in an absolute sense. They reduce specific, named risks. Several rows above have explicit residual risk or open items — these are not resolved by writing this document; they are resolved by implementing, testing, and reviewing the corresponding code at Gate 1 and beyond.

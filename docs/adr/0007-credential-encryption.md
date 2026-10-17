@@ -40,7 +40,7 @@ Concretely:
 
 ## Credential rotation lifecycle `[LOCKED]`
 
-CreatorCore does not maintain a historical vault of superseded bot tokens. Rotation proceeds as:
+Darklin3 Bot does not maintain a historical vault of superseded bot tokens. Rotation proceeds as:
 
 1. New credential received over authenticated HTTPS.
 2. Authorization validated (caller is authorized for that Tenant/BotApplication).

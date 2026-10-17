@@ -4,14 +4,14 @@
 
 ## Context
 
-`creatorcore-worker` needs to learn about configuration/lifecycle changes (module enabled/disabled, token rotated, tenant disabled) initiated through `creatorcore-api`. Message volume is low (configuration events, not per-Discord-message traffic).
+`darklin3_bot-worker` needs to learn about configuration/lifecycle changes (module enabled/disabled, token rotated, tenant disabled) initiated through `darklin3_bot-api`. Message volume is low (configuration events, not per-Discord-message traffic).
 
 ## Decision
 
 **Direct internal HTTP, no broker, in two directions:**
 
-- **Pull (routine):** `creatorcore-worker` polls `creatorcore-api` on a short interval (e.g., every 30–60 seconds — exact value an implementation detail, not architecture) for configuration relevant to the `BotApplication`s it currently hosts, using its internal service credential (ADR-0002).
-- **Push (urgent/security-sensitive only):** for events that must propagate faster than the poll interval allows — specifically credential rotation and tenant/bot disablement — `creatorcore-api` calls an authenticated internal callback exposed by the worker. This is deliberately limited to security-sensitive events, not used as a general event bus.
+- **Pull (routine):** `darklin3_bot-worker` polls `darklin3_bot-api` on a short interval (e.g., every 30–60 seconds — exact value an implementation detail, not architecture) for configuration relevant to the `BotApplication`s it currently hosts, using its internal service credential (ADR-0002).
+- **Push (urgent/security-sensitive only):** for events that must propagate faster than the poll interval allows — specifically credential rotation and tenant/bot disablement — `darklin3_bot-api` calls an authenticated internal callback exposed by the worker. This is deliberately limited to security-sensitive events, not used as a general event bus.
 
 No queue or broker (Kafka/RabbitMQ/etc.) is introduced. The internal contract is a small, well-defined set of named events (`ConfigChanged`, `CredentialRotated`, `TenantDisabled`) so that if a broker is introduced later, the _shape_ of these events doesn't need to change — only their transport.
 
@@ -34,4 +34,4 @@ The worker's internal service credential used for both directions is itself a pr
 
 ## Revisit Conditions
 
-Introduce a lightweight broker only if measured poll load on `creatorcore-api` or push-callback fan-out to a growing worker fleet becomes a demonstrated bottleneck — not preemptively. The named-event contract above is designed specifically so that this later change does not require redesigning how either side reasons about these events.
+Introduce a lightweight broker only if measured poll load on `darklin3_bot-api` or push-callback fan-out to a growing worker fleet becomes a demonstrated bottleneck — not preemptively. The named-event contract above is designed specifically so that this later change does not require redesigning how either side reasons about these events.

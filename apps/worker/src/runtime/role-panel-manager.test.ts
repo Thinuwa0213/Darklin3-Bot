@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { RolePanelManager } from "./role-panel-manager.js";
 import type { IDiscordClient } from "./discord-client.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 
 function createMockLogger(): Logger {
   return {

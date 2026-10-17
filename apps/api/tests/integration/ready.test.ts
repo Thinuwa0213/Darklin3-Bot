@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
-import { createDatabaseClient, checkDatabaseConnectivity } from "@creatorcore/db";
-import { createLogger } from "@creatorcore/logger";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
+import { createDatabaseClient, checkDatabaseConnectivity } from "@darklin3_bot/db";
+import { createLogger } from "@darklin3_bot/logger";
 import { createApp } from "../../src/app.js";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {

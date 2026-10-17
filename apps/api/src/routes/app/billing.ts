@@ -4,7 +4,7 @@ import {
   upsertSubscriptionForTenant,
   type DatabaseClient,
   type SubscriptionPlan,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import { AuthorizationError, requireTenantMembership } from "../../authz/index.js";
 import {
   createRequireAuthenticatedUser,

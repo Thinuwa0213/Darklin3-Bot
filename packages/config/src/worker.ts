@@ -11,7 +11,7 @@ import { loadConfig } from "./env.js";
  * Per Amendment 3:
  * - May originate from the process environment (e.g. injected via container
  *   environment, Kubernetes secret, or operator .env).
- * - CreatorCore itself never writes it to disk, never logs it, never serializes
+ * - Darklin3 Bot itself never writes it to disk, never logs it, never serializes
  *   it, never places it in URLs or query strings, and never exposes it through
  *   diagnostics.
  * - Access tokens remain process-memory only.

@@ -1,5 +1,5 @@
 import type { ErrorHandler } from "hono";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 
 /**
  * Safe error boundary: unexpected errors are logged server-side (through the

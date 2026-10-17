@@ -3,7 +3,7 @@ import { users } from "./users.js";
 import { customBinary } from "./lib/binary-column.js";
 
 /**
- * Encrypted Discord OAuth access/refresh tokens for a signed-in CreatorCore
+ * Encrypted Discord OAuth access/refresh tokens for a signed-in Darklin3 Bot
  * user (Phase 5, Amendment 1/2). Deliberately a separate table from Better
  * Auth's own `account` table: Better Auth's `accessToken`/`refreshToken`
  * columns are unconditionally blanked by the `account.create.before` /
@@ -27,7 +27,7 @@ import { customBinary } from "./lib/binary-column.js";
  * packed string with no version field).
  *
  * Only ever written by `create.before` (full identity is proven present
- * there) and by CreatorCore's own `DiscordGuildProvider` refresh logic —
+ * there) and by Darklin3 Bot's own `DiscordGuildProvider` refresh logic —
  * never by Better Auth's own update-triggered writes, which lack sufficient
  * identity to safely re-encrypt (see the Phase 5 design doc's Step 0
  * finding).

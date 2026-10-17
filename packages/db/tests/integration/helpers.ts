@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import mysql from "mysql2/promise";
 import { eq } from "drizzle-orm";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 import { createDatabaseClient, type DatabaseClient } from "../../src/index.js";
 import { tenants, users, workers } from "../../src/schema/index.js";
 

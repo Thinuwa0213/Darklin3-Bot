@@ -1,5 +1,5 @@
-import { loadWorkerConfig, ConfigValidationError } from "@creatorcore/config";
-import { createLogger } from "@creatorcore/logger";
+import { loadWorkerConfig, ConfigValidationError } from "@darklin3_bot/config";
+import { createLogger } from "@darklin3_bot/logger";
 import { WorkerLifecycle } from "./lifecycle.js";
 import { registerShutdownHandlers } from "./signals.js";
 

@@ -114,7 +114,7 @@ export class LeaderboardCommand implements SlashCommand {
         .setColor(0x6366f1)
         .setTitle(`🏆 ${guild.name} — XP Leaderboard`)
         .setDescription("No members have earned XP yet. Start chatting in text channels to rank up!")
-        .setFooter({ text: "CreatorCore XP & Leveling Engine" })
+        .setFooter({ text: "Darklin3 Bot XP & Leveling Engine" })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [emptyEmbed] });
@@ -136,7 +136,7 @@ export class LeaderboardCommand implements SlashCommand {
         value: `\`${users.length} members\``,
         inline: true,
       })
-      .setFooter({ text: "CreatorCore XP & Leveling Engine" })
+      .setFooter({ text: "Darklin3 Bot XP & Leveling Engine" })
       .setTimestamp();
 
     if (guild.iconURL()) {

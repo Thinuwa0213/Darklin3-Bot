@@ -17,7 +17,7 @@ function formatUptime(seconds: number): string {
 
 export class BotInfoCommand implements SlashCommand {
   public readonly name = "botinfo";
-  public readonly description = "Display CreatorCore bot runtime details, uptime, and operational health";
+  public readonly description = "Display Darklin3 Bot bot runtime details, uptime, and operational health";
 
   public async execute(
     interaction: ChatInputCommandInteraction,
@@ -30,7 +30,7 @@ export class BotInfoCommand implements SlashCommand {
 
     const embed = new EmbedBuilder()
       .setColor(0x8b5cf6)
-      .setTitle("🤖 CreatorCore Bot Runtime Telemetry")
+      .setTitle("🤖 Darklin3 Bot Bot Runtime Telemetry")
       .setThumbnail(client.user?.displayAvatarURL() ?? null)
       .addFields(
         {
@@ -40,7 +40,7 @@ export class BotInfoCommand implements SlashCommand {
         },
         {
           name: "⚙️ Engine",
-          value: "CreatorCore Multi-Tenant v1.0",
+          value: "Darklin3 Bot Multi-Tenant v1.0",
           inline: true,
         },
         {
@@ -64,7 +64,7 @@ export class BotInfoCommand implements SlashCommand {
           inline: true,
         },
       )
-      .setFooter({ text: "CreatorCore High-Availability Distributed Runtime" })
+      .setFooter({ text: "Darklin3 Bot High-Availability Distributed Runtime" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

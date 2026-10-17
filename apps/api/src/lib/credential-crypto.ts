@@ -70,7 +70,7 @@ export class CredentialEncryptionError extends Error {
  * and keyVersion so ciphertext cannot be transplanted across records.
  */
 function buildAuthContextBuffer(context: CredentialAuthContext, keyVersion: number): Buffer {
-  const domain = "creatorcore:bot_credential:v1";
+  const domain = "darklin3_bot:bot_credential:v1";
   return Buffer.from(
     `${domain}|${context.botApplicationId}|${context.credentialId}|${keyVersion}`,
     "utf8",
@@ -79,7 +79,7 @@ function buildAuthContextBuffer(context: CredentialAuthContext, keyVersion: numb
 
 /**
  * Amendment 1's AAD for the Discord OAuth-token domain: purpose/version,
- * the CreatorCore user identity (the Discord account id — see
+ * the Darklin3 Bot user identity (the Discord account id — see
  * discord-oauth-credentials.ts's schema comment on why this is the same
  * value as users.id), and keyVersion. A wholly separate domain string from
  * `buildAuthContextBuffer` above, so ciphertext from one domain can never
@@ -89,7 +89,7 @@ function buildDiscordOauthAuthContextBuffer(
   context: DiscordOauthTokenAuthContext,
   keyVersion: number,
 ): Buffer {
-  const domain = "creatorcore:discord_oauth_token:v1";
+  const domain = "darklin3_bot:discord_oauth_token:v1";
   return Buffer.from(`${domain}|${context.accountId}|${keyVersion}`, "utf8");
 }
 

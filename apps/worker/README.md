@@ -1,4 +1,4 @@
-# @creatorcore/worker
+# @darklin3_bot/worker
 
 Long-running Discord worker process foundation (`docs/adr/0005-discord-runtime.md`).
 
@@ -6,7 +6,7 @@ Long-running Discord worker process foundation (`docs/adr/0005-discord-runtime.m
 
 - A lifecycle state machine (`starting -> running -> stopping -> stopped`), logged on every transition.
 - `SIGTERM`/`SIGINT` handling that runs cleanup exactly once and exits cleanly, even if cleanup throws.
-- Validated, typed worker configuration (`@creatorcore/config`) — no database credentials (apps/worker never touches MySQL directly, `docs/adr/0002`).
+- Validated, typed worker configuration (`@darklin3_bot/config`) — no database credentials (apps/worker never touches MySQL directly, `docs/adr/0002`).
 - A heartbeat log every 30s so the process is visibly alive without faking a Discord connection.
 
 ## What does not exist yet — deliberately

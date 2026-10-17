@@ -1,4 +1,4 @@
-# CreatorCore — Security
+# Darklin3 Bot — Security
 
 **Status:** Phase 0 engineering contract. See `docs/ARCHITECTURE.md` for the `[LOCKED]`/`[PROPOSED]`/`[UNRESOLVED]`/`[SECURITY-SENSITIVE — NEEDS REVIEW]` tag meanings — the same tags are used here.
 
@@ -6,7 +6,7 @@ No authentication system, dashboard, bot runtime, or database schema exists yet.
 
 ## No false guarantee `[LOCKED — principle]`
 
-CreatorCore will never be described as "100% secure" or "hacker-proof." The goal is continuous risk reduction:
+Darklin3 Bot will never be described as "100% secure" or "hacker-proof." The goal is continuous risk reduction:
 
 - reduce attack surface
 - enforce least privilege
@@ -47,7 +47,7 @@ See `docs/DISCORD_RULES.md` for the full rule set (token handling, never trustin
 
 - No production secret is ever committed to git. `.env.example` documents variable _names_ only.
 - Bot credentials and other sensitive tenant secrets use envelope encryption at rest with key rotation (`docs/adr/0007-credential-encryption.md`, `LOCKED WITH AMENDMENT`). **The encryption key (KEK) must not be stored alongside the encrypted data in the same database** — `[LOCKED]`. Decryption happens in the authorized bot worker, scoped to the `BotApplication`s it hosts, not in `apps/api` alone — the normal API request path never transports or exposes plaintext (ADR-0007's Gate 1 amendment).
-- **Superseded credential retention `[LOCKED, Gate 1]`:** CreatorCore does not keep a historical vault of rotated-out bot tokens. The superseded encrypted credential is deleted immediately after a successful rotation cutover; only non-secret audit metadata (who rotated it, when, outcome) is retained. See ADR-0007's rotation lifecycle for the full 9-step sequence and its failure handling.
+- **Superseded credential retention `[LOCKED, Gate 1]`:** Darklin3 Bot does not keep a historical vault of rotated-out bot tokens. The superseded encrypted credential is deleted immediately after a successful rotation cutover; only non-secret audit metadata (who rotated it, when, outcome) is retained. See ADR-0007's rotation lifecycle for the full 9-step sequence and its failure handling.
 - **Worker ↔ API internal credentials `[LOCKED — DIRECTION, Gate 1]`:** each worker has its own identity and rotatable bootstrap secret, exchanged for a short-lived internal access credential with a 15-minute target lifetime — never one shared global internal password. Individually revocable per worker. See `docs/adr/0011-worker-service-identity.md`.
 - Secrets never appear in application logs, error responses, or client-side bundles — this must be an explicit, tested property (`docs/TESTING.md`), not an assumption.
 - **The shared logger's redaction (`packages/logger`) is key-based, not content-based** — it matches field _names_ against a sensitive-key list; it does not scan free-text string values (including an `Error`'s `message`/`stack`) for secret-shaped content. **Never construct an `Error` or log message that interpolates a secret value into its text** — pass the secret as a separate, named field instead, which redaction does catch. This is documented and tested as an intentional scope boundary (`packages/logger/src/redact.ts`), found and narrowed during Gate 2 security review — not an unexamined gap.
@@ -91,7 +91,7 @@ Implemented in Phase 4B & Phase 4C under 9 explicit security amendments:
 
 1. **Envelope Encryption & Authenticated Additional Data (AAD) (ADR-0007 / Amendment 6):**
    - AES-256-GCM encryption with 12-byte random nonces and 16-byte authentication tags.
-   - Additional Authenticated Data (AAD) cryptographically binds ciphertext to `creatorcore:bot_credential:v1|${botApplicationId}|${credentialId}|${keyVersion}`. Ciphertext cannot be transplanted across bot applications or credential records.
+   - Additional Authenticated Data (AAD) cryptographically binds ciphertext to `darklin3_bot:bot_credential:v1|${botApplicationId}|${credentialId}|${keyVersion}`. Ciphertext cannot be transplanted across bot applications or credential records.
    - Key material is strictly base64url-encoded 32 random bytes (`^[A-Za-z0-9_-]{43}$`). Distinct from worker-token signing key.
 2. **Exact Credential Identity Binding (Amendment 2 & 3):**
    - Rotation endpoints require exact `botApplicationId + credentialId`.
@@ -104,5 +104,5 @@ Implemented in Phase 4B & Phase 4C under 9 explicit security amendments:
 4. **Discord Runtime Token Handling & Honest Memory Limits (Amendment 7 & 8):**
    - Plaintext bot tokens are never persisted to disk, never logged, and never exposed in browser or metrics.
    - Plaintext tokens are scoped locally during login execution; references are dropped on `LOST`, `UNCERTAIN`, shutdown, and replacement.
-   - V8 garbage collection memory limitation is documented honestly: in pure JS, string memory cannot be manually zeroed; CreatorCore guarantees zero retention beyond the immediate login invocation.
+   - V8 garbage collection memory limitation is documented honestly: in pure JS, string memory cannot be manually zeroed; Darklin3 Bot guarantees zero retention beyond the immediate login invocation.
    - Runtime replacement invariant: at most one active runtime per bot application; temporary validation client is strictly bounded by the validation/swap window and destroyed immediately on failure, rejection, or swap.

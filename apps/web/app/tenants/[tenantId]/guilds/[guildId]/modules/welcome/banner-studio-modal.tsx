@@ -814,7 +814,7 @@ export function BannerStudioModal({
             </div>
           </div>
 
-          {/* 2. CreatorCore Studio Workbench: Split Layer Hierarchy & Inspector */}
+          {/* 2. Darklin3 Bot Studio Workbench: Split Layer Hierarchy & Inspector */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
             {/* Left Deck (Col 5): Layers Stack & Management */}
             <div className="lg:col-span-5 space-y-3">

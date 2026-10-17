@@ -6,7 +6,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { serve } from "@hono/node-server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 import {
   createBotApplication,
   createDatabaseClient,
@@ -15,11 +15,11 @@ import {
   revokeWorker,
   checkDatabaseConnectivity,
   type DatabaseClient,
-} from "@creatorcore/db";
-import { createLogger } from "@creatorcore/logger";
-import { createApp } from "@creatorcore/api/app";
-import { CredentialService } from "@creatorcore/api/services/credential-service";
-import { DiscordValidator } from "@creatorcore/api/services/discord-validator";
+} from "@darklin3_bot/db";
+import { createLogger } from "@darklin3_bot/logger";
+import { createApp } from "@darklin3_bot/api/app";
+import { CredentialService } from "@darklin3_bot/api/services/credential-service";
+import { DiscordValidator } from "@darklin3_bot/api/services/discord-validator";
 import {
   ControlPlaneClient,
   WorkerAuthRevokedError,

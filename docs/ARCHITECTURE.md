@@ -1,4 +1,4 @@
-# CreatorCore — Architecture
+# Darklin3 Bot — Architecture
 
 **Status of this document:** Phase 0 engineering contract. Sections are explicitly tagged:
 
@@ -13,15 +13,15 @@ No dashboard, bot runtime, database schema, or authentication system exists in t
 
 ## 1. Product shape
 
-CreatorCore is **one reusable platform + reusable modules + tenant/client configuration** — not a template that gets copied per client. A bug fixed in a shared module must be fixable centrally. Client-specific customization must not require a permanent fork of core code. `[LOCKED — product principle, not a specific technology]`
+Darklin3 Bot is **one reusable platform + reusable modules + tenant/client configuration** — not a template that gets copied per client. A bug fixed in a shared module must be fixable centrally. Client-specific customization must not require a permanent fork of core code. `[LOCKED — product principle, not a specific technology]`
 
 ## 2. Domain concepts (naming only — no schema yet)
 
 These are the entities the system will reason about. Naming them now avoids inconsistent vocabulary later; it does not imply a database schema, which is `[UNRESOLVED]`.
 
-- **Tenant** — a customer/client of CreatorCore (an organization, streamer, or community operator).
+- **Tenant** — a customer/client of Darklin3 Bot (an organization, streamer, or community operator).
 - **Guild** — a Discord server connected to a tenant. A tenant may connect multiple guilds.
-- **Bot application** — a customer-provided or CreatorCore-provisioned Discord application/bot the platform operates on a tenant's behalf.
+- **Bot application** — a customer-provided or Darklin3 Bot-provisioned Discord application/bot the platform operates on a tenant's behalf.
 - **Module** — an independently enable/disable-able feature (Stream Notifications, Welcome/Auto Roles, Auto Moderation, Giveaways, XP/Levels, Button/Reaction Roles, Announcements, Custom Branding, etc.), scoped per guild.
 
 Relationship cardinality is now `[LOCKED CONCEPTUALLY]` via [ADR-0006](adr/0006-multi-tenant-model.md): a guild belongs to exactly one tenant (no shared multi-tenant guild ownership in Phase 1); a tenant may manage multiple guilds and multiple bot applications; one bot application may serve multiple guilds via a GuildBotAssignment join. The physical schema implementing this is still `[UNRESOLVED]`.
@@ -56,7 +56,7 @@ The items below are approved and binding, each recorded as an ADR under `docs/ad
 - **Discord bot runtime** — [ADR-0005](adr/0005-discord-runtime.md): discord.js, one worker process holding multiple `Client` instances (one per customer bot application) for Phase 1, running ≥2 replicas from day one (ADR-0008) for availability. The `WorkerAssignment` claim mechanism (ADR-0006) that decides which replica currently owns which `BotApplication` is a live Gate 1 requirement, not deferred — what remains a genuinely future migration is scaling _beyond_ that HA baseline to many more worker processes purely for capacity, without changing the feature-module model. Least-privilege Gateway Intents are required — modules must not request privileged Discord data access merely for convenience, and a future module registry must make each module's required permissions/intents explicit. `LOCKED`. See `docs/DISCORD_RULES.md` for constraints that apply regardless.
 - **Multi-tenant conceptual model** — [ADR-0006](adr/0006-multi-tenant-model.md): User/Tenant/TenantMembership/Guild/BotApplication/GuildBotAssignment/BotCredential/GuildConfiguration/FeatureConfiguration/AuditEvent/**WorkerAssignment** (the last added during Gate 1 review to close a cross-reference gap — see `docs/adr/README.md`'s Gate 1 approval note). `LOCKED CONCEPTUALLY` — the physical MySQL schema is explicitly **not** approved by this decision and remains a separate, later decision.
 - **Bot credential encryption & key management** — [ADR-0007](adr/0007-credential-encryption.md), `[SECURITY-SENSITIVE — NEEDS REVIEW]`: envelope encryption (AES-256-GCM via `@noble/ciphers`), KEK held outside the database. `LOCKED WITH AMENDMENT`: plaintext decryption is **not** confined to `apps/api` — it happens in the authorized bot worker, scoped to the `BotApplication`s it hosts; the normal API request path never transports or exposes plaintext. Rotation lifecycle is locked (PENDING → validated → worker-activated → atomically promoted to ACTIVE; superseded ciphertext deleted, not archived).
-- **Deployment/runtime model** — [ADR-0008](adr/0008-deployment-runtime-model.md): four deployable units (`creatorcore-web`, `creatorcore-api`, `creatorcore-worker`, MySQL), no queue/cache/orchestration yet. `LOCKED`.
+- **Deployment/runtime model** — [ADR-0008](adr/0008-deployment-runtime-model.md): four deployable units (`darklin3_bot-web`, `darklin3_bot-api`, `darklin3_bot-worker`, MySQL), no queue/cache/orchestration yet. `LOCKED`.
 - **Internal communication** — [ADR-0009](adr/0009-internal-communication.md): direct internal HTTP (poll + narrow push callback), no broker. `LOCKED WITH AMENDMENT`: a push notification for urgent events (credential rotation, disablement) is a non-secret signal only (e.g. "credential version changed") — it never carries the credential itself; the worker retrieves actual material through ADR-0007's controlled path.
 - **Worker service identity & internal auth** — [ADR-0011](adr/0011-worker-service-identity.md): independent per-worker identity, rotatable bootstrap secret exchanged for a short-lived (15-minute target) scoped internal access credential — never one shared global internal password. `LOCKED — DIRECTION`; exact signing/token implementation deferred to implementation design.
 - **Observability & audit** — [ADR-0010](adr/0010-observability-audit.md): structured logs with mandatory redaction, a distinct append-only AuditEvent model. `LOCKED`.
@@ -90,7 +90,7 @@ Some customers may eventually request source-code handover. To keep that possibl
 
 - Core/shared packages (`packages/*`) must remain free of any single client's configuration, branding, or bespoke logic.
 - Client-specific behavior should be expressible as configuration + isolated extension points, not as edits to shared packages.
-- Possible future distribution models (not implemented, not decided): (a) shipping a read-only export of a tenant's configuration + the shared core as a reference, (b) a licensed white-label deployment of the full platform, (c) no source handover at all, only a managed service. Which model(s) CreatorCore actually offers is a business decision, `[UNRESOLVED]`, that will shape how strictly this separation must be enforced technically.
+- Possible future distribution models (not implemented, not decided): (a) shipping a read-only export of a tenant's configuration + the shared core as a reference, (b) a licensed white-label deployment of the full platform, (c) no source handover at all, only a managed service. Which model(s) Darklin3 Bot actually offers is a business decision, `[UNRESOLVED]`, that will shape how strictly this separation must be enforced technically.
 
 ## 7. Environments `[LOCKED — principle]`, specifics `[UNRESOLVED]`
 

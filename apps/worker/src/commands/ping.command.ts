@@ -17,7 +17,7 @@ export class PingCommand implements SlashCommand {
     const embed = new EmbedBuilder()
       .setColor(0x10b981)
       .setTitle("🏓 Pong!")
-      .setDescription("CreatorCore Bot Runtime is fully operational.")
+      .setDescription("Darklin3 Bot Bot Runtime is fully operational.")
       .addFields(
         {
           name: "⏱️ Roundtrip Latency",
@@ -35,7 +35,7 @@ export class PingCommand implements SlashCommand {
           inline: true,
         },
       )
-      .setFooter({ text: "CreatorCore Multi-Tenant Bot Engine" })
+      .setFooter({ text: "Darklin3 Bot Multi-Tenant Bot Engine" })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

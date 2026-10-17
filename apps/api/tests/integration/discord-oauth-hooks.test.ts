@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
   const envPath = path.resolve(fileURLToPath(import.meta.url), "../../../../../.env");
@@ -16,8 +16,8 @@ import {
   createDatabaseClient,
   findUserById,
   type DatabaseClient,
-} from "@creatorcore/db";
-import { createLogger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import { createLogger } from "@darklin3_bot/logger";
 import { createAuth } from "../../src/auth/index.js";
 import {
   decryptDiscordOauthCredential,
@@ -73,7 +73,7 @@ describe.skipIf(!dbAvailable)("Discord OAuth account.create/update hooks (real M
     auth = createAuth({
       db: dbClient.db,
       logger,
-      webAppOrigin: "https://app.creatorcore.test",
+      webAppOrigin: "https://app.darklin3_bot.test",
       betterAuthSecret: "a".repeat(32),
       discordClientId: "test-discord-client-id",
       discordClientSecret: "test-discord-client-secret",
@@ -93,7 +93,7 @@ describe.skipIf(!dbAvailable)("Discord OAuth account.create/update hooks (real M
     const ctx = await auth.$context;
     const result = await ctx.internalAdapter.createOAuthUser(
       {
-        email: `discord-${accountId}@users.creatorcore.internal`,
+        email: `discord-${accountId}@users.darklin3_bot.internal`,
         emailVerified: false,
         name: "Test User",
       },
@@ -149,10 +149,10 @@ describe.skipIf(!dbAvailable)("Discord OAuth account.create/update hooks (real M
       refreshToken: PLAINTEXT_REFRESH,
     });
 
-    // 3. CreatorCore's own users row was synced (create.after).
-    const creatorCoreUser = await findUserById(dbClient.db, accountId);
-    expect(creatorCoreUser).toBeTruthy();
-    expect(creatorCoreUser?.id).toBe(accountId);
+    // 3. Darklin3 Bot's own users row was synced (create.after).
+    const darklin3BotUser = await findUserById(dbClient.db, accountId);
+    expect(darklin3BotUser).toBeTruthy();
+    expect(darklin3BotUser?.id).toBe(accountId);
 
     await dbClient.pool.query("DELETE FROM discord_oauth_credentials WHERE account_id = ?", [
       accountId,
@@ -172,7 +172,7 @@ describe.skipIf(!dbAvailable)("Discord OAuth account.create/update hooks (real M
     const ctx = await auth.$context;
     const created = await ctx.internalAdapter.createOAuthUser(
       {
-        email: `discord-${accountId}@users.creatorcore.internal`,
+        email: `discord-${accountId}@users.darklin3_bot.internal`,
         emailVerified: false,
         name: "Test User 2",
       },

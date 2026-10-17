@@ -4,7 +4,7 @@
 
 ## Context
 
-Customers connect their own Discord bot application/token. CreatorCore must run potentially many distinct bot identities, isolate them from each other, support reconnects/graceful shutdown/token rotation, and have a credible path to scale without prematurely building distributed infrastructure for a customer count CreatorCore doesn't have yet.
+Customers connect their own Discord bot application/token. Darklin3 Bot must run potentially many distinct bot identities, isolate them from each other, support reconnects/graceful shutdown/token rotation, and have a credible path to scale without prematurely building distributed infrastructure for a customer count Darklin3 Bot doesn't have yet.
 
 ## Decision
 
@@ -19,7 +19,7 @@ Customers connect their own Discord bot application/token. CreatorCore must run 
 
 ## Alternatives Considered
 
-- **One process per customer** — cleanest isolation, but massive OS-process-management overhead for a customer count CreatorCore is nowhere near yet; violates the "do not prematurely build infrastructure for thousands of bots" priority.
+- **One process per customer** — cleanest isolation, but massive OS-process-management overhead for a customer count Darklin3 Bot is nowhere near yet; violates the "do not prematurely build infrastructure for thousands of bots" priority.
 - **`@discordjs/core` + `@discordjs/rest` (low-level, no caching/sharding conveniences)** — more control, but more code to hand-write for functionality discord.js already provides well; premature optimization for Phase 1.
 - **Worker groups with an orchestrator (Kubernetes-style) from day one** — explicitly rejected per the stated Phase 1 rule against building orchestration infrastructure before it's demonstrated to be needed.
 

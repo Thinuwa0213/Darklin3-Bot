@@ -47,13 +47,13 @@ importers:
 
   apps/api:
     dependencies:
-      '@creatorcore/config':
+      '@darklin3_bot/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@creatorcore/db':
+      '@darklin3_bot/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@creatorcore/logger':
+      '@darklin3_bot/logger':
         specifier: workspace:*
         version: link:../../packages/logger
       '@hono/node-server':
@@ -78,7 +78,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@creatorcore/config':
+      '@darklin3_bot/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@radix-ui/react-avatar':
@@ -154,10 +154,10 @@ importers:
 
   apps/worker:
     dependencies:
-      '@creatorcore/config':
+      '@darklin3_bot/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@creatorcore/logger':
+      '@darklin3_bot/logger':
         specifier: workspace:*
         version: link:../../packages/logger
       '@napi-rs/canvas':
@@ -167,10 +167,10 @@ importers:
         specifier: ^14.27.0
         version: 14.27.0
     devDependencies:
-      '@creatorcore/api':
+      '@darklin3_bot/api':
         specifier: workspace:*
         version: link:../api
-      '@creatorcore/db':
+      '@darklin3_bot/db':
         specifier: workspace:*
         version: link:../../packages/db
       '@hono/node-server':
@@ -205,7 +205,7 @@ importers:
         specifier: ^3.24.4
         version: 3.24.4(@types/node@22.20.2)
     devDependencies:
-      '@creatorcore/config':
+      '@darklin3_bot/config':
         specifier: workspace:*
         version: link:../config
       drizzle-kit:

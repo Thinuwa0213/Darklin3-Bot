@@ -1,11 +1,11 @@
-import type { Logger } from "@creatorcore/logger";
-import type { DatabaseClient } from "@creatorcore/db";
+import type { Logger } from "@darklin3_bot/logger";
+import type { DatabaseClient } from "@darklin3_bot/db";
 import {
   createUser,
   findAuthUserName,
   findUserById,
   upsertDiscordOauthCredential,
-} from "@creatorcore/db";
+} from "@darklin3_bot/db";
 import {
   encryptDiscordOauthCredential,
   type DiscordOauthTokenEncryptionKeys,
@@ -62,7 +62,7 @@ const BLANKED_TOKEN_FIELDS = { accessToken: null, refreshToken: null, idToken: n
  *   that never includes `accountId` or `userId`. There is no reliable way
  *   to reconstruct the AAD identity component here, so this hook never
  *   attempts to encrypt or store anything: it unconditionally blanks the
- *   token fields. CreatorCore's own `DiscordGuildProvider` is the sole
+ *   token fields. Darklin3 Bot's own `DiscordGuildProvider` is the sole
  *   mechanism that refreshes the stored credential thereafter, writing
  *   directly to `discord_oauth_credentials` via its own repository calls
  *   (never through Better Auth's adapter, so this hook does not need to
@@ -93,7 +93,7 @@ export function createAccountDatabaseHooks(deps: AccountDatabaseHooksDeps) {
         const accountId = BigInt(account.accountId);
 
         try {
-          // The CreatorCore users row must exist BEFORE the
+          // The Darklin3 Bot users row must exist BEFORE the
           // discord_oauth_credentials insert below, which has a foreign
           // key on it -- this hook is the only place with full identity
           // (see this function's doc comment), so the sync happens here,
@@ -151,7 +151,7 @@ export function createAccountDatabaseHooks(deps: AccountDatabaseHooksDeps) {
  * Note on transactional scope: Better Auth's own `createOAuthUser` wraps
  * user+account creation in one Drizzle transaction, but a `databaseHooks`
  * function receives only `(data, context)` — no transaction handle — so
- * this hook's own writes (the CreatorCore `users` row, the
+ * this hook's own writes (the Darklin3 Bot `users` row, the
  * `discord_oauth_credentials` row) necessarily run outside that
  * transaction, on `deps.db` directly. In the narrow window where this
  * hook's writes succeed but Better Auth's own outer transaction then fails

@@ -144,7 +144,7 @@ export class DailyCommand implements SlashCommand {
         .setDescription(
           `You've already claimed your daily XP reward for today!\n\nCome back in **${hours}h ${minutes}m** to claim your next bonus.`,
         )
-        .setFooter({ text: "CreatorCore XP & Leveling Engine" })
+        .setFooter({ text: "Darklin3 Bot XP & Leveling Engine" })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [cooldownEmbed] });
@@ -196,7 +196,7 @@ export class DailyCommand implements SlashCommand {
           inline: false,
         },
       )
-      .setFooter({ text: "CreatorCore XP & Leveling Engine" })
+      .setFooter({ text: "Darklin3 Bot XP & Leveling Engine" })
       .setTimestamp();
 
     if (newLevel > oldLevel) {

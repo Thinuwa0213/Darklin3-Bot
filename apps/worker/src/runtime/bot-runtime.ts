@@ -1,5 +1,5 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import type { IDiscordClient } from "./discord-client.js";
 import { type CommandRegistry, createDefaultCommandRegistry } from "../commands/index.js";
 import { PresenceManager } from "./presence-manager.js";
@@ -35,7 +35,7 @@ export interface BotRuntimeOptions {
  *   client and internal gateway state can be reclaimed by the JavaScript garbage collector.
  * - Honest memory limitation: In V8/Node.js, strings are immutable primitive values managed
  *   by the garbage collector and cannot be manually zeroed in memory (secure zeroization is
- *   impossible in pure JavaScript). CreatorCore guarantees zero retention beyond the immediate
+ *   impossible in pure JavaScript). Darklin3 Bot guarantees zero retention beyond the immediate
  *   login invocation.
  */
 export class BotRuntime {

@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
-import { loadWebServerConfig } from "@creatorcore/config/web-server";
+import { loadWebServerConfig } from "@darklin3_bot/config/web-server";
 
 export interface SessionData {
   user: {

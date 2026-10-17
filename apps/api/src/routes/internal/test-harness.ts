@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createHmac } from "node:crypto";
-import { createTestUserSession, type DatabaseClient } from "@creatorcore/db";
+import { createTestUserSession, type DatabaseClient } from "@darklin3_bot/db";
 import type { FakeDiscordGuildProvider } from "../../discord/fake-discord-guild-provider.js";
 
 export interface TestHarnessDeps {

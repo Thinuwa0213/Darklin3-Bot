@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Honest per-workspace build gate for CreatorCore.
+ * Honest per-workspace build gate for Darklin3 Bot.
  *
  * No buildable workspace exists yet, so this must report NOT APPLICABLE —
  * never a hard-coded success. Once a workspace under packages/* or apps/*
@@ -16,7 +16,7 @@ const repoRoot = path.resolve(fileURLToPath(import.meta.url), "../..");
 const workspaces = listWorkspaces(repoRoot);
 
 if (workspaces.length === 0) {
-  console.log("BUILD: NOT APPLICABLE — no buildable CreatorCore application/package exists.");
+  console.log("BUILD: NOT APPLICABLE — no buildable Darklin3 Bot application/package exists.");
   process.exit(0);
 }
 

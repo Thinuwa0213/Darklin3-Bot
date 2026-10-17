@@ -354,7 +354,7 @@ export function ImageCropperModal({
               />
             )}
 
-            {/* Dark Mask Overlay with CreatorCore styled crop border */}
+            {/* Dark Mask Overlay with Darklin3 Bot styled crop border */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{

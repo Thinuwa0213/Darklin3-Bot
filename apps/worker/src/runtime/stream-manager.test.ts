@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { StreamManager } from "./stream-manager.js";
 import type { IDiscordClient } from "./discord-client.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 import { ActivityType } from "discord.js";
 
 function createMockLogger(): Logger {
@@ -184,7 +184,7 @@ describe("StreamManager", () => {
     manager.stop();
   });
 
-  it("sends live announcement with CreatorCore default branding on Free tier", async () => {
+  it("sends live announcement with Darklin3 Bot default branding on Free tier", async () => {
     const manager = new StreamManager(mockClient, mockLogger);
     const mockSend = vi.fn().mockResolvedValue({ id: "msg-free" });
     const mockChannel = { send: mockSend };
@@ -226,7 +226,7 @@ describe("StreamManager", () => {
               title: "Euro Truck Simulator 2 Live Stream",
               url: "https://www.youtube.com/watch?v=YFPbHtVi06U",
               footer: expect.objectContaining({
-                text: "⚡ Stream Alert powered by CreatorCore • creatorcore.app",
+                text: "⚡ Stream Alert powered by Darklin3 Bot • darklin3.app",
               }),
             }),
           }),

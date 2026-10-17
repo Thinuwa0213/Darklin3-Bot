@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createDatabaseClient, type DatabaseClient } from "./client.js";
 
 const FAKE_CONFIG = {
-  DATABASE_URL: "mysql://creatorcore:unused-in-this-test@127.0.0.1:3306/creatorcore_test",
+  DATABASE_URL: "mysql://darklin3_bot:unused-in-this-test@127.0.0.1:3306/darklin3_bot_test",
 };
 
 describe("createDatabaseClient", () => {

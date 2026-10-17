@@ -1,4 +1,4 @@
-# CreatorCore — Database Rules
+# Darklin3 Bot — Database Rules
 
 **Status:** Phase 0 engineering contract. Tags follow `docs/ARCHITECTURE.md`.
 

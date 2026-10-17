@@ -1,5 +1,5 @@
-import { DEFAULT_LEASE_DURATION_MS } from "@creatorcore/db";
-import type { CredentialStatusSummary, RuntimeStatusRow, WorkerAssignment } from "@creatorcore/db";
+import { DEFAULT_LEASE_DURATION_MS } from "@darklin3_bot/db";
+import type { CredentialStatusSummary, RuntimeStatusRow, WorkerAssignment } from "@darklin3_bot/db";
 
 export type DashboardRuntimeStatus =
   | "NOT_CONFIGURED"

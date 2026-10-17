@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const API_BASE_URL = "http://localhost:8787";
 
-test.describe("CreatorCore Phase 5 Browser Flow & E2E Suite", () => {
+test.describe("Darklin3 Bot Phase 5 Browser Flow & E2E Suite", () => {
   test("1. Unauthenticated visitor cannot access protected pages and sees sign-in surface", async ({
     page,
   }) => {
@@ -30,7 +30,7 @@ test.describe("CreatorCore Phase 5 Browser Flow & E2E Suite", () => {
     const runId = String(Date.now());
     const discordUserId = `90${runId.padStart(16, "0").slice(-16)}`;
     const testGuildId = `91${runId.padStart(16, "0").slice(-16)}`;
-    const testGuildName = "CreatorCore Community Hub";
+    const testGuildName = "Darklin3 Bot Community Hub";
     const botSecretToken = `deterministic-valid-discord-bot-token-${runId}`;
 
     // 1. Set up manageable guild in FakeDiscordGuildProvider via test harness
@@ -82,7 +82,7 @@ test.describe("CreatorCore Phase 5 Browser Flow & E2E Suite", () => {
     await expect(guildItem).toBeVisible();
     await expect(page.locator(`#guild-name-${testGuildId}`)).toHaveText(testGuildName);
 
-    // 6. Connect guild to CreatorCore
+    // 6. Connect guild to Darklin3 Bot
     const connectBtn = page.locator(`#connect-guild-button-${testGuildId}`);
     await expect(connectBtn).toBeVisible();
     await connectBtn.click();
@@ -184,7 +184,7 @@ test.describe("CreatorCore Phase 5 Browser Flow & E2E Suite", () => {
     const runId = String(Date.now());
     const discordUserId = `94${runId.padStart(16, "0").slice(-16)}`;
     const testGuildId = `95${runId.padStart(16, "0").slice(-16)}`;
-    const testGuildName = "CreatorCore Community Lab";
+    const testGuildName = "Darklin3 Bot Community Lab";
 
     // Bootstrap test guild & session
     await request.post(`${API_BASE_URL}/internal/test/discord/guilds`, {
@@ -224,7 +224,7 @@ test.describe("CreatorCore Phase 5 Browser Flow & E2E Suite", () => {
 
     // 2. Brand wordmark is visible, and NO internal phase labels exist in DOM (Amendment 1)
     const sidebarText = await sidebar.innerText();
-    expect(sidebarText.includes("CreatorCore")).toBe(true);
+    expect(sidebarText.includes("Darklin3 Bot")).toBe(true);
     expect(sidebarText.includes("Phase 1")).toBe(false);
     expect(sidebarText.includes("Phase 5")).toBe(false);
     expect(sidebarText.includes("Phase 6")).toBe(false);

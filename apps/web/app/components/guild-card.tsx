@@ -209,7 +209,7 @@ export function GuildCard({
     );
   }
 
-  // Bespoke CreatorCore Command Deck Card View
+  // Bespoke Darklin3 Bot Command Deck Card View
   return (
     <li
       id={`guild-item-${guild.id}`}

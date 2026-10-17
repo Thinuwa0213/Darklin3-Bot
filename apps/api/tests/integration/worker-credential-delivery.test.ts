@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadDatabaseConfig } from "@creatorcore/config/database";
+import { loadDatabaseConfig } from "@darklin3_bot/config/database";
 
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
   const envPath = path.resolve(fileURLToPath(import.meta.url), "../../../../../.env");
@@ -18,8 +18,8 @@ import {
   createTenant,
   provisionWorker,
   type DatabaseClient,
-} from "@creatorcore/db";
-import { createLogger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import { createLogger } from "@darklin3_bot/logger";
 import { createApp } from "../../src/app.js";
 import type { WorkerTokenSigningKeys } from "../../src/lib/worker-token.js";
 import { CredentialService } from "../../src/services/credential-service.js";

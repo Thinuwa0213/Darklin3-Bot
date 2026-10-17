@@ -44,7 +44,7 @@ const TABLES_TO_TRUNCATE = [
 ];
 
 async function clearDatabase() {
-  console.log("🧹 Clearing test data from CreatorCore database...");
+  console.log("🧹 Clearing test data from Darklin3 Bot database...");
   const conn = await pool.getConnection();
   try {
     await conn.query("SET FOREIGN_KEY_CHECKS = 0;");

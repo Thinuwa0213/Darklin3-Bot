@@ -36,7 +36,7 @@ export function buildDiscordSocialProvider(config: DiscordProviderConfig) {
     scope: ["identify", "guilds"],
     mapProfileToUser: (profile: DiscordProfile) => ({
       name: profile.global_name ?? profile.username ?? "Discord User",
-      email: `discord-${profile.id}@users.creatorcore.internal`,
+      email: `discord-${profile.id}@users.darklin3_bot.internal`,
       emailVerified: false,
       ...(profile.avatar
         ? {

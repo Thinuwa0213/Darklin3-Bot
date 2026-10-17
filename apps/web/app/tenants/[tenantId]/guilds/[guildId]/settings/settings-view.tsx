@@ -101,7 +101,7 @@ export function SettingsView({
   );
   const [defaultFooterText, setDefaultFooterText] = useState(
     initialSettings.branding?.defaultFooterText &&
-      !initialSettings.branding.defaultFooterText.includes("CreatorCore")
+      !initialSettings.branding.defaultFooterText.includes("Darklin3 Bot")
       ? initialSettings.branding.defaultFooterText
       : "⚡ Alert powered by Darklin3 Bot",
   );

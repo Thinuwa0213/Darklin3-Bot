@@ -28,7 +28,7 @@ Every other decision (data access, authorization, credential scoping) depends on
 
 **Where ownership is checked:** in `apps/api` (ADR-0002), on every request, by resolving TenantMembership for (authenticated User, target Tenant) before evaluating anything about Guild/BotApplication/config under that tenant. This is the single choke point.
 
-**Where Discord guild permission is checked:** separately, against Discord's live API/state — before allowing a user to connect a guild to a tenant, and re-verified per ADR-0003's synchronous-for-destructive-actions rule thereafter. CreatorCore's own TenantMembership is the source of truth for ongoing authorization _after_ that initial verification; it is not re-derived from Discord on every single request.
+**Where Discord guild permission is checked:** separately, against Discord's live API/state — before allowing a user to connect a guild to a tenant, and re-verified per ADR-0003's synchronous-for-destructive-actions rule thereafter. Darklin3 Bot's own TenantMembership is the source of truth for ongoing authorization _after_ that initial verification; it is not re-derived from Discord on every single request.
 
 **Security boundary IDs:** `tenantId`, `guildId`, and `botApplicationId` must appear in the WHERE clause of every scoped query for the corresponding resource type (`docs/DATABASE_RULES.md`). `userId` establishes _who_, never _what they may touch_, by itself.
 

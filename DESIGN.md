@@ -1,4 +1,4 @@
-# Darklin3 / CreatorCore — Design Rules & Product Standards
+# Darklin3 / Darklin3 Bot — Design Rules & Product Standards
 
 ## 0. Darklin3 Locked Product Design Rules
 

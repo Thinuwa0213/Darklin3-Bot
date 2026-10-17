@@ -1,9 +1,9 @@
 import { serve } from "@hono/node-server";
 import { createHash } from "node:crypto";
-import { ConfigValidationError } from "@creatorcore/config";
-import { loadApiConfig } from "@creatorcore/config/api";
-import { createLogger } from "@creatorcore/logger";
-import { createDatabaseClient, checkDatabaseConnectivity } from "@creatorcore/db";
+import { ConfigValidationError } from "@darklin3_bot/config";
+import { loadApiConfig } from "@darklin3_bot/config/api";
+import { createLogger } from "@darklin3_bot/logger";
+import { createDatabaseClient, checkDatabaseConnectivity } from "@darklin3_bot/db";
 import { createApp } from "./app.js";
 import type { WorkerTokenSigningKeys } from "./lib/worker-token.js";
 import type {

@@ -4,7 +4,7 @@
 
 ## Context
 
-CreatorCore's Control Plane needs a web dashboard: Discord login, tenant/guild management, bot setup, module configuration, branding, and future billing UI. It must integrate cleanly with Discord OAuth, support server-rendered privileged data without leaking it unnecessarily to the browser, and remain predictable for AI-assisted development (a stated Phase 1 priority).
+Darklin3 Bot's Control Plane needs a web dashboard: Discord login, tenant/guild management, bot setup, module configuration, branding, and future billing UI. It must integrate cleanly with Discord OAuth, support server-rendered privileged data without leaking it unnecessarily to the browser, and remain predictable for AI-assisted development (a stated Phase 1 priority).
 
 ## Decision
 
@@ -33,7 +33,7 @@ CreatorCore's Control Plane needs a web dashboard: Discord login, tenant/guild m
 
 **Clarified at Gate 1 review** (the original wording risked being read as license for `apps/web` to implement its own authorization, which ADR-0002/ADR-0003 explicitly forbid): every Server Action and route handler in `apps/web` must verify that a valid session exists, then **forward the actual tenant/guild authorization decision to `apps/api`** — it never independently evaluates "is this caller allowed to touch this tenant/guild/resource" itself. `apps/web` is a pure client of the authorization surface `apps/api` owns (ADR-0003's Consequences); CSRF protection from Next.js's built-in Server Action origin checks is a helpful default, not a substitute for the SameSite/session design in ADR-0003, and is unrelated to, and does not substitute for, `apps/api`'s own authorization checks. No secrets are ever provisioned to the dashboard's client bundle — only to its server runtime, and `apps/web`'s server runtime holds no credential-decryption material and no standing service credential of its own; it calls `apps/api` using only the signed-in user's own session (ADR-0002's Boundary Definition). The credential-encryption key from ADR-0007 is never provisioned to `apps/web` under any circumstance.
 
-## Why It Fits CreatorCore
+## Why It Fits Darklin3 Bot
 
 It is the framework choice that best matches the hybrid backend boundary in ADR-0002 (dashboard as UI/BFF, not system of record), the auth library in ADR-0003, and the team's stated React background — without over-committing business logic to a web framework that bot workers have no reason to depend on.
 

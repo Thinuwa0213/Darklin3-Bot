@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { loadWebConfig } from "@creatorcore/config";
+import { loadWebConfig } from "@darklin3_bot/config";
 import { getServerSession } from "../lib/api";
 import { DiscordSignInButton } from "./components/auth-buttons";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";

@@ -42,4 +42,4 @@ Centralizing all tenant/guild authorization in one service (`apps/api`) means th
 
 ## Revisit Conditions
 
-Revisit if operating three deploy units proves to be excessive operational burden at CreatorCore's actual customer scale (in which case Option A becomes defensible again for a size-constrained team), or if a genuine third API consumer (a future public/mobile API) emerges, which would strengthen rather than weaken this decision.
+Revisit if operating three deploy units proves to be excessive operational burden at Darklin3 Bot's actual customer scale (in which case Option A becomes defensible again for a size-constrained team), or if a genuine third API consumer (a future public/mobile API) emerges, which would strengthen rather than weaken this decision.

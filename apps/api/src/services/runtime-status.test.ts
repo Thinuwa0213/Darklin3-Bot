@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_LEASE_DURATION_MS } from "@creatorcore/db";
+import { DEFAULT_LEASE_DURATION_MS } from "@darklin3_bot/db";
 import { deriveRuntimeStatus } from "./runtime-status.js";
 
 const NOW = new Date("2026-01-01T00:00:00Z");

@@ -19,7 +19,7 @@ import {
  * needing a testing seam exported from the production verifier itself. If
  * worker-token.ts's token format ever changes, keep this in sync.
  */
-const CONTEXT_STRING = "creatorcore-worker-access-token-v1";
+const CONTEXT_STRING = "darklin3_bot-worker-access-token-v1";
 
 function sign(payloadSegment: string, key: string): string {
   return createHmac("sha256", key)
@@ -49,8 +49,8 @@ function validPayload(overrides: Record<string, unknown> = {}) {
     v: 1,
     kv: 1,
     sub: "worker-test",
-    iss: "creatorcore-api",
-    aud: "creatorcore-worker",
+    iss: "darklin3_bot-api",
+    aud: "darklin3_bot-worker",
     iat: now,
     exp: now + 900,
     ...overrides,

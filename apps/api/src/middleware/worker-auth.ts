@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { findWorkerById, recordAuditEvent, type DatabaseClient } from "@creatorcore/db";
+import { findWorkerById, recordAuditEvent, type DatabaseClient } from "@darklin3_bot/db";
 import { verifyWorkerAccessToken, type WorkerTokenSigningKeys } from "../lib/worker-token.js";
 
 export interface WorkerAuthEnv {

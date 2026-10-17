@@ -4,7 +4,7 @@ import {
   ControlPlaneTransportError,
   WorkerAuthRevokedError,
 } from "./control-plane-client.js";
-import type { Logger } from "@creatorcore/logger";
+import type { Logger } from "@darklin3_bot/logger";
 
 function createMockLogger(): Logger & { messages: string[]; payloads: unknown[] } {
   const messages: string[] = [];

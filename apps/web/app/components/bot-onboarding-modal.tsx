@@ -100,7 +100,7 @@ export function BotOnboardingModal({
       try {
         let activeTenantId = guild.tenantId;
 
-        // 1. If guild is not yet connected in CreatorCore, connect it first
+        // 1. If guild is not yet connected in Darklin3 Bot, connect it first
         if (!guild.connected || !activeTenantId) {
           const connectRes = await connectGuildAction(guild.id);
           if (!connectRes.ok || !connectRes.tenantId) {
@@ -125,7 +125,7 @@ export function BotOnboardingModal({
               : onboardRes.error === "CREDENTIAL_VALIDATION_FAILED"
                 ? "Invalid bot token! Discord rejected this token. Please check and try again."
                 : onboardRes.error === "BOT_ALREADY_REGISTERED"
-                  ? "This Discord bot is already registered to another server in CreatorCore."
+                  ? "This Discord bot is already registered to another server in Darklin3 Bot."
                   : (onboardRes.error ?? "Failed to configure bot application"),
           );
           return;

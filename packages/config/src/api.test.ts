@@ -15,7 +15,7 @@ const VALID_ENV = {
   WORKER_TOKEN_SIGNING_KEY: "a".repeat(32),
   BOT_CREDENTIAL_ENCRYPTION_KEY: VALID_ENCRYPTION_KEY,
   BETTER_AUTH_SECRET: "d".repeat(32),
-  WEB_APP_ORIGIN: "https://app.creatorcore.test",
+  WEB_APP_ORIGIN: "https://app.darklin3_bot.test",
   DISCORD_CLIENT_ID: "discord-client-id",
   DISCORD_CLIENT_SECRET: "discord-client-secret",
   DISCORD_OAUTH_TOKEN_ENCRYPTION_KEY: VALID_DISCORD_OAUTH_KEY,

@@ -76,7 +76,7 @@ export interface OnboardBotActionResult {
 }
 
 /**
- * Server Action to connect an authorized Discord guild to CreatorCore.
+ * Server Action to connect an authorized Discord guild to Darklin3 Bot.
  * Calls `POST /app/guilds/:guildId/connect` in apps/api with forwarded session and origin.
  */
 export async function connectGuildAction(guildId: string): Promise<ConnectGuildActionResult> {

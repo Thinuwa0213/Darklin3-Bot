@@ -3,7 +3,7 @@ import type { CommandContext, SlashCommand } from "./command.interface.js";
 
 export class HelpCommand implements SlashCommand {
   public readonly name = "help";
-  public readonly description = "Explore available CreatorCore bot commands and modular features";
+  public readonly description = "Explore available Darklin3 Bot bot commands and modular features";
 
   public async execute(
     interaction: ChatInputCommandInteraction,
@@ -11,9 +11,9 @@ export class HelpCommand implements SlashCommand {
   ): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
-      .setTitle("✨ CreatorCore Bot Command Center")
+      .setTitle("✨ Darklin3 Bot Bot Command Center")
       .setDescription(
-        "Welcome to your server's branded Discord companion, powered by the CreatorCore platform.\n\n" +
+        "Welcome to your server's branded Discord companion, powered by the Darklin3 Bot platform.\n\n" +
           "Here are the active commands available for this server:",
       )
       .addFields(
@@ -36,10 +36,10 @@ export class HelpCommand implements SlashCommand {
         {
           name: "🛠️ Server Management",
           value:
-            "Server administrators can configure modules, custom branding, and triggers anytime from the CreatorCore Web Dashboard.",
+            "Server administrators can configure modules, custom branding, and triggers anytime from the Darklin3 Bot Web Dashboard.",
         },
       )
-      .setFooter({ text: "CreatorCore Platform • docs.creatorcore.dev" })
+      .setFooter({ text: "Darklin3 Bot Platform • docs.darklin3.app" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

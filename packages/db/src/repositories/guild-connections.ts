@@ -61,7 +61,7 @@ export type ConnectGuildResult =
 
 /**
  * A guild-only, tenant-agnostic lookup used solely to discover whether a
- * Discord guild has already been adopted by *any* CreatorCore tenant — the
+ * Discord guild has already been adopted by *any* Darklin3 Bot tenant — the
  * one legitimate exception to docs/DATABASE_RULES.md's findByTenantAndId
  * rule, matching `findTenantById`'s own precedent (tenants.ts): there is no
  * tenant to scope by yet, since discovering it is the entire point of this
@@ -97,7 +97,7 @@ async function resolveAgainstExistingGuild(
 }
 
 /**
- * Connects a Discord guild to CreatorCore for the given (already
+ * Connects a Discord guild to Darklin3 Bot for the given (already
  * Discord-authorized — the caller must have run
  * `requireCurrentDiscordGuildManager` first) user. Amendment 5: relies on
  * `guilds.id` being the Discord snowflake itself (a proven InnoDB

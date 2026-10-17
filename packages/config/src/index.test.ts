@@ -6,7 +6,7 @@ import * as bareEntry from "./index.js";
  * they carry DATABASE_URL. Re-exporting either from the bare package entry
  * would let apps/web/apps/worker reach it through a dependency they already
  * legitimately hold (found during the DATABASE_URL security review) — the
- * same class of leak the pre-existing @creatorcore/config/database subpath
+ * same class of leak the pre-existing @darklin3_bot/config/database subpath
  * split was built to prevent. This test locks the boundary at runtime, not
  * just via package.json#exports, so a regression fails loudly here too.
  *
@@ -17,7 +17,7 @@ import * as bareEntry from "./index.js";
  * only on the transitive "apiConfigSchema isn't exported at all" guarantee,
  * so a regression here fails with a message naming the actual secret.
  */
-describe("@creatorcore/config bare entry point", () => {
+describe("@darklin3_bot/config bare entry point", () => {
   it("does not export loadApiConfig or apiConfigSchema", () => {
     expect(bareEntry).not.toHaveProperty("loadApiConfig");
     expect(bareEntry).not.toHaveProperty("apiConfigSchema");

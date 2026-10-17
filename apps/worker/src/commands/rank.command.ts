@@ -197,7 +197,7 @@ export class RankCommand implements SlashCommand {
           inline: false,
         },
       )
-      .setFooter({ text: "CreatorCore XP & Leveling Engine" })
+      .setFooter({ text: "Darklin3 Bot XP & Leveling Engine" })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

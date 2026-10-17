@@ -1,9 +1,9 @@
 {
-  "name": "@creatorcore/config",
+  "name": "@darklin3_bot/config",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Typed, runtime-scoped environment configuration for CreatorCore (docs/ARCHITECTURE.md section 8 of the Gate 2 plan). A workspace loads only the config shape it needs.",
+  "description": "Typed, runtime-scoped environment configuration for Darklin3 Bot (docs/ARCHITECTURE.md section 8 of the Gate 2 plan). A workspace loads only the config shape it needs.",
   "license": "UNLICENSED",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +30,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
-  "creatorcore": {
+  "darklin3_bot": {
     "testGates": {
       "unit": true,
       "integration": false,

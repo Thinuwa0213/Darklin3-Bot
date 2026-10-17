@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { DatabaseClient } from "@creatorcore/db";
+import type { DatabaseClient } from "@darklin3_bot/db";
 import {
   createInitialActiveCredential,
   createPendingCredential,
@@ -9,8 +9,8 @@ import {
   promotePendingCredential,
   rejectPendingCredential,
   recordAuditEvent,
-} from "@creatorcore/db";
-import type { Logger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import type { Logger } from "@darklin3_bot/logger";
 import {
   decryptBotCredential,
   encryptBotCredential,

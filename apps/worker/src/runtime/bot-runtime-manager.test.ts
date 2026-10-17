@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { createLogger } from "@creatorcore/logger";
+import { createLogger } from "@darklin3_bot/logger";
 import { BotRuntimeManager } from "./bot-runtime-manager.js";
 import type { IDiscordClient } from "./discord-client.js";
 import type { ControlPlaneClient } from "../client/control-plane-client.js";

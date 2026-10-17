@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { createOriginCheckMiddleware } from "./origin-check.js";
 
-const ALLOWED_ORIGIN = "https://app.creatorcore.test";
+const ALLOWED_ORIGIN = "https://app.darklin3_bot.test";
 
 function buildApp() {
   const app = new Hono();
@@ -53,7 +53,7 @@ describe("createOriginCheckMiddleware (CSRF, security-review H3/M4)", () => {
     const app = buildApp();
     const res = await app.request("/write", {
       method: "POST",
-      headers: { origin: "https://evil.app.creatorcore.test" },
+      headers: { origin: "https://evil.app.darklin3_bot.test" },
     });
     expect(res.status).toBe(403);
   });

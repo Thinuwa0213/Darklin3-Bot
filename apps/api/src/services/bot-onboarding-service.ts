@@ -7,8 +7,8 @@ import {
   reassignBotForGuild,
   recordAuditEvent,
   type DatabaseClient,
-} from "@creatorcore/db";
-import type { Logger } from "@creatorcore/logger";
+} from "@darklin3_bot/db";
+import type { Logger } from "@darklin3_bot/logger";
 import { encryptBotCredential, type CredentialEncryptionKeys } from "../lib/credential-crypto.js";
 import type { DiscordValidator } from "./discord-validator.js";
 
@@ -157,7 +157,7 @@ export class BotOnboardingService {
       if (isDuplicateKeyError(error)) {
         // discord_application_id is globally unique (bot_applications
         // schema) -- this specific Discord bot is already registered
-        // somewhere in CreatorCore. Never silently adopt/merge it.
+        // somewhere in Darklin3 Bot. Never silently adopt/merge it.
         await recordAuditEvent(this.deps.db, {
           actorType: "USER",
           actorUserId: input.userId,

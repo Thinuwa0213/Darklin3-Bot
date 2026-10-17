@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createLogger } from "@creatorcore/logger";
-import type { DatabaseClient } from "@creatorcore/db";
+import { createLogger } from "@darklin3_bot/logger";
+import type { DatabaseClient } from "@darklin3_bot/db";
 import { createApp } from "./app.js";
 import type { WorkerTokenSigningKeys } from "./lib/worker-token.js";
 

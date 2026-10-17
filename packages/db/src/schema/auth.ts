@@ -10,7 +10,7 @@ import {
 /**
  * Better Auth's own identity/session tables (Phase 5, docs/adr/0003).
  *
- * Deliberately a separate identity space from CreatorCore's own `users`
+ * Deliberately a separate identity space from Darklin3 Bot's own `users`
  * table (Phase 3, keyed directly by the Discord snowflake): "auth identity
  * != tenant authorization" (task spec). These four tables' field shapes are
  * transcribed from the actually-installed `better-auth@1.7.4`'s own core
@@ -26,7 +26,7 @@ import {
  * independent, exactly as every other table in this schema does.
  *
  * IDs are Better-Auth-generated opaque strings (default: 32-char
- * alphanumeric, `@better-auth/core/utils/id`), not CreatorCore UUIDs or
+ * alphanumeric, `@better-auth/core/utils/id`), not Darklin3 Bot UUIDs or
  * Discord snowflakes — sized generously (varchar(64)) for headroom.
  */
 
@@ -75,7 +75,7 @@ export const authSessions = mysqlTable(
  * (apps/api/src/auth) before Better Auth's adapter ever writes a row — this
  * table never holds real Discord token material. The real, encrypted
  * credential lives in `discord_oauth_credentials`, keyed by
- * `accountId`/`users.id` (the Discord snowflake), owned by CreatorCore's own
+ * `accountId`/`users.id` (the Discord snowflake), owned by Darklin3 Bot's own
  * repository layer, not Better Auth's.
  */
 export const authAccounts = mysqlTable(
