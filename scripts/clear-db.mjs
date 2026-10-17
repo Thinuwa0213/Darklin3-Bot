@@ -33,6 +33,8 @@ const TABLES_TO_TRUNCATE = [
   "bot_applications",
   "workers",
   "tenant_memberships",
+  "tenant_subscriptions",
+  "media_assets",
   "guilds",
   "tenants",
   "discord_oauth_credentials",
