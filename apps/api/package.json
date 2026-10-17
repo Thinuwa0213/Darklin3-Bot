@@ -38,7 +38,7 @@
     "@darklin3_bot/db": "workspace:*",
     "@darklin3_bot/logger": "workspace:*",
     "@hono/node-server": "^2.1.1",
-    "better-auth": "1.7.4",
+    "better-auth": "1.7.7",
     "hono": "^4.13.7",
     "zod": "^4.6.2"
   },
