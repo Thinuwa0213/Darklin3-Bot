@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, type ApplicationCommandDataResolvable } from "discord.js";
+import { Client, GatewayIntentBits, Partials, type ApplicationCommandDataResolvable } from "discord.js";
 
 /**
  * Interface abstracting Discord Gateway Client capabilities needed by CreatorCore.
@@ -14,10 +14,12 @@ export interface IDiscordClient {
   registerCommands?(commands: unknown[]): Promise<void>;
   getPing?(): number;
   setPresence?(presence: unknown): unknown;
+  fetchChannel?(channelId: string): Promise<unknown>;
+  fetchGuild?(guildId: string): Promise<unknown>;
 }
 
 /**
- * Real Discord.js Client implementation with Guilds and GuildMembers intents.
+ * Real Discord.js Client implementation with Guilds, GuildMembers, and Reactions intents.
  * GuildMembers intent is required for member onboarding, auto-roles, and welcome messages.
  */
 export class RealDiscordClient implements IDiscordClient {
@@ -25,7 +27,23 @@ export class RealDiscordClient implements IDiscordClient {
 
   constructor() {
     this.client = new Client({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildInvites,
+      ],
+      partials: [
+        Partials.Message,
+        Partials.Channel,
+        Partials.Reaction,
+        Partials.User,
+        Partials.GuildMember,
+      ],
     });
   }
 
@@ -58,12 +76,17 @@ export class RealDiscordClient implements IDiscordClient {
 
   /**
    * Registers slash commands with the Discord Application Commands API.
-   * Also seeds connected guilds so commands update immediately in Discord without delay.
+   * Clears global commands to prevent duplicate entries and registers guild-level commands
+   * so they activate and update immediately without Discord global CDN caching delays.
    */
   public async registerCommands(commands: unknown[]): Promise<void> {
     const commandList = commands as ApplicationCommandDataResolvable[];
     if (this.client.application) {
-      await this.client.application.commands.set(commandList);
+      try {
+        await this.client.application.commands.set([]);
+      } catch {
+        // Global cleanup is best effort
+      }
     }
 
     for (const guild of this.client.guilds.cache.values()) {
@@ -82,6 +105,22 @@ export class RealDiscordClient implements IDiscordClient {
   public setPresence(presence: unknown): unknown {
     if (!this.client.user) return;
     return this.client.user.setPresence(presence as any);
+  }
+
+  public async fetchChannel(channelId: string): Promise<unknown> {
+    try {
+      return await this.client.channels.fetch(channelId);
+    } catch {
+      return null;
+    }
+  }
+
+  public async fetchGuild(guildId: string): Promise<unknown> {
+    try {
+      return await this.client.guilds.fetch(guildId);
+    } catch {
+      return null;
+    }
   }
 }
 

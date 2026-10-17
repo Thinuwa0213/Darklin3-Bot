@@ -5,6 +5,7 @@ import {
   recordAuditEvent,
   type DatabaseClient,
 } from "@creatorcore/db";
+import type { Logger } from "@creatorcore/logger";
 import { AuthorizationError, requireCurrentDiscordGuildManager } from "../../authz/index.js";
 import { DiscordUnavailableError, type DiscordGuildProvider } from "../../discord/types.js";
 import {
@@ -19,6 +20,7 @@ export interface GuildRoutesDeps {
   auth: Auth;
   discordGuildProvider: DiscordGuildProvider;
   webAppOrigin: string;
+  logger?: Logger;
 }
 
 function parseDiscordSnowflake(raw: string): bigint | undefined {
@@ -55,6 +57,11 @@ export function createGuildRoutes(deps: GuildRoutesDeps): Hono<AuthenticatedUser
       manageableGuilds = await deps.discordGuildProvider.listManageableGuilds(userId);
     } catch (error) {
       if (error instanceof DiscordUnavailableError) {
+        deps.logger?.warn("guilds.runtime_unavailable", {
+          userId: userId.toString(),
+          message: error.message,
+          cause: error.cause instanceof Error ? error.cause.message : error.cause ? String(error.cause) : undefined,
+        });
         return c.json({ error: "RUNTIME_UNAVAILABLE" }, 503);
       }
       throw error;
@@ -74,6 +81,7 @@ export function createGuildRoutes(deps: GuildRoutesDeps): Hono<AuthenticatedUser
           connected: Boolean(connected),
           tenantId: connected?.tenantId,
           botName: connected?.botName ?? null,
+          botConfigured: Boolean(connected?.botApplicationId || connected?.botName),
         };
       }),
     });

@@ -17,10 +17,10 @@ import {
   Radio,
   Bot,
   Zap,
-  CheckCircle2,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
+import { PageHeader, ProBadge } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
 interface BillingViewProps {
   tenantId: string;
@@ -86,44 +86,34 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <span>Billing & Subscriptions</span>
-            <Badge variant={activePlan === "PRO" ? "default" : activePlan === "ENTERPRISE" ? "default" : "secondary"}>
-              {activePlan}
+      <PageHeader
+        category="Tenant Administration"
+        title="Billing & Subscriptions"
+        description="Manage your subscription tiers, usage entitlements, and white-label bot features."
+        badge={
+          activePlan === "FREE" ? (
+            <Badge variant="outline" className="font-mono text-[10px]">
+              FREE
             </Badge>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Manage your subscription tiers, usage entitlements, and white-label bot features.
-          </p>
-        </div>
-
-        <Button variant="outline" size="sm" asChild>
-          <a href="/guilds">&larr; Server Selection</a>
-        </Button>
-      </div>
+          ) : (
+            <ProBadge label={activePlan} />
+          )
+        }
+        backHref="/guilds"
+        backLabel="Server Selection"
+      />
 
       {/* Status Feedback Banner */}
       {feedback && (
-        <div
-          className={`flex items-center gap-3 p-4 rounded-lg border text-sm ${
-            feedback.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-              : "bg-destructive/10 border-destructive/20 text-destructive"
-          }`}
-        >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="h-5 w-5 shrink-0" />
-          ) : (
-            <AlertCircle className="h-5 w-5 shrink-0" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
+        <FeedbackBanner
+          type={feedback.type}
+          message={feedback.message}
+          onDismiss={() => setFeedback(null)}
+        />
       )}
 
       {/* Current Subscription Status Card */}
-      <Card className="border-border shadow-xs">
+      <Card className="border-border/80 shadow-2xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center justify-between">
             <span className="flex items-center gap-2">
@@ -145,20 +135,20 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
             <div className="rounded-lg bg-muted/50 p-3 border border-border/50">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Server className="h-3.5 w-3.5" />
-                <span>Connected Guilds</span>
+                <span>Bot Deployment</span>
               </div>
               <p className="text-sm font-semibold text-foreground">
-                {activePlan === "FREE" ? "1 Guild Limit" : activePlan === "PRO" ? "Up to 3 Guilds" : "Unlimited Guilds"}
+                {activePlan === "ENTERPRISE" ? "Dedicated Cluster" : "Dedicated Server Bot"}
               </p>
             </div>
 
             <div className="rounded-lg bg-muted/50 p-3 border border-border/50">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Bot className="h-3.5 w-3.5" />
-                <span>Custom Bot Token</span>
+                <span>Media & Asset Storage</span>
               </div>
               <p className="text-sm font-semibold text-foreground">
-                {activePlan === "FREE" ? "Disabled (Default Bot)" : "Unlocked (100% White-Label)"}
+                {activePlan === "FREE" ? "30 MB Quota" : activePlan === "PRO" ? "100 MB Quota" : "300 MB Quota"}
               </p>
             </div>
 
@@ -168,7 +158,7 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
                 <span>Stream Live Alerts</span>
               </div>
               <p className="text-sm font-semibold text-foreground">
-                {activePlan === "FREE" ? "1 Streamer (Twitch)" : "Unlimited (Twitch, YouTube, Kick)"}
+                {activePlan === "FREE" ? "1 / Platform (Twitch, YT, Kick, TikTok)" : "Unlimited (All Platforms)"}
               </p>
             </div>
           </div>
@@ -229,27 +219,31 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>1 Connected Discord Server</span>
+                <span>1 Dedicated Discord Server</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Standard Welcome Messages</span>
+                <span>30MB Media &amp; Asset Storage</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Basic XP Leveling (Default Card)</span>
+                <span>1 Alert / Platform (Twitch, YT, Kick, TikTok)</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>1 Twitch Stream Notification</span>
+                <span>Standard Welcome Messages &amp; XP</span>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground/60">
                 <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
-                <span className="line-through">Custom Bot Avatar & Name</span>
+                <span className="line-through">Server Booster Announcements</span>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground/60">
                 <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
-                <span className="line-through">Custom Canvas Rank Cards</span>
+                <span className="line-through">Community Stream Radar</span>
+              </li>
+              <li className="flex items-center gap-2 text-muted-foreground/60">
+                <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
+                <span className="line-through">White-Label Branding Removal</span>
               </li>
             </ul>
           </CardContent>
@@ -307,23 +301,27 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Up to 3 Connected Servers</span>
+                <span>100MB Media &amp; Asset Storage</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Custom Canvas Rank Cards & Multipliers</span>
+                <span>Server Booster Nitro Announcements</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Unlimited Twitch, YouTube & Kick Alerts</span>
+                <span>Community Stream Radar &amp; Live Role Sync</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Unlimited Button & Dropdown Roles</span>
+                <span>Unlimited Twitch, YouTube, Kick &amp; TikTok Alerts</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Advanced Anti-Raid & Phishing Shield</span>
+                <span>Custom Canvas Rank Cards &amp; Multipliers</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-primary shrink-0" />
+                <span>Advanced Anti-Raid &amp; Phishing Shield</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0" />
@@ -386,11 +384,7 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
               </li>
               <li className="flex items-center gap-2 text-foreground">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Unlimited Guild Connections</span>
-              </li>
-              <li className="flex items-center gap-2 text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Multiple Custom Branded Bots</span>
+                <span>300MB High-Performance Asset Storage</span>
               </li>
               <li className="flex items-center gap-2 text-foreground">
                 <Check className="h-4 w-4 text-primary shrink-0" />
@@ -398,7 +392,11 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
               </li>
               <li className="flex items-center gap-2 text-foreground">
                 <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Staff Roles & Granular RBAC</span>
+                <span>Priority Cluster Runtime SLA</span>
+              </li>
+              <li className="flex items-center gap-2 text-foreground">
+                <Check className="h-4 w-4 text-primary shrink-0" />
+                <span>Staff Roles &amp; Granular RBAC</span>
               </li>
               <li className="flex items-center gap-2 text-foreground">
                 <Check className="h-4 w-4 text-primary shrink-0" />

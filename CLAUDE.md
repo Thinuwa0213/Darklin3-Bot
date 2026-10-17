@@ -51,6 +51,7 @@ Use `NOT APPLICABLE` (with the reason) when a check genuinely doesn't apply yet 
 - **Never introduce a permanent client-specific fork of shared/core code.** Client customization goes through configuration/extension points (`docs/ARCHITECTURE.md`).
 - **Never add a dependency, framework, or database engine not already `[LOCKED]`** without flagging it as a decision for the user, even if it seems obviously correct.
 - **Never fabricate code or tests purely to make a quality gate look green.** A genuinely empty test category is reported as `NOT APPLICABLE`, not papered over.
+- **Always enforce Free vs PRO branding and watermarks:** Every Discord embed and bot announcement must display the default Darklin3 branding watermark (`⚡ Alert powered by Darklin3 Bot`) on the Free tier. White-labeling and custom footers/icons are strictly gated behind PRO tier and must check `customBrandingEnabled`. Never hardcode client-specific footers without plan verification.
 
 ## Git safety
 

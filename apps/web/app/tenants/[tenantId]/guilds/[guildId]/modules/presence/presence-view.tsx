@@ -9,9 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Save,
-  CheckCircle2,
-  AlertCircle,
-  Bot,
   Activity,
   Plus,
   Trash2,
@@ -24,8 +21,12 @@ import {
   Headphones,
   Tv,
   Trophy,
+  Loader2,
 } from "lucide-react";
 import { savePresenceAction } from "@/app/actions";
+import { PageHeader } from "@/components/layout/page-header";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { DiscordAppBadge } from "@/components/discord/discord-chat-preview";
 
 export type ActivityType = "WATCHING" | "PLAYING" | "LISTENING" | "STREAMING" | "COMPETING";
 
@@ -40,10 +41,11 @@ interface PresenceViewProps {
   tenantId: string;
   guildId: string;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
-  botName?: string;
-  initialActivities?: ActivityItem[];
-  initialStatusMode?: "online" | "idle" | "dnd";
-  initialRotationInterval?: number;
+  botName?: string | undefined;
+  botAvatarUrl?: string | null | undefined;
+  initialActivities?: ActivityItem[] | undefined;
+  initialStatusMode?: "online" | "idle" | "dnd" | undefined;
+  initialRotationInterval?: number | undefined;
 }
 
 export function PresenceView({
@@ -51,6 +53,7 @@ export function PresenceView({
   guildId,
   currentPlan,
   botName = "CreatorBot",
+  botAvatarUrl = null,
   initialActivities = [],
   initialStatusMode = "online",
   initialRotationInterval = 60,
@@ -182,40 +185,26 @@ export function PresenceView({
     activities.length > 0 ? (activities[activePreviewIndex] ?? activities[0] ?? null) : null;
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-5xl pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-              <Activity className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                  Rich Presence &amp; Activities
-                </h1>
-                <Badge
-                  variant={currentPlan === "FREE" ? "secondary" : "default"}
-                  className="text-[10px] font-mono font-bold"
-                >
-                  {currentPlan}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Configure dynamic rotating Rich Presence activities displayed underneath the bot&apos;s username in Discord.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <PageHeader
+        category="Gateway Presence"
+        title="Rich Presence & Activities"
+        description="Configure dynamic rotating Rich Presence activities displayed underneath the bot's username in Discord."
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+        actions={
           <Button
             onClick={handleSave}
             disabled={isPending || cooldownSeconds > 0}
-            className="gap-2 shadow-xs"
+            size="sm"
+            className="gap-2 shadow-2xs font-semibold text-xs px-4 h-9 cursor-pointer"
           >
-            <Save className="h-4 w-4" />
+            {isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
             <span>
               {isPending
                 ? "Applying..."
@@ -224,25 +213,27 @@ export function PresenceView({
                   : "Apply Presence"}
             </span>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {saved && (
-        <div className="flex items-center gap-2 p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>
-            {activities.length === 0
+        <FeedbackBanner
+          type="success"
+          message={
+            activities.length === 0
               ? "Discord Gateway presence updated: Bot online status saved with no activity text."
-              : "Discord Gateway presence successfully updated and rotation cycle deployed!"}
-          </span>
-        </div>
+              : "Discord Gateway presence successfully updated and rotation cycle deployed!"
+          }
+          onDismiss={() => setSaved(false)}
+        />
       )}
 
       {saveError && (
-        <div className="flex items-center gap-2 p-3.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{saveError}</span>
-        </div>
+        <FeedbackBanner
+          type="error"
+          message={saveError}
+          onDismiss={() => setSaveError(null)}
+        />
       )}
 
       {/* Plan Quota & Gateway Safety Banner */}
@@ -285,7 +276,7 @@ export function PresenceView({
                 Discord Gateway Safety
               </p>
               <p className="text-[11px] text-muted-foreground leading-tight">
-                Max 5 updates/minute enforced by Discord. CreatorCore safely spaces out rotations.
+                Max 5 updates/minute enforced by Discord. Darklin3 Bot safely spaces out rotations.
               </p>
             </div>
           </CardContent>
@@ -298,8 +289,7 @@ export function PresenceView({
           {/* Global Gateway Status Card */}
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Activity className="h-4 w-4 text-emerald-500" />
+              <CardTitle className="text-sm font-semibold">
                 Global Gateway Presence
               </CardTitle>
               <CardDescription className="text-xs">
@@ -566,9 +556,17 @@ export function PresenceView({
                 <div className="px-4 pb-4 space-y-3 relative">
                   <div className="relative -mt-8 inline-block">
                     <div className="h-16 w-16 rounded-full border-4 border-[#111214] overflow-hidden bg-[#2b2d31]">
-                      <div className="h-full w-full flex items-center justify-center font-bold text-xs bg-[#5865F2] text-white">
-                        <Bot className="h-7 w-7" />
-                      </div>
+                      {botAvatarUrl ? (
+                        <img
+                          src={botAvatarUrl}
+                          alt={botName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center font-bold text-xs bg-[#5865F2] text-white">
+                          <span>{botName.slice(0, 2).toUpperCase()}</span>
+                        </div>
+                      )}
                     </div>
                     {/* Status Dot */}
                     <div
@@ -588,9 +586,7 @@ export function PresenceView({
                       <span className="text-sm font-bold text-white tracking-tight">
                         {botName}
                       </span>
-                      <span className="bg-[#5865F2] text-white text-[9px] font-bold px-1.5 py-0.5 rounded leading-none">
-                        BOT
-                      </span>
+                      <DiscordAppBadge />
                     </div>
                     <span className="text-[11px] text-[#949ba4] font-mono block">
                       @{botName.toLowerCase().replace(/[^a-z0-9_]/g, "")}

@@ -18,8 +18,11 @@ export interface PlanEntitlements {
   name: string;
   priceMonthly: number;
   priceAnnual: number;
+  maxStorageMb: number;
   maxConnectedGuilds: number;
   streamNotificationsLimit: number;
+  maxRolePanels: number;
+  serverBooster: boolean;
   customBotToken: boolean;
   customCanvasRankCard: boolean;
   unlimitedButtonRoles: boolean;
@@ -34,8 +37,11 @@ export const PLAN_DEFINITIONS: Record<SubscriptionPlan, PlanEntitlements> = {
     name: "Starter (Free)",
     priceMonthly: 0,
     priceAnnual: 0,
+    maxStorageMb: 30,
     maxConnectedGuilds: 1,
-    streamNotificationsLimit: 1,
+    streamNotificationsLimit: 4,
+    maxRolePanels: 2,
+    serverBooster: false,
     customBotToken: false,
     customCanvasRankCard: false,
     unlimitedButtonRoles: false,
@@ -48,8 +54,11 @@ export const PLAN_DEFINITIONS: Record<SubscriptionPlan, PlanEntitlements> = {
     name: "Creator Pro",
     priceMonthly: 9.99,
     priceAnnual: 79,
-    maxConnectedGuilds: 3,
-    streamNotificationsLimit: 25,
+    maxStorageMb: 100,
+    maxConnectedGuilds: 1,
+    streamNotificationsLimit: 100,
+    maxRolePanels: 10,
+    serverBooster: true,
     customBotToken: true,
     customCanvasRankCard: true,
     unlimitedButtonRoles: true,
@@ -62,8 +71,11 @@ export const PLAN_DEFINITIONS: Record<SubscriptionPlan, PlanEntitlements> = {
     name: "Studio / Esports",
     priceMonthly: 29.99,
     priceAnnual: 249,
-    maxConnectedGuilds: 100,
-    streamNotificationsLimit: 100,
+    maxStorageMb: 300,
+    maxConnectedGuilds: 1,
+    streamNotificationsLimit: 500,
+    maxRolePanels: 100,
+    serverBooster: true,
     customBotToken: true,
     customCanvasRankCard: true,
     unlimitedButtonRoles: true,

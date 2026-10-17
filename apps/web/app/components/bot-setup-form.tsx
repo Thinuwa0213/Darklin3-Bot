@@ -358,12 +358,12 @@ export function BotSetupForm({
               Obtain your bot token from the Discord Developer Portal under Bot &gt; Reset Token.
             </p>
 
-            {/* Privileged Gateway Intents Notice */}
+            {/* Privileged Gateway Intents & Public Bot Security Notice */}
             <div className="mt-3 rounded-lg border border-border/70 bg-muted/40 p-3 space-y-2">
               <div className="flex items-center justify-between text-xs font-semibold text-foreground">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  Required Gateway Intents
+                  Bot Configuration Checklist
                 </span>
                 <a
                   href="https://discord.com/developers/applications"
@@ -376,9 +376,9 @@ export function BotSetupForm({
                 </a>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Make sure all 3 toggles are enabled under <strong>Bot &gt; Privileged Gateway Intents</strong>:
+                In Discord Developer Portal under <strong>Bot</strong>, enable all 3 Gateway Intents and turn <strong>OFF Public Bot</strong>:
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5 text-[11px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 pt-0.5 text-[11px]">
                 <div className="flex items-center gap-1.5 text-foreground font-medium">
                   <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
                   <span>Server Members</span>
@@ -390,6 +390,10 @@ export function BotSetupForm({
                 <div className="flex items-center gap-1.5 text-foreground font-medium">
                   <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
                   <span>Presence Intent</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-500 font-medium">
+                  <Lock className="h-3 w-3 text-amber-500 shrink-0" />
+                  <span>Public Bot: OFF</span>
                 </div>
               </div>
             </div>

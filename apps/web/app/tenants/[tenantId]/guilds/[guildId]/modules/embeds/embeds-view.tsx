@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +10,29 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  FileText,
   Send,
   Plus,
   Trash2,
-  CheckCircle2,
+  Globe,
+  Sparkles,
+  Lock,
+  Hash,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
+import Link from "next/link";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
+import type { GuildSettings } from "@/lib/settings-storage";
+import type { LiveDiscordChannel } from "../welcome/welcome-types";
+import { publishEmbedToDiscordAction } from "@/app/actions";
+import { DiscordChatPreview } from "@/components/discord/discord-chat-preview";
 
 interface EmbedsViewProps {
   tenantId: string;
   guildId: string;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
+  globalSettings?: GuildSettings;
+  liveChannels?: LiveDiscordChannel[];
 }
 
 interface EmbedField {
@@ -39,23 +51,68 @@ const PRESET_COLORS = [
   { label: "Dark Slate", hex: "#2B2D31" },
 ];
 
-export function EmbedsView({ tenantId: _tenantId, guildId: _guildId, currentPlan: _currentPlan }: EmbedsViewProps) {
-  const [channel, setChannel] = useState("#announcements");
-  const [authorName, setAuthorName] = useState("CreatorCore News");
+export function EmbedsView({ tenantId, guildId, currentPlan, globalSettings, liveChannels = [] }: EmbedsViewProps) {
+  const isPro = currentPlan === "PRO" || currentPlan === "ENTERPRISE";
+
+  const [channelId, setChannelId] = useState(liveChannels[0]?.id || "");
+  const [publishing, setPublishing] = useState(false);
+  const [publishFeedback, setPublishFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Clean Discord channels for SearchableSelect options (fixes double ## bug)
+  const channelOptions: SearchableOption[] = useMemo(() => {
+    return liveChannels.map((ch) => {
+      const cleanName = ch.name.replace(/^#+/, "");
+      return {
+        value: ch.id,
+        label: cleanName,
+        icon: <Hash className="h-3.5 w-3.5" />,
+      };
+    });
+  }, [liveChannels]);
+  const [authorName, setAuthorName] = useState("Darklin3 Bot Operations");
   const [title, setTitle] = useState("🚨 Community Update & Tournament Schedule");
   const [description, setDescription] = useState(
     "Welcome to the official monthly championship! Check the schedule below and ensure your squads are checked in before Friday 6 PM EST.",
   );
-  const [color, setColor] = useState("#5865F2");
-  const [footerText, setFooterText] = useState("CreatorCore System • Event Operations");
-  const [includeTimestamp, setIncludeTimestamp] = useState(true);
+  const [color, setColor] = useState(globalSettings?.branding?.defaultEmbedColor || "#5865F2");
+
+  // Footer configuration mode: 'global' | 'custom' | 'none'
+  const [footerMode, setFooterMode] = useState<"global" | "custom" | "none">("global");
+  const [customFooterText, setCustomFooterText] = useState("Event Operations • Darklin3 Bot");
+  const [customFooterIcon, setCustomFooterIcon] = useState("");
+  const [includeTimestamp, setIncludeTimestamp] = useState(
+    globalSettings?.branding?.showTimestampDefault ?? true,
+  );
+
+  const globalFooterText =
+    isPro && globalSettings?.branding?.customBrandingEnabled
+      ? globalSettings?.branding?.defaultFooterText
+      : "⚡ Alert powered by Darklin3 Bot";
+  const globalFooterIcon =
+    isPro && globalSettings?.branding?.customBrandingEnabled
+      ? globalSettings?.branding?.defaultFooterIconUrl
+      : "";
+
+  const resolvedFooterText = !isPro
+    ? "⚡ Alert powered by Darklin3 Bot"
+    : footerMode === "none"
+      ? ""
+      : footerMode === "custom"
+        ? (customFooterText.trim() || "⚡ Alert powered by Darklin3 Bot")
+        : (globalFooterText || "⚡ Alert powered by Darklin3 Bot");
+
+  const resolvedFooterIcon = !isPro
+    ? ""
+    : footerMode === "none"
+      ? ""
+      : footerMode === "custom"
+        ? customFooterIcon
+        : globalFooterIcon;
 
   const [fields, setFields] = useState<EmbedField[]>([
     { id: "1", name: "🏆 Prize Pool", value: "$1,000 USD", inline: true },
     { id: "2", name: "📅 Date & Time", value: "Oct 24th, 6 PM EST", inline: true },
   ]);
-
-  const [saved, setSaved] = useState(false);
 
   const handleAddField = () => {
     setFields([
@@ -69,55 +126,117 @@ export function EmbedsView({ tenantId: _tenantId, guildId: _guildId, currentPlan
     ]);
   };
 
-  const handleSend = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSend = async () => {
+    if (!channelId) {
+      setPublishFeedback({ type: "error", message: "Please select a destination channel." });
+      return;
+    }
+    setPublishing(true);
+    setPublishFeedback(null);
+
+    let hexInt = 0x5865f2;
+    if (color) {
+      const parsed = Number.parseInt(color.replace("#", ""), 16);
+      if (!Number.isNaN(parsed)) hexInt = parsed;
+    }
+
+    const embedPayload: any = {
+      title,
+      description,
+      color: hexInt,
+      fields: fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline })),
+      timestamp: new Date().toISOString(),
+    };
+
+    if (authorName.trim()) {
+      embedPayload.author = { name: authorName };
+    }
+
+    if (!isPro) {
+      // Free plan embeds MUST strictly display the mandatory Darklin3 watermark
+      embedPayload.footer = { text: "⚡ Alert powered by Darklin3 Bot" };
+    } else {
+      if (footerMode === "custom" && customFooterText.trim()) {
+        embedPayload.footer = { text: customFooterText, icon_url: customFooterIcon || undefined };
+      } else if (footerMode === "global") {
+        const text = globalSettings?.branding?.customBrandingEnabled && globalSettings?.branding?.defaultFooterText
+          ? globalSettings.branding.defaultFooterText
+          : "⚡ Alert powered by Darklin3 Bot";
+        const icon = globalSettings?.branding?.customBrandingEnabled && globalSettings?.branding?.defaultFooterIconUrl
+          ? globalSettings.branding.defaultFooterIconUrl
+          : undefined;
+        embedPayload.footer = { text, icon_url: icon };
+      }
+      // If footerMode === "none" on PRO, embedPayload.footer is completely omitted
+    }
+
+    try {
+      const res = await publishEmbedToDiscordAction(tenantId, guildId, channelId, embedPayload);
+      if (res.ok) {
+        setPublishFeedback({ type: "success", message: "Embed published directly to Discord successfully!" });
+      } else {
+        setPublishFeedback({ type: "error", message: res.error || "Failed to publish embed to Discord." });
+      }
+    } catch {
+      setPublishFeedback({ type: "error", message: "Network error publishing embed." });
+    } finally {
+      setPublishing(false);
+    }
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Visual Embed Builder</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Craft rich Discord announcement embeds with formatted fields, custom brand colors, and instant previews.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button onClick={handleSend} className="gap-2 shadow-xs">
+    <div className="space-y-6 max-w-5xl pb-12">
+      <PageHeader
+        category="Visual Messaging"
+        title="Visual Embed Builder"
+        description="Craft rich Discord announcement embeds with formatted fields, custom brand colors, and instant previews."
+        backHref={`/tenants/${tenantId}/guilds/${guildId}`}
+        backLabel="Server Overview"
+        actions={
+          <Button onClick={handleSend} disabled={publishing} size="sm" className="gap-2 shadow-2xs h-9 cursor-pointer">
             <Send className="h-4 w-4" />
-            <span>Publish to Discord</span>
+            <span>{publishing ? "Publishing..." : "Publish to Discord"}</span>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {saved && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Embed announcement dispatched to Discord channel!</span>
-        </div>
+      {publishFeedback && (
+        <FeedbackBanner
+          type={publishFeedback.type}
+          message={publishFeedback.message}
+          onDismiss={() => setPublishFeedback(null)}
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Editor Form Column (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <Card className="border-border">
+          <Card className="border-border/80 shadow-2xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base font-semibold">
                 Embed Content Configuration
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Destination Channel</Label>
-                <Input
-                  value={channel}
-                  onChange={(e) => setChannel(e.target.value)}
-                  placeholder="#announcements"
-                  className="text-xs font-mono"
-                />
+                {liveChannels.length > 0 ? (
+                  <SearchableSelect
+                    options={channelOptions}
+                    value={channelId}
+                    onChange={(val) => setChannelId(val)}
+                    placeholder="Select a destination channel..."
+                    searchPlaceholder="Search channel (e.g. announcements)..."
+                    emptyMessage="No Discord channels match your search"
+                  />
+                ) : (
+                  <Input
+                    value={channelId}
+                    onChange={(e) => setChannelId(e.target.value)}
+                    placeholder="Enter channel ID..."
+                    className="text-xs font-mono"
+                  />
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -244,18 +363,187 @@ export function EmbedsView({ tenantId: _tenantId, guildId: _guildId, currentPlan
           {/* Footer Configuration */}
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Footer & Timestamp</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <span>Footer &amp; Timestamp</span>
+                  {footerMode === "global" && (
+                    <Badge variant="outline" className="text-[10px] font-mono border-primary/40 text-primary bg-primary/10">
+                      GLOBAL INHERITED
+                    </Badge>
+                  )}
+                </CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Footer Mode Switcher */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Footer Text</Label>
-                <Input
-                  value={footerText}
-                  onChange={(e) => setFooterText(e.target.value)}
-                  placeholder="Footer caption"
-                  className="text-xs"
-                />
+                <Label className="text-xs font-semibold">Footer Branding Source</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFooterMode("global")}
+                    className={`p-2.5 rounded-lg border text-xs text-left transition-all flex flex-col gap-1 cursor-pointer ${
+                      footerMode === "global"
+                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                        : "border-border/80 text-muted-foreground hover:text-foreground bg-card hover:bg-muted/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Globe className="h-3.5 w-3.5" />
+                      <span>Global Default</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">Server Settings</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFooterMode("custom")}
+                    className={`p-2.5 rounded-lg border text-xs text-left transition-all flex flex-col gap-1 cursor-pointer ${
+                      footerMode === "custom"
+                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                        : "border-border/80 text-muted-foreground hover:text-foreground bg-card hover:bg-muted/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span>Custom Footer</span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] font-mono border-amber-500/40 text-amber-500 bg-amber-500/10 px-1 py-0 h-4">
+                        PRO
+                      </Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">Per-Embed Override</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFooterMode("none")}
+                    className={`p-2.5 rounded-lg border text-xs text-left transition-all flex flex-col gap-1 cursor-pointer ${
+                      footerMode === "none"
+                        ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
+                        : "border-border/80 text-muted-foreground hover:text-foreground bg-card hover:bg-muted/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span>No Footer</span>
+                      <Badge variant="outline" className="text-[9px] font-mono border-amber-500/40 text-amber-500 bg-amber-500/10 px-1 py-0 h-4">
+                        PRO
+                      </Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">Clean / Minimal</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Mode: Global Default */}
+              {footerMode === "global" && (
+                <div className="rounded-lg border border-border/80 bg-muted/30 p-3 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground font-semibold">Active Server Footer:</span>
+                    {isPro ? (
+                      <Link
+                        href={`/tenants/${tenantId}/guilds/${guildId}/settings`}
+                        className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                      >
+                        <span>Edit in Server Settings</span>
+                      </Link>
+                    ) : (
+                      <Badge variant="outline" className="text-[9px] font-mono text-muted-foreground">
+                        FREE TIER
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-2 rounded-md bg-background border border-border/60 font-mono text-[11px] text-foreground truncate">
+                    {resolvedFooterText}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    {isPro
+                      ? "Modifying your Server Settings updates this footer across all your bot's embeds automatically."
+                      : "Free tier embeds automatically feature the official Darklin3 watermark. Upgrade to PRO to enable white-labeling."}
+                  </p>
+                </div>
+              )}
+
+              {/* Mode: Custom Footer */}
+              {footerMode === "custom" && (
+                <>
+                  {!isPro ? (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs space-y-3">
+                      <div className="flex items-center gap-2 font-semibold text-amber-500">
+                        <Lock className="h-4 w-4 shrink-0 text-amber-500" />
+                        <span>Custom Footer Locked (PRO Only)</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Customizing per-embed footer text or adding custom brand logos requires an active <strong>Darklin3 PRO</strong> subscription. Free embeds retain the official Darklin3 watermark.
+                      </p>
+                      <Button
+                        size="sm"
+                        className="w-full text-xs bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-xs cursor-pointer"
+                        asChild
+                      >
+                        <Link href={`/tenants/${tenantId}/billing`}>Upgrade to Darklin3 PRO &rarr;</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="custom-footer-text" className="text-xs font-semibold">
+                          Custom Footer Text
+                        </Label>
+                        <Input
+                          id="custom-footer-text"
+                          value={customFooterText}
+                          onChange={(e) => setCustomFooterText(e.target.value)}
+                          placeholder="Specific footer for this announcement"
+                          className="text-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="custom-footer-icon" className="text-xs font-semibold">
+                          Custom Footer Icon URL (Optional)
+                        </Label>
+                        <Input
+                          id="custom-footer-icon"
+                          value={customFooterIcon}
+                          onChange={(e) => setCustomFooterIcon(e.target.value)}
+                          placeholder="https://example.com/logo.png"
+                          className="text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Mode: None */}
+              {footerMode === "none" && (
+                <>
+                  {!isPro ? (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs space-y-3">
+                      <div className="flex items-center gap-2 font-semibold text-amber-500">
+                        <Lock className="h-4 w-4 shrink-0 text-amber-500" />
+                        <span>Watermark Removal Locked (PRO Only)</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Complete watermark removal is exclusive to <strong>Darklin3 PRO</strong>. On the Free tier, embeds will continue to show the standard Darklin3 watermark.
+                      </p>
+                      <Button
+                        size="sm"
+                        className="w-full text-xs bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-xs cursor-pointer"
+                        asChild
+                      >
+                        <Link href={`/tenants/${tenantId}/billing`}>Upgrade to Darklin3 PRO &rarr;</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-border/80 bg-muted/40 p-3 text-xs text-muted-foreground">
+                      <span>Footer is completely disabled for this embed. The output on Discord will be clean and minimal.</span>
+                    </div>
+                  )}
+                </>
+              )}
 
               <Separator />
 
@@ -269,78 +557,31 @@ export function EmbedsView({ tenantId: _tenantId, guildId: _guildId, currentPlan
 
         {/* Live Discord Embed Preview Column (5 cols) */}
         <div className="lg:col-span-5 sticky top-6">
-          <Card className="border-border shadow-md bg-card/40">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Live Discord Message Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              {/* Message Container */}
-              <div className="rounded-xl border border-border/80 bg-background/95 p-4 space-y-3 font-sans">
-                {/* Bot Header */}
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0">
-                    C
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-foreground">CreatorBot</span>
-                      <Badge variant="secondary" className="text-[9px] px-1 py-0 font-bold">
-                        BOT
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground font-mono">Today at 12:00 PM</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Discord Embed Element */}
-                <div
-                  className="rounded-md border-l-4 bg-muted/30 p-3.5 space-y-2.5 text-xs"
-                  style={{ borderLeftColor: color }}
-                >
-                  {authorName && (
-                    <span className="text-[11px] font-semibold text-foreground/80 block">
-                      {authorName}
-                    </span>
-                  )}
-
-                  {title && (
-                    <h3 className="text-sm font-bold text-foreground leading-snug">
-                      {title}
-                    </h3>
-                  )}
-
-                  {description && (
-                    <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                      {description}
-                    </p>
-                  )}
-
-                  {/* Embed Fields Grid */}
-                  {fields.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2.5 pt-1">
-                      {fields.map((f) => (
-                        <div key={f.id} className={f.inline ? "col-span-1" : "col-span-2"}>
-                          <span className="text-[11px] font-bold text-foreground block">{f.name}</span>
-                          <span className="text-muted-foreground">{f.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Footer */}
-                  {(footerText || includeTimestamp) && (
-                    <div className="flex items-center gap-1.5 pt-2 text-[10px] text-muted-foreground font-mono border-t border-border/50">
-                      {footerText && <span>{footerText}</span>}
-                      {footerText && includeTimestamp && <span>•</span>}
-                      {includeTimestamp && <span>Today at 12:00 PM</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <DiscordChatPreview
+            channelName={liveChannels.find((c) => c.id === channelId)?.name || "announcements"}
+            botName="Darklin3 Bot"
+            headerRightSlot={
+              <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
+                LIVE EMBED BUILDER
+              </Badge>
+            }
+            embed={{
+              color: color,
+              author: authorName ? { name: authorName } : undefined,
+              title: title,
+              description: description,
+              fields: fields.map((f) => ({
+                name: f.name,
+                value: f.value,
+                inline: f.inline,
+              })),
+              footer: {
+                text: resolvedFooterText || null,
+                iconUrl: resolvedFooterIcon || null,
+              },
+              timestamp: includeTimestamp,
+            }}
+          />
         </div>
       </div>
     </div>

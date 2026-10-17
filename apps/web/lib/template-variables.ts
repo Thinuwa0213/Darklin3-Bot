@@ -53,6 +53,99 @@ export const WELCOME_VARIABLES: TemplateVariable[] = TEMPLATE_VARIABLES.filter((
   ["{user}", "{user.name}", "{server}", "{memberCount}"].includes(v.token),
 );
 
+export const STREAM_ALERT_VARIABLES: TemplateVariable[] = [
+  {
+    token: "{streamer}",
+    label: "Streamer Name",
+    description: "The name of the streamer or channel",
+    example: "CreatorPulse",
+    category: "user",
+  },
+  {
+    token: "{role}",
+    label: "Mention Role",
+    description: "The ping role configured for this alert",
+    example: "@everyone",
+    category: "user",
+  },
+  {
+    token: "{url}",
+    label: "Stream Link",
+    description: "Direct link to the live stream",
+    example: "https://youtube.com/watch?v=...",
+    category: "misc",
+  },
+  {
+    token: "{game}",
+    label: "Game / Category",
+    description: "Current game or category being streamed",
+    example: "VALORANT",
+    category: "misc",
+  },
+];
+
+export const VIDEO_UPLOAD_VARIABLES: TemplateVariable[] = [
+  {
+    token: "{streamer}",
+    label: "Creator Name",
+    description: "The name of the video creator",
+    example: "CreatorPulse",
+    category: "user",
+  },
+  {
+    token: "{title}",
+    label: "Video Title",
+    description: "The title of the newly uploaded video",
+    example: "Euro Truck Simulator 2 New Mods",
+    category: "misc",
+  },
+  {
+    token: "{url}",
+    label: "Video Link",
+    description: "Direct link to the uploaded video",
+    example: "https://youtube.com/watch?v=...",
+    category: "misc",
+  },
+  {
+    token: "{role}",
+    label: "Mention Role",
+    description: "The ping role configured for this alert",
+    example: "@everyone",
+    category: "user",
+  },
+];
+
+export const RADAR_VARIABLES: TemplateVariable[] = [
+  {
+    token: "{member}",
+    label: "Member Name",
+    description: "The Discord username or server display name",
+    example: "StreamerSLRP",
+    category: "user",
+  },
+  {
+    token: "{game}",
+    label: "Game Title",
+    description: "The game being streamed on Discord",
+    example: "Grand Theft Auto V",
+    category: "misc",
+  },
+  {
+    token: "{keyword}",
+    label: "Matched Tag",
+    description: "The matched community keyword or tag",
+    example: "[SLRP]",
+    category: "misc",
+  },
+  {
+    token: "{url}",
+    label: "Stream Link",
+    description: "The link to the member's stream",
+    example: "https://twitch.tv/streamerslrp",
+    category: "misc",
+  },
+];
+
 /**
  * Replaces standard placeholders in a string with sample preview data.
  */

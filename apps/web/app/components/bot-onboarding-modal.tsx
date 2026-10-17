@@ -292,8 +292,35 @@ export function BotOnboardingModal({
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end">
-                <Button size="sm" onClick={() => setStep(2)} className="gap-1.5">
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-border/60">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isPending}
+                  onClick={async () => {
+                    setError(null);
+                    startTransition(async () => {
+                      let activeTenantId = guild.tenantId;
+                      if (!guild.connected || !activeTenantId) {
+                        const connectRes = await connectGuildAction(guild.id);
+                        if (!connectRes.ok || !connectRes.tenantId) {
+                          setError(connectRes.error ?? "Failed to connect Discord server");
+                          return;
+                        }
+                        activeTenantId = connectRes.tenantId;
+                      }
+                      onOpenChange(false);
+                      router.push(`/tenants/${activeTenantId}/guilds/${guild.id}`);
+                      router.refresh();
+                    });
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Skip bot setup for now (Connect only)
+                </Button>
+
+                <Button size="sm" onClick={() => setStep(2)} className="gap-1.5 font-semibold">
                   <span>Next: Configure Bot & Intents</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>

@@ -74,6 +74,7 @@ export function createApp(options: CreateAppOptions): Hono {
         auth: options.auth,
         discordGuildProvider: options.discordGuildProvider,
         webAppOrigin: options.webAppOrigin,
+        logger: options.logger,
       }),
     );
   }

@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 import { callApiServer, getServerSession } from "../../lib/api";
 import { type GuildItem } from "../components/guild-card";
 import { GuildsCommandDeck } from "./guilds-command-deck";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserMenu } from "@/components/layout/user-menu";
+import { GlobalHeader } from "@/components/layout/global-header";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Server, AlertCircle } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
+import { ArrowLeft, Server, AlertCircle, RefreshCw } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +29,17 @@ export default async function GuildsPage() {
           <p id="guilds-error-message" className="text-sm text-destructive mt-1">
             Failed to load manageable guilds: {res.error ?? "Access denied or Discord unavailable"}
           </p>
-          <div className="mt-6 pt-4 border-t border-destructive/15">
+          <div className="mt-6 pt-4 border-t border-destructive/15 flex items-center justify-between gap-3">
             <Button variant="outline" size="sm" asChild>
               <a href="/" className="flex items-center gap-1.5">
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Home</span>
+              </a>
+            </Button>
+            <Button variant="default" size="sm" asChild>
+              <a href="/guilds" className="flex items-center gap-1.5">
+                <RefreshCw className="h-4 w-4" />
+                <span>Try Again</span>
               </a>
             </Button>
           </div>
@@ -46,48 +52,17 @@ export default async function GuildsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 sm:px-8 backdrop-blur-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-black text-sm">
-            C
-          </div>
-          <span className="font-bold text-base tracking-tight">CreatorCore</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <UserMenu user={session.user} />
-        </div>
-      </header>
+      <GlobalHeader user={session.user} />
 
       <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-border/80">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Control Plane Hub
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Server Command Deck
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your authoritative Discord servers, active bot instances, and tenant configurations.
-            </p>
-          </div>
-
-          <Button variant="outline" size="sm" asChild className="self-start sm:self-center shadow-2xs">
-            <a
-              href="/"
-              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Home</span>
-            </a>
-          </Button>
-        </div>
+        <PageHeader
+          category="Control Plane Hub"
+          title="Server Command Deck"
+          description="Manage your authoritative Discord servers, active bot instances, and tenant configurations."
+          backHref="/"
+          backLabel="Back to Home"
+        />
 
         {/* Content Area */}
         {guilds.length === 0 ? (

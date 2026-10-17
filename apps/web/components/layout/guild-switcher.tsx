@@ -19,7 +19,8 @@ export interface ConnectedGuildItem {
   id: string;
   name: string;
   connected: boolean;
-  tenantId?: string;
+  tenantId?: string | undefined;
+  icon?: string | null | undefined;
 }
 
 interface GuildSwitcherProps {
@@ -27,19 +28,33 @@ interface GuildSwitcherProps {
     id: string;
     tenantId: string;
     name?: string | undefined;
+    icon?: string | null | undefined;
   };
   connectedGuilds: ConnectedGuildItem[];
+}
+
+function getGuildIconUrl(guildId: string, iconHash?: string | null): string | null {
+  if (!iconHash) return null;
+  const isAnimated = iconHash.startsWith("a_");
+  const ext = isAnimated ? "gif" : "webp";
+  return `https://cdn.discordapp.com/icons/${guildId}/${iconHash}.${ext}?size=128`;
 }
 
 export function GuildSwitcher({ currentGuild, connectedGuilds }: GuildSwitcherProps) {
   const router = useRouter();
   const { state, isMobile } = useSidebar();
+  const [imageError, setImageError] = React.useState(false);
 
   // Active guild name or fallback
   const activeGuildName =
     currentGuild.name ??
     connectedGuilds.find((g) => g.id === currentGuild.id)?.name ??
     `Guild ${currentGuild.id.slice(0, 6)}...`;
+
+  const activeGuildIconUrl = getGuildIconUrl(
+    currentGuild.id,
+    currentGuild.icon ?? connectedGuilds.find((g) => g.id === currentGuild.id)?.icon,
+  );
 
   const initials = activeGuildName
     .split(" ")
@@ -63,10 +78,20 @@ export function GuildSwitcher({ currentGuild, connectedGuilds }: GuildSwitcherPr
         )}
         aria-label="Switch Discord Server"
       >
-        <Avatar className="h-8 w-8 shrink-0 rounded-md border border-sidebar-border">
-          <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs rounded-md">
-            {initials}
-          </AvatarFallback>
+        <Avatar className="h-8 w-8 shrink-0 rounded-md border border-sidebar-border overflow-hidden bg-secondary">
+          {activeGuildIconUrl && !imageError ? (
+            <img
+              src={activeGuildIconUrl}
+              alt={activeGuildName}
+              referrerPolicy="no-referrer"
+              className="h-full w-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs rounded-md">
+              {initials}
+            </AvatarFallback>
+          )}
         </Avatar>
 
         {(state === "expanded" || isMobile) && (
@@ -97,24 +122,45 @@ export function GuildSwitcher({ currentGuild, connectedGuilds }: GuildSwitcherPr
         {/* Current active guild */}
         <DropdownMenuItem className="flex items-center justify-between font-semibold bg-sidebar-accent text-sidebar-accent-foreground">
           <div className="flex items-center gap-2 truncate">
-            <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
+            {activeGuildIconUrl && !imageError ? (
+              <img
+                src={activeGuildIconUrl}
+                alt={activeGuildName}
+                referrerPolicy="no-referrer"
+                className="h-4 w-4 rounded-xs object-cover shrink-0"
+              />
+            ) : (
+              <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
+            )}
             <span className="truncate">{activeGuildName}</span>
           </div>
           <Check className="h-4 w-4 shrink-0 text-primary" />
         </DropdownMenuItem>
 
         {/* Other connected guilds */}
-        {otherConnectedGuilds.map((guild) => (
-          <DropdownMenuItem
-            key={guild.id}
-            id={`switch-to-guild-${guild.id}`}
-            onClick={() => router.push(`/tenants/${guild.tenantId}/guilds/${guild.id}`)}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate">{guild.name}</span>
-          </DropdownMenuItem>
-        ))}
+        {otherConnectedGuilds.map((guild) => {
+          const otherIconUrl = getGuildIconUrl(guild.id, guild.icon);
+          return (
+            <DropdownMenuItem
+              key={guild.id}
+              id={`switch-to-guild-${guild.id}`}
+              onClick={() => router.push(`/tenants/${guild.tenantId}/guilds/${guild.id}`)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              {otherIconUrl ? (
+                <img
+                  src={otherIconUrl}
+                  alt={guild.name}
+                  referrerPolicy="no-referrer"
+                  className="h-4 w-4 rounded-xs object-cover shrink-0"
+                />
+              ) : (
+                <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
+              <span className="truncate">{guild.name}</span>
+            </DropdownMenuItem>
+          );
+        })}
 
         <DropdownMenuSeparator />
 

@@ -261,3 +261,23 @@ export async function listActiveAssignmentsForWorker(
       ),
     );
 }
+
+/**
+ * Forcibly marks any active worker assignment for a bot application as RELEASED.
+ * Used when a server administrator pauses or restarts their bot.
+ */
+export async function releaseAnyAssignmentForBotApplication(
+  db: Db,
+  botApplicationId: string,
+): Promise<{ ok: boolean }> {
+  const result = await db
+    .update(workerAssignments)
+    .set({ status: "RELEASED", releasedAt: sql`now()` })
+    .where(
+      and(
+        eq(workerAssignments.botApplicationId, botApplicationId),
+        eq(workerAssignments.status, "ACTIVE"),
+      ),
+    );
+  return { ok: result[0].affectedRows > 0 };
+}

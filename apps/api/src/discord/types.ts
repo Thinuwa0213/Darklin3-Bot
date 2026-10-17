@@ -11,8 +11,8 @@ export interface ManageableGuild {
 }
 
 export class DiscordUnavailableError extends Error {
-  constructor(message = "Discord API unavailable") {
-    super(message);
+  constructor(message = "Discord API unavailable", options?: ErrorOptions) {
+    super(message, options);
     this.name = "DiscordUnavailableError";
   }
 }

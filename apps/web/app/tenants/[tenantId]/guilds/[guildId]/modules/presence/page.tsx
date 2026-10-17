@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { callApiServer, getServerSession } from "../../../../../../../lib/api";
 import { readStoredPresence } from "../../../../../../../lib/presence-storage";
+import { getGuildBotBranding } from "../../../../../../../lib/bot-branding";
 import { PresenceView } from "./presence-view";
 
 export const dynamic = "force-dynamic";
@@ -20,17 +21,11 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
   const { tenantId, guildId } = await params;
 
-  const [subRes, statusRes, presenceRes] = await Promise.all([
+  const [subRes, branding, presenceRes, directStored] = await Promise.all([
     callApiServer<{ plan: "FREE" | "PRO" | "ENTERPRISE" }>(
       `/app/tenants/${encodeURIComponent(tenantId)}/subscription`,
     ),
-    callApiServer<{
-      status: string;
-      botApplicationId: string | null;
-      botName?: string | null;
-    }>(
-      `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/runtime-status`,
-    ),
+    getGuildBotBranding(tenantId, guildId, "Darklin3 Bot"),
     callApiServer<{
       statusMode: "online" | "idle" | "dnd";
       rotationInterval: number;
@@ -43,18 +38,17 @@ export default async function PresencePage({ params }: PresencePageProps) {
     }>(
       `/app/tenants/${encodeURIComponent(tenantId)}/guilds/${encodeURIComponent(guildId)}/presence`,
     ),
+    readStoredPresence(tenantId, guildId),
   ]);
 
   const currentPlan = subRes.ok && subRes.data ? subRes.data.plan : "FREE";
-  const botName = statusRes.ok && statusRes.data?.botName ? statusRes.data.botName : "CreatorBot";
+  const botName = branding.botName;
+  const botAvatarUrl = branding.botAvatarUrl;
 
   let presenceData = presenceRes.ok && presenceRes.data ? presenceRes.data : null;
 
-  if (!presenceData) {
-    const directStored = await readStoredPresence(tenantId, guildId);
-    if (directStored) {
-      presenceData = directStored;
-    }
+  if (!presenceData && directStored) {
+    presenceData = directStored;
   }
 
   if (!presenceData) {
@@ -71,6 +65,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
       guildId={guildId}
       currentPlan={currentPlan}
       botName={botName}
+      botAvatarUrl={botAvatarUrl}
       initialActivities={presenceData.activities ?? []}
       initialStatusMode={presenceData.statusMode ?? "online"}
       initialRotationInterval={presenceData.rotationInterval ?? 60}

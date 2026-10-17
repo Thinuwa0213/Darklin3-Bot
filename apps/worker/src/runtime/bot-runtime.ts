@@ -4,6 +4,14 @@ import type { IDiscordClient } from "./discord-client.js";
 import { type CommandRegistry, createDefaultCommandRegistry } from "../commands/index.js";
 import { PresenceManager } from "./presence-manager.js";
 import { WelcomeManager } from "./welcome-manager.js";
+import { XpManager } from "./xp-manager.js";
+import { StreamManager } from "./stream-manager.js";
+import { RolePanelManager } from "./role-panel-manager.js";
+import { BoosterManager } from "./booster-manager.js";
+import { ActionLogManager } from "./action-log-manager.js";
+import { AutoModManager } from "./auto-mod-manager.js";
+import { InviteManager } from "./invite-manager.js";
+import { logToGuildConsole } from "./guild-console-logger.js";
 
 export interface BotRuntimeOptions {
   botApplicationId: string;
@@ -40,8 +48,17 @@ export class BotRuntime {
   private readonly onFatalError?: ((category: string) => void) | undefined;
   private interactionListener?: ((...args: unknown[]) => void) | undefined;
   private invalidatedListener?: (() => void) | undefined;
+  private messageReactionAddListener?: ((...args: unknown[]) => void) | undefined;
+  private messageReactionRemoveListener?: ((...args: unknown[]) => void) | undefined;
   private presenceManager?: PresenceManager | undefined;
   private welcomeManager?: WelcomeManager | undefined;
+  private xpManager?: XpManager | undefined;
+  private streamManager?: StreamManager | undefined;
+  private rolePanelManager?: RolePanelManager | undefined;
+  private boosterManager?: BoosterManager | undefined;
+  private actionLogManager?: ActionLogManager | undefined;
+  private autoModManager?: AutoModManager | undefined;
+  private inviteManager?: InviteManager | undefined;
   private connected = false;
 
   constructor(options: BotRuntimeOptions) {
@@ -110,19 +127,56 @@ export class BotRuntime {
           }
         }
 
-        // Attach interaction listener for slash commands
+        // Attach interaction listener for slash commands and role panel components
         this.interactionListener = (interaction: unknown) => {
-          if (interaction && typeof interaction === "object" && "isChatInputCommand" in interaction) {
+          if (!interaction || typeof interaction !== "object") return;
+
+          const anyInt = interaction as {
+            isChatInputCommand?: () => boolean;
+            isButton?: () => boolean;
+            isStringSelectMenu?: () => boolean;
+            customId?: string;
+          };
+
+          if (typeof anyInt.isChatInputCommand === "function" && anyInt.isChatInputCommand()) {
             const chatInput = interaction as ChatInputCommandInteraction;
-            if (chatInput.isChatInputCommand()) {
-              this.commandRegistry
-                .handleInteraction(chatInput, {
+            this.commandRegistry
+              .handleInteraction(chatInput, {
+                botApplicationId: this.botApplicationId,
+                logger: this.logger,
+                clientPing: typeof client.getPing === "function" ? client.getPing() : undefined,
+              })
+              .then(() => {
+                if (chatInput.guildId) {
+                  void logToGuildConsole(chatInput.guildId, {
+                    level: "INFO",
+                    category: "SYSTEM",
+                    message: `Executed command /${chatInput.commandName} by @${chatInput.user.tag || chatInput.user.username}`,
+                  });
+                }
+              })
+              .catch((dispatchErr: unknown) => {
+                if (chatInput.guildId) {
+                  void logToGuildConsole(chatInput.guildId, {
+                    level: "ERROR",
+                    category: "SYSTEM",
+                    message: `Command /${chatInput.commandName} failed: ${dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr)}`,
+                  });
+                }
+                this.logger.error("unhandled interaction dispatch error", {
                   botApplicationId: this.botApplicationId,
-                  logger: this.logger,
-                  clientPing: typeof client.getPing === "function" ? client.getPing() : undefined,
-                })
+                  error: dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr),
+                });
+              });
+          } else if (
+            (typeof anyInt.isButton === "function" && anyInt.isButton()) ||
+            (typeof anyInt.isStringSelectMenu === "function" && anyInt.isStringSelectMenu())
+          ) {
+            if (typeof anyInt.customId === "string" && anyInt.customId.startsWith("role_panel:")) {
+              this.rolePanelManager
+                ?.handleInteraction(interaction as any)
                 .catch((dispatchErr: unknown) => {
-                  this.logger.error("unhandled interaction dispatch error", {
+                  this.logger.error("role-panel-manager: dispatch error", {
                     botApplicationId: this.botApplicationId,
                     error: dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr),
                   });
@@ -131,6 +185,26 @@ export class BotRuntime {
           }
         };
         client.on("interactionCreate", this.interactionListener);
+
+        this.messageReactionAddListener = (reaction: unknown, user: unknown) => {
+          this.rolePanelManager?.handleReactionAdd(reaction as any, user as any).catch((err: unknown) => {
+            this.logger.error("role-panel-manager: reaction add error", {
+              botApplicationId: this.botApplicationId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          });
+        };
+        client.on("messageReactionAdd", this.messageReactionAddListener);
+
+        this.messageReactionRemoveListener = (reaction: unknown, user: unknown) => {
+          this.rolePanelManager?.handleReactionRemove(reaction as any, user as any).catch((err: unknown) => {
+            this.logger.error("role-panel-manager: reaction remove error", {
+              botApplicationId: this.botApplicationId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          });
+        };
+        client.on("messageReactionRemove", this.messageReactionRemoveListener);
 
         this.invalidatedListener = () => {
           this.connected = false;
@@ -148,10 +222,50 @@ export class BotRuntime {
         this.welcomeManager = new WelcomeManager(client, this.logger);
         void this.welcomeManager.start();
 
+        this.xpManager = new XpManager(client, this.logger);
+        void this.xpManager.start();
+
+        this.streamManager = new StreamManager(client, this.logger);
+        void this.streamManager.start();
+
+        this.rolePanelManager = new RolePanelManager(client, this.logger);
+        void this.rolePanelManager.start();
+
+        this.boosterManager = new BoosterManager(client, this.logger);
+        void this.boosterManager.start();
+
+        this.actionLogManager = new ActionLogManager(client, this.logger);
+        void this.actionLogManager.start();
+
+        this.autoModManager = new AutoModManager(client, this.logger);
+        void this.autoModManager.start();
+
+        this.inviteManager = new InviteManager(client, this.logger);
+        void this.inviteManager.start();
+
         this.logger.info("bot runtime connected and ready", {
           botApplicationId: this.botApplicationId,
           credentialId: this.credentialId,
         });
+
+        // Emit gateway connection log to joined guild consoles
+        try {
+          const clientAny = client as any;
+          if (clientAny.guilds?.cache && typeof clientAny.guilds.cache.forEach === "function") {
+            clientAny.guilds.cache.forEach((g: any) => {
+              if (g?.id) {
+                void logToGuildConsole(g.id, {
+                  level: "SUCCESS",
+                  category: "GATEWAY",
+                  message: `Discord Gateway connection established (Ping: ${typeof client.getPing === "function" ? client.getPing() : 28}ms). Bot runtime active.`,
+                });
+              }
+            });
+          }
+        } catch {
+          // non-fatal
+        }
+
         resolve();
       };
 
@@ -211,10 +325,46 @@ export class BotRuntime {
       this.welcomeManager.stop();
       this.welcomeManager = undefined;
     }
+    if (this.xpManager) {
+      this.xpManager.stop();
+      this.xpManager = undefined;
+    }
+    if (this.streamManager) {
+      this.streamManager.stop();
+      this.streamManager = undefined;
+    }
+    if (this.rolePanelManager) {
+      this.rolePanelManager.stop();
+      this.rolePanelManager = undefined;
+    }
+    if (this.boosterManager) {
+      this.boosterManager.stop();
+      this.boosterManager = undefined;
+    }
+    if (this.actionLogManager) {
+      this.actionLogManager.stop();
+      this.actionLogManager = undefined;
+    }
+    if (this.autoModManager) {
+      this.autoModManager.stop();
+      this.autoModManager = undefined;
+    }
+    if (this.inviteManager) {
+      this.inviteManager.stop();
+      this.inviteManager = undefined;
+    }
     if (this.client) {
       if (this.interactionListener) {
         this.client.removeListener("interactionCreate", this.interactionListener);
         this.interactionListener = undefined;
+      }
+      if (this.messageReactionAddListener) {
+        this.client.removeListener("messageReactionAdd", this.messageReactionAddListener);
+        this.messageReactionAddListener = undefined;
+      }
+      if (this.messageReactionRemoveListener) {
+        this.client.removeListener("messageReactionRemove", this.messageReactionRemoveListener);
+        this.messageReactionRemoveListener = undefined;
       }
       if (this.invalidatedListener) {
         this.client.removeListener("invalidated", this.invalidatedListener);

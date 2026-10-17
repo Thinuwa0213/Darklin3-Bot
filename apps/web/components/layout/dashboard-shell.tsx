@@ -11,6 +11,7 @@ interface DashboardShellProps {
     id: string;
     tenantId: string;
     name?: string | undefined;
+    icon?: string | null | undefined;
   };
   connectedGuilds: ConnectedGuildItem[];
   user: {

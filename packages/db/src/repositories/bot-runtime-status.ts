@@ -121,3 +121,46 @@ export async function findRuntimeStatusForTenantBotApplication(
 
   return row;
 }
+
+/**
+ * Updates or sets the bot runtime state directly from the control plane
+ * (e.g., user-initiated STOPPED/PAUSED or STARTING state).
+ */
+export async function setBotRuntimeState(
+  db: Db,
+  botApplicationId: string,
+  state: RuntimeState,
+  errorCategory?: string,
+): Promise<void> {
+  const [existing] = await db
+    .select({ workerId: botRuntimeStatus.workerId })
+    .from(botRuntimeStatus)
+    .where(eq(botRuntimeStatus.botApplicationId, botApplicationId));
+
+  if (existing) {
+    await db
+      .update(botRuntimeStatus)
+      .set({
+        state,
+        errorCategory: errorCategory ?? null,
+        lastSeenAt: sql`now()`,
+      })
+      .where(eq(botRuntimeStatus.botApplicationId, botApplicationId));
+    return;
+  }
+
+  const [assignment] = await db
+    .select({ workerId: workerAssignments.workerId })
+    .from(workerAssignments)
+    .where(eq(workerAssignments.botApplicationId, botApplicationId));
+
+  if (assignment?.workerId) {
+    await db.insert(botRuntimeStatus).values({
+      botApplicationId,
+      workerId: assignment.workerId,
+      state,
+      errorCategory: errorCategory ?? null,
+      lastSeenAt: sql`now()`,
+    });
+  }
+}

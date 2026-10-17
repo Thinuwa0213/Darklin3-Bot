@@ -12,7 +12,6 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { connectGuildAction } from "../actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BotOnboardingModal } from "./bot-onboarding-modal";
@@ -25,6 +24,7 @@ export interface GuildItem {
   icon?: string | null;
   owner?: boolean;
   botName?: string | null;
+  botConfigured?: boolean;
 }
 
 function getGuildInitials(name: string): string {
@@ -52,34 +52,21 @@ export function GuildCard({
   viewMode?: "grid" | "table";
 }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
 
   const iconUrl = getGuildIconUrl(guild.id, guild.icon);
 
+  const isConfigured = guild.connected && Boolean(guild.botConfigured || guild.botName);
+  const isPartiallyConfigured = guild.connected && !isConfigured;
+
   const copySnowflake = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(guild.id);
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 1500);
-  };
-
-  const handleConnect = async (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setLoading(true);
-    setError(null);
-
-    const res = await connectGuildAction(guild.id);
-    if (!res.ok || !res.tenantId) {
-      setError(res.error ?? "Failed to connect guild");
-      setLoading(false);
-      return;
-    }
-
-    router.push(`/tenants/${res.tenantId}/guilds/${guild.id}`);
   };
 
   // Dense Table Row View
@@ -142,59 +129,79 @@ export function GuildCard({
           )}
         </td>
         <td className="py-3 px-4">
-          <Badge
-            id={`guild-connection-badge-${guild.id}`}
-            variant={guild.connected ? "success" : "secondary"}
-            className="text-[11px] px-2 py-0"
-          >
-            {guild.connected ? "Connected" : "Not Connected"}
-          </Badge>
+          {isConfigured ? (
+            <Badge
+              id={`guild-connection-badge-${guild.id}`}
+              variant="success"
+              className="text-[11px] px-2 py-0"
+            >
+              Active
+            </Badge>
+          ) : isPartiallyConfigured ? (
+            <Badge
+              id={`guild-connection-badge-${guild.id}`}
+              className="text-[11px] px-2 py-0 bg-amber-500/15 text-amber-500 border border-amber-500/30 font-medium"
+            >
+              Needs Setup
+            </Badge>
+          ) : (
+            <Badge
+              id={`guild-connection-badge-${guild.id}`}
+              variant="secondary"
+              className="text-[11px] px-2 py-0"
+            >
+              Not Connected
+            </Badge>
+          )}
         </td>
         <td className="py-3 px-4 text-xs text-muted-foreground">
-          {guild.connected ? (
+          {isConfigured ? (
             <span className="flex items-center gap-1.5 font-medium text-foreground">
               <Bot className="h-3.5 w-3.5 text-primary" />
               <span>{guild.botName ?? "Active Bot"}</span>
             </span>
+          ) : isPartiallyConfigured ? (
+            <span className="text-amber-500/90 text-xs font-medium">Not Configured</span>
           ) : (
             <span className="text-muted-foreground/60">Unassigned</span>
           )}
         </td>
         <td className="py-3 px-4 text-right">
           <div className="flex items-center justify-end gap-2">
-            {!guild.connected && (
+            {isConfigured ? (
               <Button
-                variant="ghost"
+                id={`connect-guild-button-${guild.id}`}
+                onClick={() => router.push(`/tenants/${guild.tenantId}/guilds/${guild.id}`)}
+                variant="default"
                 size="sm"
+                className="h-8 text-xs font-medium flex items-center gap-1.5"
+              >
+                <span>Open Console</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            ) : isPartiallyConfigured ? (
+              <Button
+                id={`connect-guild-button-${guild.id}`}
                 onClick={() => setIsModalOpen(true)}
-                className="h-8 text-xs text-muted-foreground hover:text-foreground hidden sm:inline-flex items-center gap-1"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-medium flex items-center gap-1.5 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>Wizard</span>
+                <span>Configure Bot</span>
+              </Button>
+            ) : (
+              <Button
+                id={`connect-guild-button-${guild.id}`}
+                onClick={() => setIsModalOpen(true)}
+                variant="secondary"
+                size="sm"
+                className="h-8 text-xs font-medium flex items-center gap-1.5"
+              >
+                <Plug className="h-3.5 w-3.5" />
+                <span>Connect</span>
               </Button>
             )}
-            <Button
-              id={`connect-guild-button-${guild.id}`}
-              onClick={handleConnect}
-              disabled={loading}
-              variant={guild.connected ? "default" : "secondary"}
-              size="sm"
-              className="h-8 text-xs font-medium flex items-center gap-1.5"
-            >
-              {loading ? (
-                "Connecting..."
-              ) : guild.connected ? (
-                <>
-                  <span>Open Console</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </>
-              ) : (
-                <>
-                  <Plug className="h-3.5 w-3.5" />
-                  <span>Connect</span>
-                </>
-              )}
-            </Button>
           </div>
           {error && <div className="text-[11px] text-destructive mt-1 text-right">{error}</div>}
         </td>
@@ -213,7 +220,11 @@ export function GuildCard({
       {/* Subtle State Edge Indicator */}
       <div
         className={`absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r-full transition-colors ${
-          guild.connected ? "bg-emerald-500" : "bg-muted-foreground/20 group-hover:bg-muted-foreground/40"
+          isConfigured
+            ? "bg-emerald-500"
+            : isPartiallyConfigured
+              ? "bg-amber-500"
+              : "bg-muted-foreground/20 group-hover:bg-muted-foreground/40"
         }`}
       />
 
@@ -279,13 +290,21 @@ export function GuildCard({
         <div className="my-4 pt-3.5 border-t border-border/50 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium">Control Plane</span>
-            {guild.connected ? (
+            {isConfigured ? (
               <span className="flex items-center gap-1.5 font-medium text-emerald-500">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 <span>Active Console</span>
+              </span>
+            ) : isPartiallyConfigured ? (
+              <span className="flex items-center gap-1.5 font-medium text-amber-500">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span>Setup Required</span>
               </span>
             ) : (
               <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
@@ -297,10 +316,15 @@ export function GuildCard({
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium">Linked Bot</span>
-            {guild.connected ? (
+            {isConfigured ? (
               <span className="font-semibold text-foreground flex items-center gap-1 truncate max-w-[170px]">
                 <Bot className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="truncate">{guild.botName ?? "Active Instance"}</span>
+              </span>
+            ) : isPartiallyConfigured ? (
+              <span className="text-amber-500/90 text-[11px] font-medium flex items-center gap-1">
+                <Bot className="h-3.5 w-3.5 text-amber-500/70 shrink-0" />
+                <span>Not Configured</span>
               </span>
             ) : (
               <span className="text-muted-foreground/60 italic text-[11px]">No bot instance</span>
@@ -321,50 +345,66 @@ export function GuildCard({
         )}
 
         <div className="flex items-center justify-between gap-2">
-          <Badge
-            id={`guild-connection-badge-${guild.id}`}
-            variant={guild.connected ? "success" : "secondary"}
-            className="text-[10px] px-2 py-0 font-medium"
-          >
-            {guild.connected ? "Connected" : "Not Connected"}
-          </Badge>
+          {isConfigured ? (
+            <Badge
+              id={`guild-connection-badge-${guild.id}`}
+              variant="success"
+              className="text-[10px] px-2 py-0 font-medium"
+            >
+              Active
+            </Badge>
+          ) : isPartiallyConfigured ? (
+            <Badge
+              id={`guild-connection-badge-${guild.id}`}
+              className="text-[10px] px-2 py-0 font-medium bg-amber-500/15 text-amber-500 border border-amber-500/30"
+            >
+              Needs Setup
+            </Badge>
+          ) : (
+            <Badge
+              id={`guild-connection-badge-${guild.id}`}
+              variant="secondary"
+              className="text-[10px] px-2 py-0 font-medium"
+            >
+              Not Connected
+            </Badge>
+          )}
 
           <div className="flex items-center gap-1.5">
-            {!guild.connected && (
+            {isConfigured ? (
               <Button
-                variant="ghost"
+                id={`connect-guild-button-${guild.id}`}
+                onClick={() => router.push(`/tenants/${guild.tenantId}/guilds/${guild.id}`)}
+                variant="default"
                 size="sm"
+                className="h-8 px-3 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+              >
+                <span>Open Console</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            ) : isPartiallyConfigured ? (
+              <Button
+                id={`connect-guild-button-${guild.id}`}
                 onClick={() => setIsModalOpen(true)}
-                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                title="Launch setup wizard"
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs font-semibold flex items-center gap-1.5 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 shadow-xs"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Wizard</span>
+                <span>Configure Bot</span>
+              </Button>
+            ) : (
+              <Button
+                id={`connect-guild-button-${guild.id}`}
+                onClick={() => setIsModalOpen(true)}
+                variant="secondary"
+                size="sm"
+                className="h-8 px-3 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+              >
+                <Plug className="h-3.5 w-3.5" />
+                <span>Connect</span>
               </Button>
             )}
-
-            <Button
-              id={`connect-guild-button-${guild.id}`}
-              onClick={handleConnect}
-              disabled={loading}
-              variant={guild.connected ? "default" : "secondary"}
-              size="sm"
-              className="h-8 px-3 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
-            >
-              {loading ? (
-                "Connecting..."
-              ) : guild.connected ? (
-                <>
-                  <span>Open Console</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </>
-              ) : (
-                <>
-                  <Plug className="h-3.5 w-3.5" />
-                  <span>Connect</span>
-                </>
-              )}
-            </Button>
           </div>
         </div>
       </div>
