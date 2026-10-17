@@ -528,7 +528,7 @@ export function RolesView({
                 variant="outline"
                 className="h-7 text-xs border-amber-500/40 text-amber-500 hover:bg-amber-500/10 cursor-pointer shrink-0 self-start sm:self-auto"
               >
-                <Link href={`/tenants/${tenantId}/billing`}>
+                <Link href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                   Upgrade Plan &rarr;
                 </Link>
               </Button>

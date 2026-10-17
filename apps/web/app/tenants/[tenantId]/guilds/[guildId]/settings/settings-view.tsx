@@ -456,7 +456,7 @@ export function SettingsView({
                     <span>White-Labeling Requires PRO Plan</span>
                   </div>
                   <Button size="sm" className="text-xs h-7 gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold" asChild>
-                    <a href={`/tenants/${tenantId}/billing`}>
+                    <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                       <span>Upgrade to PRO</span>
                       <ArrowRight className="h-3 w-3" />
                     </a>

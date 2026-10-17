@@ -256,7 +256,7 @@ export function PresenceView({
               </Badge>
               {currentPlan !== "ENTERPRISE" && (
                 <Button variant="ghost" size="sm" asChild className="h-7 text-[11px] px-2 text-primary">
-                  <a href={`/tenants/${tenantId}/billing`}>
+                  <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                     Upgrade {currentPlan === "FREE" ? "to Pro (5 slots)" : "to Enterprise (10 slots)"} &rarr;
                   </a>
                 </Button>
@@ -505,7 +505,7 @@ export function PresenceView({
                   You have reached the maximum {maxAllowed} status slots for the {currentPlan} plan.
                 </span>
                 <Button variant="link" size="sm" asChild className="h-auto p-0 text-primary font-semibold">
-                  <a href={`/tenants/${tenantId}/billing`}>
+                  <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                     Upgrade for more &rarr;
                   </a>
                 </Button>

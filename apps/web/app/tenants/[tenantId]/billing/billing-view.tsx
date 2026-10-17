@@ -88,6 +88,8 @@ const DEFAULT_FALLBACK_PLANS: BillingPricingPlan[] = [
 
 interface BillingViewProps {
   tenantId: string;
+  guildId?: string | undefined;
+  guildName?: string | undefined;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
   subscription: {
     id?: string;
@@ -95,11 +97,13 @@ interface BillingViewProps {
     currentPeriodEnd?: string | null;
     cancelAtPeriodEnd?: boolean;
   } | null;
-  plans?: BillingPricingPlan[];
+  plans?: BillingPricingPlan[] | undefined;
 }
 
 export function BillingView({
   tenantId,
+  guildId,
+  guildName,
   currentPlan: initialPlan,
   subscription,
   plans,
@@ -156,7 +160,7 @@ export function BillingView({
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Page Header */}
       <PageHeader
-        category="Tenant Administration"
+        category={guildName ? `${guildName} Operations` : guildId ? "Server Operations" : "Tenant Administration"}
         title="Billing & Subscriptions"
         description="Manage your subscription tiers, usage entitlements, and white-label bot features."
         badge={
@@ -168,8 +172,8 @@ export function BillingView({
             <ProBadge label={activePlan} />
           )
         }
-        backHref="/guilds"
-        backLabel="Server Selection"
+        backHref={guildId ? `/tenants/${tenantId}/guilds/${guildId}` : "/guilds"}
+        backLabel={guildId ? "Guild Overview" : "Server Selection"}
       />
 
       {/* Status Feedback Banner */}

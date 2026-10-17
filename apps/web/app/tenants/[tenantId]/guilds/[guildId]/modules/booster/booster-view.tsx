@@ -204,7 +204,7 @@ export function BoosterView({
                 asChild
                 className="gap-1.5 shadow-2xs h-9 bg-pink-600 hover:bg-pink-700 text-white cursor-pointer font-semibold text-xs px-3"
               >
-                <a href={`/tenants/${tenantId}/billing`}>
+                <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                   <Lock className="h-3.5 w-3.5" />
                   <span>Upgrade to Pro</span>
                 </a>
@@ -247,7 +247,7 @@ export function BoosterView({
               asChild
               className="bg-pink-600 hover:bg-pink-700 text-white font-semibold text-xs h-8 shrink-0 shadow-xs cursor-pointer"
             >
-              <a href={`/tenants/${tenantId}/billing`}>
+              <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                 <span>Upgrade to Pro</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
               </a>

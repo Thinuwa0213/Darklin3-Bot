@@ -482,7 +482,7 @@ export function EmbedsView({ tenantId, guildId, currentPlan, globalSettings, liv
                         className="w-full text-xs bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-xs cursor-pointer"
                         asChild
                       >
-                        <Link href={`/tenants/${tenantId}/billing`}>Upgrade to Darklin3 PRO &rarr;</Link>
+                        <Link href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>Upgrade to Darklin3 PRO &rarr;</Link>
                       </Button>
                     </div>
                   ) : (
@@ -534,7 +534,7 @@ export function EmbedsView({ tenantId, guildId, currentPlan, globalSettings, liv
                         className="w-full text-xs bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-xs cursor-pointer"
                         asChild
                       >
-                        <Link href={`/tenants/${tenantId}/billing`}>Upgrade to Darklin3 PRO &rarr;</Link>
+                        <Link href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>Upgrade to Darklin3 PRO &rarr;</Link>
                       </Button>
                     </div>
                   ) : (

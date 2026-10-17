@@ -476,7 +476,7 @@ export function BrandingView({
               </span>
               {currentPlan === "FREE" && (
                 <Button variant="ghost" size="sm" asChild className="h-6 text-[11px] px-2 text-primary hover:text-primary hover:bg-primary/10">
-                  <a href={`/tenants/${tenantId}/billing`}>Upgrade to Pro (100MB) &rarr;</a>
+                  <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>Upgrade to Pro (100MB) &rarr;</a>
                 </Button>
               )}
             </div>
@@ -1013,7 +1013,7 @@ export function BrandingView({
                     You have reached the {maxMb}MB storage quota. Please remove existing assets or upgrade your plan to upload more images.
                   </p>
                   <Button size="sm" variant="destructive" asChild className="w-full h-7 text-xs font-semibold">
-                    <a href={`/tenants/${tenantId}/billing`}>
+                    <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                       <span>Upgrade Plan</span>
                       <ArrowRight className="h-3 w-3 ml-1" />
                     </a>
@@ -1023,7 +1023,7 @@ export function BrandingView({
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[11px] text-muted-foreground">Need more space?</span>
                   <a
-                    href={`/tenants/${tenantId}/billing`}
+                    href={`/tenants/${tenantId}/guilds/${guildId}/billing`}
                     className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
                   >
                     <span>Upgrade to Pro (100MB)</span>

@@ -19,6 +19,7 @@ interface PaywallDialogProps {
   featureTitle: string;
   featureDescription: string;
   tenantId: string;
+  guildId?: string;
 }
 
 const PRO_BENEFITS = [
@@ -36,6 +37,7 @@ export function PaywallDialog({
   featureTitle,
   featureDescription,
   tenantId,
+  guildId,
 }: PaywallDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,7 +78,7 @@ export function PaywallDialog({
 
         <DialogFooter className="flex-col sm:flex-col gap-2 pt-2">
           <Button asChild className="w-full gap-2 shadow-sm font-semibold">
-            <a href={`/tenants/${tenantId}/billing`}>
+            <a href={guildId ? `/tenants/${tenantId}/guilds/${guildId}/billing` : `/tenants/${tenantId}/billing`}>
               <Sparkles className="h-4 w-4" />
               <span>View Plans & Upgrade</span>
             </a>

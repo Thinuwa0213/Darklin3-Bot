@@ -852,7 +852,7 @@ export function NotificationsView({
                         <span>White-Labeling Requires PRO</span>
                       </div>
                       <Button size="sm" asChild className="h-7 text-xs px-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold">
-                        <a href={`/tenants/${tenantId}/billing`}>
+                        <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                           <span>Upgrade to PRO</span>
                           <ArrowRight className="h-3 w-3 ml-1" />
                         </a>

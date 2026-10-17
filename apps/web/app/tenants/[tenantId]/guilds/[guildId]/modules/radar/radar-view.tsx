@@ -220,7 +220,7 @@ export function CommunityRadarView({
                 asChild
                 className="gap-1.5 h-9 font-medium shadow-2xs bg-amber-600 hover:bg-amber-700 text-white cursor-pointer text-xs px-3"
               >
-                <a href={`/tenants/${tenantId}/billing`}>
+                <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                   <Lock className="h-3.5 w-3.5" />
                   <span>Upgrade to Pro</span>
                 </a>
@@ -266,7 +266,7 @@ export function CommunityRadarView({
               asChild
               className="bg-amber-600 hover:bg-amber-700 text-white text-xs shrink-0 font-medium h-8"
             >
-              <a href={`/tenants/${tenantId}/billing`}>
+              <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                 <span>Upgrade to PRO</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </a>

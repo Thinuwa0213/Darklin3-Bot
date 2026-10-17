@@ -403,7 +403,7 @@ export default async function GuildOverviewPage({ params }: PageProps) {
                 asChild
                 className="h-8 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-xs"
               >
-                <a href={`/tenants/${tenantId}/billing`}>
+                <a href={`/tenants/${tenantId}/guilds/${guildId}/billing`}>
                   <span>Upgrade to Pro</span>
                   <ArrowRight className="h-3 w-3" />
                 </a>

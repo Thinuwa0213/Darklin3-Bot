@@ -68,7 +68,8 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
   const moderationUrl = `${guildBase}/modules/moderation`;
   const actionLogsUrl = `${guildBase}/modules/action-logs`;
   const invitesUrl = `${guildBase}/modules/invites`;
-  const billingUrl = `/tenants/${currentGuild.tenantId}/billing`;
+  const billingUrl = `${guildBase}/billing`;
+
 
   return (
     <Sidebar id="app-sidebar" collapsible="icon">
@@ -303,7 +304,7 @@ export function AppSidebar({ currentGuild, connectedGuilds, user }: AppSidebarPr
               <SidebarMenuButton
                 id="nav-billing"
                 href={billingUrl}
-                isActive={pathname.startsWith(`/tenants/${currentGuild.tenantId}/billing`)}
+                isActive={pathname === billingUrl || pathname.startsWith(billingUrl) || pathname.startsWith(`/tenants/${currentGuild.tenantId}/billing`)}
               >
                 <CreditCard className="h-4 w-4 shrink-0 text-muted-foreground" />
                 {(state === "expanded" || isMobile) && (
