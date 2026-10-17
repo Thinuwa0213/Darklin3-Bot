@@ -1,4 +1,16 @@
 import type { NextConfig } from "next";
+import fs from "node:fs";
+import path from "node:path";
+
+// Ensure root .env is loaded in development if running inside apps/web workspace
+const rootEnvPath = path.resolve(__dirname, "../../.env");
+if (!process.env.API_INTERNAL_URL && fs.existsSync(rootEnvPath)) {
+  try {
+    process.loadEnvFile(rootEnvPath);
+  } catch {
+    // Ignore if already loaded
+  }
+}
 
 /**
  * Minimal Phase 2 foundation config — no product-specific settings yet.

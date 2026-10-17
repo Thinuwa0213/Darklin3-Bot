@@ -397,8 +397,12 @@ $content = ($lines -join "`n")
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($targetPath, $content, $utf8NoBom)
 
+$webEnvPath = Join-Path $repoRoot "apps\web\.env.local"
+[System.IO.File]::WriteAllText($webEnvPath, $content, $utf8NoBom)
+
 Write-Section "Done"
 Write-Host "Wrote: $targetPath"
+Write-Host "Wrote: $webEnvPath"
 Write-Host ""
 Write-Host "Generated (values not shown):"
 Write-Host "  WORKER_TOKEN_SIGNING_KEY: generated"

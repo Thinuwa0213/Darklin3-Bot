@@ -65,6 +65,10 @@ try {
       envContent += `\nWORKER_BOOTSTRAP_SECRET=${bootstrapSecret}\n`;
     }
     fs.writeFileSync(envPath, envContent, "utf-8");
+    const webEnvPath = path.join(repoRoot, "apps/web/.env.local");
+    if (fs.existsSync(webEnvPath)) {
+      fs.writeFileSync(webEnvPath, envContent, "utf-8");
+    }
     console.log(`[provision-worker] Updated .env with WORKER_BOOTSTRAP_SECRET.`);
   } else {
     console.log(`[provision-worker] Worker ${workerId} is already provisioned.`);
