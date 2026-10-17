@@ -22,6 +22,70 @@ import {
 import { PageHeader, ProBadge } from "@/components/layout/page-header";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
+export interface BillingPricingPlan {
+  id: string;
+  name: string;
+  description: string;
+  monthly_price: number;
+  annual_price: number;
+  annual_discount_label?: string;
+  badge?: string | null;
+  is_featured?: boolean;
+  features: string[];
+  cta_text?: string;
+  cta_url?: string;
+  cta_type?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export function normalizePlanKey(id: string): "FREE" | "PRO" | "ENTERPRISE" {
+  const upper = id.toUpperCase();
+  if (upper === "STARTER" || upper === "FREE") return "FREE";
+  if (upper === "PRO" || upper === "CREATOR" || upper === "CREATOR_PRO") return "PRO";
+  if (upper === "ENTERPRISE" || upper === "STUDIO") return "ENTERPRISE";
+  return upper as "FREE" | "PRO" | "ENTERPRISE";
+}
+
+const DEFAULT_FALLBACK_PLANS: BillingPricingPlan[] = [
+  {
+    id: "starter",
+    name: "Starter",
+    description: "Free dedicated bot hosting for growing communities.",
+    monthly_price: 0,
+    annual_price: 0,
+    annual_discount_label: "",
+    badge: null,
+    is_featured: false,
+    features: [
+      "1 dedicated bot instance",
+      "1080p welcome canvas studio",
+      "Automatic member starter roles",
+      "30 MB custom asset storage",
+      "1 stream alert per platform",
+      "Web console access",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    description: "For active guilds, streamers, and community servers.",
+    monthly_price: 9.99,
+    annual_price: 7.99,
+    annual_discount_label: "-20%",
+    badge: "Recommended",
+    is_featured: true,
+    features: [
+      "Everything in Starter, plus:",
+      "100 MB custom asset storage",
+      "Community stream radar",
+      "Server booster announcements",
+      "Unlimited live stream alerts",
+      "Priority Discord ticket support",
+    ],
+  },
+];
+
 interface BillingViewProps {
   tenantId: string;
   currentPlan: "FREE" | "PRO" | "ENTERPRISE";
@@ -31,9 +95,15 @@ interface BillingViewProps {
     currentPeriodEnd?: string | null;
     cancelAtPeriodEnd?: boolean;
   } | null;
+  plans?: BillingPricingPlan[];
 }
 
-export function BillingView({ tenantId, currentPlan: initialPlan, subscription }: BillingViewProps) {
+export function BillingView({
+  tenantId,
+  currentPlan: initialPlan,
+  subscription,
+  plans,
+}: BillingViewProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [interval, setInterval] = useState<"month" | "year">("month");
@@ -41,7 +111,9 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [processingPlan, setProcessingPlan] = useState<string | null>(null);
 
-  const handlePlanChange = (targetPlan: "FREE" | "PRO" | "ENTERPRISE") => {
+  const displayPlans = plans && plans.length > 0 ? plans : DEFAULT_FALLBACK_PLANS;
+
+  const handlePlanChange = (targetPlan: "FREE" | "PRO" | "ENTERPRISE", planName: string) => {
     setProcessingPlan(targetPlan);
     setFeedback(null);
 
@@ -62,7 +134,7 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
             setActivePlan(targetPlan);
             setFeedback({
               type: "success",
-              message: `Successfully upgraded to ${targetPlan === "PRO" ? "Creator Pro" : "Studio Enterprise"}!`,
+              message: `Successfully upgraded to ${planName}!`,
             });
             router.refresh();
           } else {
@@ -79,9 +151,6 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
       }
     });
   };
-
-  const proPrice = interval === "year" ? "$6.58" : "$9.99";
-  const enterprisePrice = interval === "year" ? "$20.75" : "$29.99";
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -127,7 +196,7 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
           <CardDescription className="text-xs">
             {activePlan === "FREE"
               ? "You are currently on the Free Starter tier. Upgrade to unlock full white-label custom bots."
-              : `Active Plan: ${activePlan === "PRO" ? "Creator Pro" : "Studio Enterprise"}. High-availability priority runtime.`}
+              : `Active Plan: ${activePlan === "PRO" ? "Pro" : activePlan === "ENTERPRISE" ? "Enterprise" : activePlan}. High-availability priority runtime.`}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-2">
@@ -199,233 +268,132 @@ export function BillingView({ tenantId, currentPlan: initialPlan, subscription }
       </div>
 
       {/* Pricing Comparison Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-        {/* FREE STARTER */}
-        <Card className={`flex flex-col justify-between border-border ${activePlan === "FREE" ? "ring-2 ring-primary/40" : ""}`}>
-          <CardHeader>
-            <div className="flex items-center justify-between mb-1">
-              <CardTitle className="text-lg font-bold">Starter</CardTitle>
-              {activePlan === "FREE" && <Badge variant="secondary">Current Plan</Badge>}
-            </div>
-            <CardDescription className="text-xs">For small communities testing the waters.</CardDescription>
-            <div className="mt-4">
-              <span className="text-3xl font-extrabold text-foreground">$0</span>
-              <span className="text-xs text-muted-foreground ml-1">/ month</span>
-            </div>
-          </CardHeader>
+      <div
+        className={`grid grid-cols-1 ${
+          displayPlans.length === 2
+            ? "md:grid-cols-2 max-w-3xl"
+            : displayPlans.length >= 3
+            ? "md:grid-cols-3 max-w-5xl"
+            : "max-w-md"
+        } mx-auto gap-6 items-stretch w-full`}
+      >
+        {displayPlans.map((plan) => {
+          const targetPlanKey = normalizePlanKey(plan.id);
+          const isCurrentPlan = activePlan === targetPlanKey;
+          const price = interval === "year" ? plan.annual_price : plan.monthly_price;
+          const formattedPrice = price === 0 ? "$0" : `$${Number(price).toFixed(2)}`;
+          const isFeatured = Boolean(plan.is_featured || plan.badge);
+          const badgeText = plan.badge || (plan.is_featured ? "Most Popular" : null);
 
-          <CardContent className="space-y-3 pt-2">
-            <Separator />
-            <ul className="space-y-2.5 text-xs text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>1 Dedicated Discord Server</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>30MB Media &amp; Asset Storage</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>1 Alert / Platform (Twitch, YT, Kick, TikTok)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Standard Welcome Messages &amp; XP</span>
-              </li>
-              <li className="flex items-center gap-2 text-muted-foreground/60">
-                <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
-                <span className="line-through">Server Booster Announcements</span>
-              </li>
-              <li className="flex items-center gap-2 text-muted-foreground/60">
-                <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
-                <span className="line-through">Community Stream Radar</span>
-              </li>
-              <li className="flex items-center gap-2 text-muted-foreground/60">
-                <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
-                <span className="line-through">White-Label Branding Removal</span>
-              </li>
-            </ul>
-          </CardContent>
+          return (
+            <Card
+              key={plan.id}
+              className={`relative flex flex-col justify-between border-border transition-all duration-200 ${
+                isFeatured ? "border-primary shadow-lg bg-card" : ""
+              } ${isCurrentPlan ? "ring-2 ring-primary/60" : ""}`}
+            >
+              {badgeText && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  <span>{badgeText}</span>
+                </div>
+              )}
 
-          <CardFooter className="pt-2">
-            {activePlan === "FREE" ? (
-              <Button disabled variant="outline" className="w-full text-xs">
-                Active Tier
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full text-xs"
-                disabled={isPending}
-                onClick={() => handlePlanChange("FREE")}
-              >
-                {processingPlan === "FREE" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Downgrade to Free"}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+              <CardHeader className={badgeText ? "pt-6" : ""}>
+                <div className="flex items-center justify-between mb-1">
+                  <CardTitle className="text-lg font-bold flex items-center gap-1.5">
+                    {targetPlanKey === "PRO" ? (
+                      <Crown className="h-5 w-5 text-amber-500" />
+                    ) : targetPlanKey === "ENTERPRISE" ? (
+                      <ShieldCheck className="h-5 w-5 text-purple-500" />
+                    ) : (
+                      <Zap className="h-4 w-4 text-primary" />
+                    )}
+                    <span>{plan.name}</span>
+                  </CardTitle>
+                  {isCurrentPlan && (
+                    <Badge variant={isFeatured ? "default" : "secondary"}>
+                      Current Plan
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="text-xs">
+                  {plan.description}
+                </CardDescription>
+                <div className="mt-4">
+                  <span className="text-3xl font-extrabold text-foreground">{formattedPrice}</span>
+                  <span className="text-xs text-muted-foreground ml-1">
+                    / month {interval === "year" && price > 0 ? `(billed annually ${plan.annual_discount_label || "-20%"})` : ""}
+                  </span>
+                </div>
+              </CardHeader>
 
-        {/* CREATOR PRO (FEATURED) */}
-        <Card className={`relative flex flex-col justify-between border-primary shadow-lg bg-card ${activePlan === "PRO" ? "ring-2 ring-primary" : ""}`}>
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
-            <Sparkles className="h-3 w-3" />
-            <span>Most Popular</span>
-          </div>
+              <CardContent className="space-y-3 pt-2">
+                <Separator />
+                <ul className="space-y-2.5 text-xs text-muted-foreground">
+                  {plan.features.map((feat, idx) => {
+                    const isNegative = feat.startsWith("- ");
+                    const text = isNegative ? feat.replace(/^-\s*/, "") : feat;
 
-          <CardHeader className="pt-6">
-            <div className="flex items-center justify-between mb-1">
-              <CardTitle className="text-lg font-bold flex items-center gap-1.5">
-                <Crown className="h-5 w-5 text-amber-500" />
-                <span>Creator Pro</span>
-              </CardTitle>
-              {activePlan === "PRO" && <Badge variant="default">Current Plan</Badge>}
-            </div>
-            <CardDescription className="text-xs">
-              For streamers, creators, and esports communities.
-            </CardDescription>
-            <div className="mt-4">
-              <span className="text-3xl font-extrabold text-foreground">{proPrice}</span>
-              <span className="text-xs text-muted-foreground ml-1">
-                / month {interval === "year" ? "(billed annually)" : ""}
-              </span>
-            </div>
-          </CardHeader>
+                    if (isNegative) {
+                      return (
+                        <li key={idx} className="flex items-center gap-2 text-muted-foreground/60">
+                          <span className="h-4 w-4 shrink-0 flex items-center justify-center font-bold">-</span>
+                          <span className="line-through">{text}</span>
+                        </li>
+                      );
+                    }
 
-          <CardContent className="space-y-3 pt-2">
-            <Separator />
-            <ul className="space-y-2.5 text-xs text-foreground">
-              <li className="flex items-center gap-2 font-medium text-primary">
-                <Check className="h-4 w-4 shrink-0" />
-                <span>100% White-Label Branded Bot</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>100MB Media &amp; Asset Storage</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Server Booster Nitro Announcements</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Community Stream Radar &amp; Live Role Sync</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Unlimited Twitch, YouTube, Kick &amp; TikTok Alerts</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Custom Canvas Rank Cards &amp; Multipliers</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Advanced Anti-Raid &amp; Phishing Shield</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>99.9% High-Availability Worker SLA</span>
-              </li>
-            </ul>
-          </CardContent>
+                    return (
+                      <li key={idx} className="flex items-start gap-2 text-foreground">
+                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <span>{text}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </CardContent>
 
-          <CardFooter className="pt-2">
-            {activePlan === "PRO" ? (
-              <Button disabled className="w-full text-xs">
-                Current Plan
-              </Button>
-            ) : (
-              <Button
-                className="w-full text-xs font-bold gap-2 shadow-sm"
-                disabled={isPending}
-                onClick={() => handlePlanChange("PRO")}
-              >
-                {processingPlan === "PRO" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+              <CardFooter className="pt-2">
+                {isCurrentPlan ? (
+                  <Button disabled variant="outline" className="w-full text-xs">
+                    {targetPlanKey === "FREE" ? "Active Tier" : "Current Plan"}
+                  </Button>
+                ) : targetPlanKey === "FREE" ? (
+                  <Button
+                    variant="outline"
+                    className="w-full text-xs"
+                    disabled={isPending}
+                    onClick={() => handlePlanChange("FREE", plan.name)}
+                  >
+                    {processingPlan === "FREE" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Downgrade to Free"
+                    )}
+                  </Button>
                 ) : (
-                  <>
-                    <Zap className="h-4 w-4" />
-                    <span>Upgrade to Creator Pro</span>
-                  </>
+                  <Button
+                    className={`w-full text-xs font-bold gap-2 shadow-sm ${
+                      !isFeatured ? "bg-primary/90 hover:bg-primary" : ""
+                    }`}
+                    disabled={isPending}
+                    onClick={() => handlePlanChange(targetPlanKey, plan.name)}
+                  >
+                    {processingPlan === targetPlanKey ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4" />
+                        <span>Upgrade to {plan.name}</span>
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-
-        {/* ENTERPRISE / STUDIO */}
-        <Card className={`flex flex-col justify-between border-border ${activePlan === "ENTERPRISE" ? "ring-2 ring-primary/40" : ""}`}>
-          <CardHeader>
-            <div className="flex items-center justify-between mb-1">
-              <CardTitle className="text-lg font-bold flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-purple-500" />
-                <span>Studio Enterprise</span>
-              </CardTitle>
-              {activePlan === "ENTERPRISE" && <Badge variant="default">Current Plan</Badge>}
-            </div>
-            <CardDescription className="text-xs">
-              For esports organizations and large gaming studios.
-            </CardDescription>
-            <div className="mt-4">
-              <span className="text-3xl font-extrabold text-foreground">{enterprisePrice}</span>
-              <span className="text-xs text-muted-foreground ml-1">
-                / month {interval === "year" ? "(billed annually)" : ""}
-              </span>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-3 pt-2">
-            <Separator />
-            <ul className="space-y-2.5 text-xs text-muted-foreground">
-              <li className="flex items-center gap-2 font-medium text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Everything in Creator Pro</span>
-              </li>
-              <li className="flex items-center gap-2 text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>300MB High-Performance Asset Storage</span>
-              </li>
-              <li className="flex items-center gap-2 text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Dedicated Worker Process Isolation</span>
-              </li>
-              <li className="flex items-center gap-2 text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Priority Cluster Runtime SLA</span>
-              </li>
-              <li className="flex items-center gap-2 text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>Staff Roles &amp; Granular RBAC</span>
-              </li>
-              <li className="flex items-center gap-2 text-foreground">
-                <Check className="h-4 w-4 text-primary shrink-0" />
-                <span>90-Day Full Audit Logs Export</span>
-              </li>
-            </ul>
-          </CardContent>
-
-          <CardFooter className="pt-2">
-            {activePlan === "ENTERPRISE" ? (
-              <Button disabled className="w-full text-xs">
-                Current Plan
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full text-xs"
-                disabled={isPending}
-                onClick={() => handlePlanChange("ENTERPRISE")}
-              >
-                {processingPlan === "ENTERPRISE" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Upgrade to Studio"
-                )}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
